@@ -1,0 +1,60 @@
+========================================================================================================
+11. USER
+Execution: Configuration
+Statement: Overwrite
+========================================================================================================
+
+USER: adalah instruction yang digunakan untuk menetukan identitas user yang ada di dalam linux system
+di dalam container.
+
+Hampir mirip dengan command linux su (subtitute user). Command su bisa dipelajari di ShellNotes
+pada handout ini. Sedikit perbedaannya hanyalah su bisa berpindah-pindah secara interaktif pada shell yang sedang aktif,
+sedangkan USER ini dijalankan sebagai configuration untuk instruction berikutnya. (start dari titik itu lanjut ke layer selanjutnya)
+(Note: USER instruction tidak akan meminta password)
+
+Apabila instruction USER tidak di code, secara default dia akan memilih root.
+Jadi secara default sebenarnya sudah ada:
+USER root
+
+Syntax dari user kurang lebih seperti di bawah ini:
+USER username
+USER UID 
+USER username:appgroup
+
+Jadi bisa menggunakan username atau userid.
+USER boby
+USER 10001
+
+Tapi tentu saja container linux based pertamakali dibuat belum ada user sendiri. Kita harus
+menambahkan user dengan shell script sendiri. Mengenai command penambahan user juga bisa dipelajari di
+ShellNotes yang ada pada handout ini.
+
+Oleh sebab itu, kita akan menjalankan RUN untuk menambahkan user terlebih dahulu sebelum menggunakannya
+dengan instruction USER.
+
+Bisa coba jalankan build dari directory USER. Silahkan jalankan build dan run seperti di bawah ini:
+docker build -t switch-user:1.0 -f Dockerfile.sample .
+docker run -it --name my_auth switch-user:1.0 bash
+
+Kalau kita liat code Dockerfile yang tersedia, bisa kita terjemahkan
+
+By Root ---------------------------------
+Buat folder super
+Buat file oldHistory.txt
+Install app
+Buat user bobywidjaja
+By bobywidjaja --------------------------
+Buat folder myproject
+Buat file updateHistory.txt
+Copy italy.txt
+
+Folder super dan oldHistory.txt di miliki oleh root, karena sesuai dengan batas layernya.
+Tetapi hanya folder myproject dan updateHistory.txt yang atas kepemilikan bobywidjaja, sedangkan
+    italy.txt tidak, karena italy.txt tidak diproses oleh command shell internal linuxnya.
+
+drwxr-xr-x   1 bobywidjaja bobywidjaja 4096 Jul  9 04:17 myproject
+    -rwxr-xr-x 1 root        root        1742 Jun 26 09:50 italy.txt
+    -rw-r--r-- 1 bobywidjaja bobywidjaja    0 Jul  9 04:17 updateHistory.txt
+
+drwxr-xr-x   1 root        root        4096 Jul  9 04:16 super
+    -rw-r--r-- 1 root root 0 Jul  9 04:16 oldHistory.txt

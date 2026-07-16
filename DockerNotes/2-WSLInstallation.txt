@@ -1,0 +1,109 @@
+Hampir seluruh docker yang ada di dunia saat ini menggunakan Linux Kernel ketimbang Windows Kernel untuk PC local maupun PC servernya.
+Karena linux OS free dan ringan, dan kebanyakan para System Admin dan System Ops juga lebih familiar menggunakan linux server.
+Oleh karena itu untuk menggunakan Linux kernel sebagai host kernel yang kita akan gunakan di setiap container kita, kita harus terlebih dahulu
+memiliki linux.
+
+Untuk para pengguna linux ini bisa langsung saja menggunakan kernel dari OSnya, tapi untuk para pengguna Windows, ada 2 solusi,
+yaitu menginstall Linux pada sebuah Virtual Machine atau solusi yang lebih praktis dan ringan, yaitu menggunakan WSL.
+
+WSL (Windows Subsystem for Linux) adalah teknologi dari Microsoft yang memungkinkan kita menjalankan Linux di dalam Windows
+tanpa harus me-reserve memory dan performance PC kita ke dalam VM. 
+Note: Versi linux yang ada di dalam WSL lain dengan linux full yang ada di dalam PC linux ataupun yang ada di dalam VM,
+bentuknya akan sangat minim sekali, hanya ada kernel dan beberapa feature shell yang perlu saja.
+
+Di atas WSL kita bisa pasang distribusi linux yang kita inginkan, atau menggunakan aplikasi buatan docker yaitu docker hub dengan
+tujuan lebih praktis.
+
+Ini adalah guide untuk menginstall linux pada wsl langsung tanpa menggunakan docker desktop:
+
+1. Install WSL jika WSL belum ada pada PC anda dengan powershell:
+wsl --install
+
+2. Untuk memastikan WSL memang ter-install dengan benar, silahkan check command sekaligus versinya:
+wsl -v 
+wsl --status
+
+3. Apabila sudah ada WSL di dalam PC anda tapi belum up to date versinya, mungkin bisa di update:
+wsl --update
+
+4. Silahkan check available Linux distro yang ada di online, dan silahkan pilih.
+wsl --list --online
+
+5. Untuk kasus ini saya menggunakan Fedora karena distro yang baik untuk belajar dan juga masih satu keluarga dengan Red Hat (RHEL)
+yang biasa sering dipakai diperusahaan-perusahaan.
+Note: silahkan check ShellNotes/1-LinuxDistribution note untuk lebih jelasnya.
+wsl --install FedoraLinux-44
+
+6. Gunakan command dibawah untuk melihat, versi atau distribusi apa saja yang ada pada wsl kalian.
+wsl -l -
+
+7. Saat ini anda bisa membuka langsung aplikasi WSL pada windows anda, nanti anda akan dibawa otomatis ke 
+distribusi linux yang anda sudah install, silahkan check versi dengan command ini:
+cat /etc/os-release
+
+8. Untuk melakukan update terhadap distribusi OS anda, anda bisa command:
+(Note: dnf hanya berlaku di beberapa distribusi saja, untuk kasus ini saya menggunakan Fedora)
+sudo dnf update -y
+
+9. Untuk menginstall docker, tolong jalankan 3 commands ini secara berurutan:
+sudo dnf install dnf-plugins-core
+sudo dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+10. Close wsl dan linux kalian, lalu buka lagi, dan check apakah docker sudah aktif dan bekerja pada linux anda:
+systemctl status
+systemctl is-system-running
+systemctl status docker
+
+11. Setup dulu password untuk user root kalian:
+sudo passwd root
+
+12. untuk pindah ke user root:
+su -
+
+13. untuk pindah ke user lagi:
+su johndoe
+
+14. Saat ini hanya root yang bisa menjalankan perintah docker, karena hanya root yang mendapatkan permission untuk itu,
+supaya user kalian juga bisa, kalian bisa masukan user kalian ke dalam group docker, dengan:
+sudo usermod -aG docker johndoe
+
+15. Check apakah user kalian sudah tergabung dengan group docker atau tidak dengan command:
+groups
+id
+Note: untuk masuk group dengan penggunaan usermod, kita harus restart WSL nya terlebih dahulu.
+
+Kalau user sudah mendapatkan group docker, kita bisa menjalankan docker engine.
+Atau kalian juga bisa memilih menjalankannya dari sisi root, sehingga tidak perlu pusing dengan group docker.
+Cara jalankannya:
+sudo systemctl start docker
+
+====================================================================================================================
+
+Kalau kita memiliki 2 distro, baik di Docker desktop atau Fedora, kita bisa melihatnya di powershell
+dengan command wsl -l -v sebelumnya, dan akan menunjukan:
+  NAME              STATE           VERSION
+* FedoraLinux-44    Stopped         2
+  docker-desktop    Running         2
+
+Di sini bisa dilihat mana yang distro yang sedang dijalankan sebagai default, atau mana yang sedang jalan atau tidak.
+Selain itu kita juga bisa check docker mana yang dijalankan dengan:
+
+1. Bisa dicheck dengan menggunakan:
+which docker
+
+Untuk docker desktop
+which docker
+/c/Program Files/Docker/Docker/resources/bin/docker
+
+Untuk Fedora WSL:
+which docker
+/usr/sbin/docker
+
+Apabila defaultnya bukan Distro yang anda inginkan, misalnya
+  NAME              STATE           VERSION
+   FedoraLinux-44    Stopped         2
+*  docker-desktop    Running         2
+
+Bisa dipindahkan dengan cara:
+wsl --set-default FedoraLinux-44

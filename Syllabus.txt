@@ -1,0 +1,28 @@
+
+- Shell Script
+    Shebang X
+    Variable X
+    Input X
+    Conditional X
+    Array X
+    Iteration X
+    String X
+    Permission X
+    Authentication
+
+
+- Image X
+- Container X
+- Docker File X
+- Registry 
+- Database
+- Backend
+- Frontend
+- Docker Compose
+- Environment Variable
+- Build
+- Pruning
+- Network
+- Volume
+- Swarm
+

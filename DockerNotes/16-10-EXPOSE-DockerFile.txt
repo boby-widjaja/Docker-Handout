@@ -1,0 +1,46 @@
+========================================================================================================
+10. EXPOSE
+Execution: Run-Time
+Statement: Additive
+========================================================================================================
+
+EXPOSE: Sebenarnya EXPOSE hanyalah dokumentasi tentang port number yang akan digunakan oleh app atau system yang
+akan di deploy di dalam image ini. Tetapi expose bisa dipakai dengan praktis pada saat run-time container dengan menggunakan
+-P publish dengan export ketimbang menggunakan -p publish port secara manual.
+
+Port adalah alamat dari "connector" komunikasi protocol. Ketika kita melihat contoh-contoh container yang 
+dibuat, ada -p 8000:80 atau 7070:8080, dan lain sebagainya. Atau ketika kita browsing project kita, dibelakang ip address ada port number.
+
+Pada docker ada 2 macam port, yaitu container port dan host port.
+-Container Port dan Application Port sama, container si aplikasi bisa mendengar.
+-Host Port adalah port yang bisa didengar oleh host computer anda, karena host computer tidak bisa langsung mendengar ke container port.
+    lain dengan sebelum memakai docker, dimana host bisa langsung ke application port.
+
+Penjelasan lebih detail akan dijelaskan di chapter-chapter selanjutnya khususnya yang membahas network.
+ 
+Syntax dari EXPOSE seperti ini:
+EXPOSE <port> [<port>/<protocol>...]
+
+EXPOSE 80
+
+Note: docker tidak kenal beberapa protocol aplikasi seperti http, smtp, ftp, dan lain-lain.
+Protocol yang dikenali hanya TCP dan UDP. Walaupun bisa saja menulis protocol seperti dibawah ini, tetapi tidak wajib.
+Secara default sudah TCP.
+
+EXPOSE 80/tcp
+
+Bisa di check contoh di StaticWebEXPOSE
+
+Dockerfile memiliki instruction:
+EXPOSE 80
+
+Lalu buat docker dengan:
+docker create --name s_web -P static-web:1.0
+
+dengan adanya EXPOSE kita tidak perlu:
+docker create --name s_web -p 8000:80 static-web:1.0
+
+Docker akan membuatkan port number secara random ke host.
+Untuk check port numbernya:
+docker container start s_web
+docker container ls

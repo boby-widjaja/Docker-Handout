@@ -1,0 +1,62 @@
+========================================================================================================
+15. ENTRYPOINT
+Execution: Run-Time
+Statement: Overwrite
+Script: Exec Form
+========================================================================================================
+
+ENTRYPOINT: instructionnya yang menjalankan shell script di saat container run-time.
+Hal ini yang membuat ENTRYPOINT terlihat mirip dengan CMD.
+
+Perbedaan antara ENTRYPOINT dan CMD adalah:
+CMD = default command yang boleh diganti
+ENTRYPOINT = program utama yang selalu dijalankan
+
+Jadi CMD itu bisa di override pada saat docker command untuk run, sedangkan ENTRYPOINT tidak. 
+Mengenai CMD akan dijelaskan di notesnya.
+
+Check directory ENTRYPOINT pada Guides.
+Pada contoh pertama ini kita akan membandingkan antara RUN dan ENTRYPOINT.
+Bisa dilihat kalau ENTRYPOINT tidak jalan ketika diproses build, tapi jalan ketika di run atau di start.
+Itu membuktikan kalau instruksi ini adalah run-time execution.
+
+docker build -t script-runner:1.0 -f Dockerfile.sample .
+docker run -it --name script_text script-runner:1.0
+atau dengan start
+docker container create --name script_text script-runner:1.0
+docker container start -a script_text
+
+Contoh ke 2 kita akan coba menggunakan ENTRYPOINT dengan trick seolah kita menggunakan parameter.
+docker build -t ping-param:1.0 -f Dockerfile.sample2 .
+Taruh parameter di urutan terakhir.
+docker run --name ping_domain ping-param:1.0 google.com
+
+Pada contoh ke 3, ENTRYPOINT bisa kita kombinasikan juga dengan CMD dengan menggunakan exec form.
+docker build -t ping:1.0 -f Dockerfile.sample3 .
+docker run --name ping_command ping:1.0
+
+Tapi karena CMD bisa di override, kita juga bisa memberikan domain lain sebagai pengganti default.
+docker run --name ping_command ping:1.0 detik.com
+
+ENTRYPOINT juga bisa di override, tapi harus dengan special option, yaitu --entrypoint.
+Dengan syntax:
+docker run --entrypoint [script]
+
+Kita akan coba jalankan contoh ke-4 dalam directory
+docker build -t ping-google:1.0 -f Dockerfile.sample4 .
+docker run --name overrider --entrypoint tree ping-google:1.0
+
+------------------------------------------- Best Practice --------------------------------------------------
+
+1. Selalu gunakan exec form untuk lebih mudah disambung dengan CMD atau command.
+
+2. Kapan menggunakan ENTRYPOINT?
+Gunakan ENTRYPOINT untuk khusus penggunaan aplikasi tertentu, seperti project app atau DBMS.
+Jangan gunakan untuk keperluan linux command untuk kebutuhan umum.
+
+3. Bisa manfaatkan kombinasi ENTRYPOINT untuk command dan CMD untuk parameter default untuk command
+yang berasal dari ENTRYPOINTnya.
+
+4. Walaupun ENTRYPOINT bisa di override dengan menggunakan --entrypoint option, jangan membuat
+ENTRYPOINT dengan pemikiran untuk dioverride, jadi ENTRYPOINT adalah script yang jarang sekali di ganti di command.
+Jadi --entrypoint adalah option yang digunakan in case of emergency saja.

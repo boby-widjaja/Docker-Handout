@@ -1,0 +1,2 @@
+FROM trigger:1.0
+RUN echo "This is the final image"

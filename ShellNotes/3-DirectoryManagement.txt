@@ -1,0 +1,47 @@
+Perintah Print Working Directory:
+pwd 
+
+Buat directory:
+mkdir [Nama Directory]
+mkdir Sample
+
+Buat directory sampai ke sub directory, gunakan option p (parent):
+mkdir -p [Parent Directory/Child Directory]
+mkdir -p Parent/Child
+
+Listing isi dari working directory:
+ls
+
+Listing seluruh isi working directory termasuk yang di hidden:
+ls -a
+ls --all
+
+Hapus directory:
+rmdir [Nama Directory]
+rmdir Sample
+
+Untuk pindah 
+cd [DirectoryPath]
+cd DockerNotes/ShellNotes
+
+untuk naik satu level, gunakan ..:
+cd ../DockerNotes/ShellNotes
+
+untuk kembali ke home directory dari linuxnya:
+cd ~
+
+Gunakan command tree untuk melihat directory structure dalam tampilan tree:
+tree
+atau
+tree [DirectoryName]
+tree Container
+
+Kita bisa membuat multiple structure directory sekaligus dengan feature Brace Expansion:
+(Feature ini khusus untuk Bash Script)
+mkdir project/{src,test,docs}
+
+Hasilnya:
+project/
+├── src
+├── test
+└── docs

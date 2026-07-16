@@ -1,0 +1,42 @@
+Xargs adalah command yang digunakan untuk mengubah input menjadi argument untuk command lain.
+Pada awalnya pasti kita suka tertukar dengan | pipe, sebenarnya fungsinya berbeda.
+Karena sebagian command mengharap argument bukan langsung stdin, jadi kita membutuhkan xargs.
+
+Sebelum kita code xargs, mari sama-sama belajar membedakan apakah command ini mengharapkan argument atau langsung
+standard input. Ada command yang mendukung stdin dan argument ada juga yang hanya mendukung argument.
+
+1. Apabila saya mengetik nama file setelah command itu berarti command tersebut mendukung argument.
+Contoh:
+ls file.txt
+rm file.txt
+cp file1 file2
+grep "hello" file.txt
+
+2. Apakah command bisa jalan tanpa nama file dan langsung masuk ke mode standard user input?
+Kalau bisa berarti command tersebut mendukung stdin langsung.
+Contoh:
+silahkan hanyak ketik command cat tanpa nama file.
+Lalu anda bisa keluar dengan ctrl + d atau ctrl + c
+
+3. Apabila command bisa langsung bekerja dengan pipe | itu artinya command tersebut menerima stdin,
+bila tidak bisa bekerja itu artinya command tersebut mengharapkan argument saja.
+Dan di sinilah nanti xargs berguna.
+Contoh:
+echo "hello world" | wc (Ini akan bekerja karena wc menerima stdin)
+echo "Supreme" | mkdir (Ini tidak akan bekerja karena mkdir hanya menerima argument)
+
+Dengan menggunakan xargs ini akan bekerja
+echo "Supreme" | xargs mkdir
+
+4. Lihat jenis/kategori kegunaan command linux. 
+Jika command termasuk ke dalam output processing atau text processing biasanya mendukung stdin, contohnya:
+cat, grep, sort, uniq, cut, awk, sed, tr, head, tail, wc, paste, tee
+
+Jika command termasuk ke dalam File/ Directory Management dan Operation, biasanya membutuhkan argument only:
+rm, mv, cp, mkdir, rmdir, touch, chmod, chown, ln
+
+5. Baca manual lewat command man pada bagian synopsis.
+Contoh ada pilihan file pada grep tapi tidak dengan mkdir.
+Itu artinya grep menerima stdin.
+grep [OPTION]... PATTERNS [FILE]...
+mkdir [OPTION]... DIRECTORY...

@@ -1,0 +1,6 @@
+FROM ubuntu:26.04
+
+RUN apt update && apt install -y iputils-ping
+
+#akan di concat ke text berikutnya, jadi seperti parameter
+ENTRYPOINT ["ping"]

@@ -1,0 +1,189 @@
+(Trivia: AWK singkatan Aho, Weinberger, Kernighan. Nama 3 computer scientist)
+
+awk adalah tools yang cukup canggih dalam shell script untuk memproses text secara baris per baris, 
+biasanya lebih ditujukan untuk text dalam bentuk deret data.
+Awk bisa mengenali pattern dan dia juga punya procedural languagenya sendiri (Jadi programmer akan lebih familiar).
+
+Struktur syntax awk kurang lebih seperti di bawah ini:
+awk 'pattern { action }' file.txt
+
+Bisa dilihat, awk terdiri dari 2 bagian, yaitu pattern, dan action.
+Baik pattern dan action akan memproses text setiap baris dalam text satu-persatu dalam process iteration.
+
+Pattern adalah boolean conditional, dimana dia mengharap hasilnya true atau false, dan secara default bila tidak di code hasilnya akan true.
+Karena itu isi dari pattern akan berupa conditional dan comparison operation.
+Apabila hasil dari pattern untuk baris yang sedang ditunjuk dalam iterasi bernilai true, barulah dia bisa diproses dalam action,
+bila hasilnya false maka tidak akan diproses.
+Secara simple, kita bisa lihat bahwa Pattern ini akan banyak dimanfaatkan sebagai data filter.
+
+Action ditulis di dalam code-block dan diproses secara procedural statement by statement sama seperti bahasa pemrograman kebanyakan.
+Action adalah perlakuan terhadap baris yang saat ini sedang ditunjuk dalam iterasi dan di approved oleh pattern dengan nilai true.
+Apabila action tidak ditulis sama sekali, by default dia akan melakukan {print} atau mencetak semua text pada baris itu.
+Kalau ada sedikit saja code pada action, maka default print akan hilang dan harus di code sendiri lagi.
+
+Berikut ini adalah code awk yang tidak melakukan apa-apa, karena patternnya kosong dan actionnya juga sesuai dengan default,
+yaitu print.
+awk '{print}' peopleTable.txt
+
+Lalu berikutnya kita akan coba membuat sebuah pattern.
+
+Kita akan mengurangi 1 column dengan menggunakan NR (Number of Record/Row)
+awk 'NR > 1 {print}' peopleTable.txt
+
+Command diatas mengatakan, row ke 2 dan seterusnya yang nilainya true dan boleh di print.
+Saat kamu membuat pattern, action yang apabila hanya print saja tidak perlu ditulis karena default.
+awk 'NR > 1' peopleTable.txt
+
+Ini membuat pattern NR > 1 berfungsi seperti filter pada SQL, Ini artinya mau record lebih besar dari baris 1
+awk 'NR > 2 {print}' peopleTable.txt (akan membuang data person di row pertama.)
+
+Kita juga menghilangkan row pertama saja dengan:
+awk 'NR != 1' peopleTable.txt
+
+atau mengambil hanya data di row ke 3
+awk 'NR == 3' peopleTable.txt
+
+Feature pada pattern banyak, kita akan coba beberapa yang sifatnya umum.
+
+Kita akan coba membedakan awk dengan cut saat ekstraksi data berdasarkan separator:
+cut -d '|' -f 2 karyawan.txt
+vs
+awk -F '|' '{print $2}' karyawan.txt
+
+$X artinya column ke X.
+Pada command diatas, kita tidak menggunakan pattern, sehingga semua row akan bersifat true.
+Tapi pada command action kita memang hanya print column ke 2.
+-d delimiter option pada command cut setara dengan -F Field Separator pada command awk.
+
+Keduanya mengambil column kedua dimana separator/delimiternya adalah |
+Tapi coba kita test ke bentuk text yang lain, misalnya peopleTable.txt
+Kita ingin ambil Department Column:
+
+Saya tidak bisa melakukannya dengan cut, karena separator di sini hanyalah 1 spasi, dan bentuk text yang seperti table
+membuat jumlah spasi antar column jadi inconsistent.
+cut -d ' ' -f 3 peopleTable.txt
+
+Sedangkan awk bisa mengenali pattern spasi, sehingga command di bawah ini akan mengeluarkan output berupa column Department
+awk -F ' ' '{print $3}' peopleTable.txt
+
+Bahkan karena defaultnya sudah spasi, tidak perlu option field separator lagi.
+awk '{print $3}' peopleTable.txt
+
+Kita juga bisa memanfaatkan awk dengan list dari file pada working directory kita,
+misalnya ingin dapat nama dari file atau jam file dibuat dalam baris column.
+
+NF (Number of Field) artinya adalah total column yang ada.
+ls -l | awk '{print $NF}'
+ls -l | awk '{print $(NF-1)}' 
+
+Sedikit lebih kreatif, hanya mengambil seluruh informasi nama saja tanpa headernya:
+awk 'NR != 1 {print $2}' peopleTable.txt
+atau kalau pusing dengan proses yang satu kali jalan, kita bisa mengandalkan pipe
+awk 'NR !=1' peopleTable.txt | awk '{print $2}' 
+
+Sekarang kita akan lihat bagaimana action bisa melakukan string interpolation.
+Saya ingin mengeluarkan output peopleTable dalam bentuk Salary: $5500, City: Bandung.
+awk '{print "Salary: $ "$4 ", City: " $5}' peopleTable.txt
+
+Tapi bisa dilihat sendiri, kalau column paling atasnya ada:
+Salary: $ Gaji, City: Kota
+Headernya masih ada di sana, ayo kita singkirkan terlebih dahulu sebelum proses row ke action:
+awk 'NR != 1 {print "Salary: $ "$4 ", City: " $5}' peopleTable.txt
+
+Kita bisa melakukan filter cara lain di pattern, misalnya kita hanya mencari baris dimana ada kata Bandungnya.
+'//' sendiri adalah Regex (Regular Expression) bahasa pattern lain yang banyak dipakai di dunia text processing atau pemrograman.
+awk '/Bandung/' peopleTable.txt
+awk '/Bandung/ {print}' peopleTable.txt
+
+Kita juga bisa filter di pattern dengan operasi pembanding, contohnya:
+
+Menampilkan seluruh row dimana column 3, textnya = IT
+awk '$3 == "IT"' peopleTable.txt
+
+Nampilkan seluruh row dimana 
+awk '$4 > 5000' peopleTable.txt
+
+Kali ini saya akan membuat experiment antara pattern dan action dengan menggunakan operasi matematika.
+Misalnya kalau kita lihat pada text peopleTable, seluruh gaji ditulis dalam US Dollar, saya mau convert ke
+Rupiah dengan asumsi 1 USD adalah 17000 rupiah.
+
+Percobaan code di bawah ini sedikit aneh, karena operasi perhitungan bukanlah conditional operation,
+seharusnya perkalian lebih di tulis di dalam code-block action.
+awk '$4 = $4 * 17000' peopleTable.txt
+
+Hasilnya oke, tapi bisa dilihat kalau dari hasilnya headernya sudah tidak ada.
+Karena percobaan Gaji * 17000 akan menghasilkan 0 dan 0 identik dengan false dalam dunia pemrograman (binary theory)
+
+Tapi apabila kita langsung menulis:
+awk '{$4 = $4 * 17000 }' peopleTable.txt
+ini tidak akan works, karena statement pada action ini {$4 = $4 * 17000 }, me-replace {print} action yang seharusnya
+terjadi secara default.
+
+Jadi saat ini baik $4 = $4 * 17000 dan print keduanya harus terjadi, ini yang membuat kita harus menuliskan multi-statement
+pada action, jadi ada procedurenya. 
+(Note: hati-hati dalam menggunakan enter atau new line pada awk, karena cara kerjanya bisa berbeda)
+awk '{
+    $4 = $4 * 17000 
+    print
+}' peopleTable.txt
+
+Secara default syntaxnya seperti javascript, ada automatic semi-colon (;) insertionnya kalau multi-statement ditulis dalam
+baris baru. Seharusnya ada ; sebagai tanda akhir statement.
+awk '{$4 = $4 * 17000; print;}' peopleTable.txt
+
+Tapi untuk lebih best-practicenya, saya menulis dengan keduanya.
+Sekaligus kita ingin menyingkirkan headernya pada pattern juga.
+awk 'NR != 1 {
+    $4 = $4 * 17000; 
+    print;
+}' peopleTable.txt
+
+Kita juga bisa menggunakan feature BEGIN dan END block.
+BEGIN dan END block keduanya adalah action yang bekerja diluar pattern dan action yang biasa.
+BEGIN { action_sebelum_memproses_file }
+pattern1 { action1 }
+pattern2 { action2 }
+...
+END { action_setelah_semua_file_diproses }
+
+Jadi BEGIN dimulai paling pertama, lalu iteration dari pattern dan action yang biasa, lalu semua diakhiri END.
+awk '
+BEGIN {
+    print "============= EMPLOYEE REPORT ================\n"
+    printf "%-5s %-18s %-12s %12s %-12s\n", "ID", "Nama", "Departemen", "Gaji", "Kota"
+    print "---------------------------------------------------------------"
+}
+NR != 1 {
+    $4 = $4 * 17000; 
+    printf "%-5s %-18s %-12s %12d %-12s\n", $1, $2, $3, $4, $5
+}
+END {
+    print "---------------------------------------------------------------"
+}
+' peopleTable.txt
+
+Begin juga bisa kita manfaatkan untuk mendeklarasi local variable sendiri, dan jgua bisa
+kita manfaatkan untuk membuat hal-hal seperti OFS (Output Field Separator)
+awk '
+BEGIN {
+    print "============= EMPLOYEE REPORT ================\n"
+    total = 0
+    OFS = " | "
+}
+NR != 1 {
+    total += $4
+    print $1, $2, $3, $4, $5
+}
+END {
+    printf "\n----------- Total Gaji %s ------------\n\n", total
+    print "==============================================\n"
+}
+' peopleTable.txt
+
+Kita juga bisa menulis conditional di dalam action block
+awk 'NR != 1 {
+    if($4 > 5000)
+        print $0, "<GAJI BESAR>"
+    else
+        print
+}' peopleTable.txt

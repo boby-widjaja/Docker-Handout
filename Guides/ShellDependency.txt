@@ -1,0 +1,64 @@
+Networking tool untuk test request API, seperti postman versi terminal:
+sudo dnf install curl
+
+Tools untuk mendownload file dari internet
+sudo dnf install wget
+
+Networking tools berisi tools DNS seperti: dig, nslookup, host
+sudo dnf install bind-utils
+
+OpenSSH untuk request dalam secured socket, memiliki beberapa tools seperti: ssh, scp, sftp, dan lain sebagainya
+sudo dnf install openssh-clients
+
+JSON Parser ketika menerima API dari JSON
+sudo dnf install jq
+
+Basic Calculator, calculator dasar yang bisa support perhitungan floating point
+sudo dnf install bc
+
+Tools yang digunakan untuk mengetahui tipe file sebenarnya
+sudo dnf install file
+
+Menampilkan struktur directory dalam bentuk pohon
+sudo dnf install tree
+
+Membuat dan meng-extract zip
+sudo dnf install zip
+sudo dnf install unzip
+
+Menunjukan lokasi executable
+sudo dnf install which
+
+Menunjukan atau menampilkan set nama host machine
+sudo dnf install hostname
+
+Untuk process dan system monitoring, berisi tools: ps, top, free, vmstat
+sudo dnf install procps-ng
+
+List Open Files (semua file yang sedang dipakai proses)
+sudo dnf install lsof
+
+Terminal multiplexer atau memberi kemampuan multi session dalam 1 terminal, sehingga bisa
+- menjalankan process di background
+- remote session tetap hidup
+sudo dnf install screen
+
+Text editor, neovim adalah versi yang lebih baru dari vim, tapi vim sudah terlanjur lebih ada banyak di setiap server.
+sudo dnf install vim
+sudo dnf install neovim
+
+Tools untuk mencari file dengan cepat di dalam system.
+sudo dnf install plocate
+
+Library untuk membuat UI berbasis terminal (TUI), saya pakai ini untuk command clear.
+sudo dnf install ncurses
+
+Untuk git repository:
+sudo dnf install git
+
+Legacy networking tools yang sudah lama, tapi masih bisa dipakai.
+Tools-toolsnya seperti: ipconfig, netstat, route, dll
+sudo dnf install net-tools
+
+Swiss Army Knife untuk jaringan (networking). Check koneksi dan port
+sudo dnf install nmap-ncat

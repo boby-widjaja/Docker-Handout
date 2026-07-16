@@ -1,0 +1,36 @@
+Head dan tail adalah dua command yang digunakan untuk melihat sebagian isi file tanpa harus membuka seluruh file
+menggunakan file editor.
+
+head [OPTION] file
+head scarboroughFair.txt
+
+tail [OPTION] file
+tail scarboroughFair.txt
+
+By default head dan tail akan mengeluarkan 10 baris
+Untuk menentukan jumlah barisnya, kita bisa pakai number command:
+head -n 3 scarboroughFair.txt
+
+Menunjukan 4 line terakhir:
+tail -n 4 karyawan.txt
+
+Menunjukan mulai dari baris 4 ke belakang
+tail -n +4 karyawan.txt
+
+Mulai dari head, kecuali 3 paling terakhir
+head -n -3 karyawan.txt
+
+Bisa list sekali 2 files juga.
+head namesGI.txt namesJL.txt
+
+Ada feature yang sering dipakai oleh system admin atau dev ops untuk monitoring
+sebuah progress log, yaitu dengan command tail follow.
+Dimana saat file bertambah, hasil output akan terus mengikutin progress terakhir dari file.
+tail -f scarboroughFair.txt
+
+Itu sebabnya setelah kita follow, kita harus exit dari progress.
+
+Versi lebih smart dan hebatnya adalah dengan menggunakan versi -F (kapitalnya)
+Pada versi ini, walaupun file dihapus dan dibuat ulang, command tetap bisa follow
+tail -F scarboroughFair.txt
+

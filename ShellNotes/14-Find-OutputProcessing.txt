@@ -1,0 +1,58 @@
+File digunakan untuk mencari file dan directory berdasarkan berbagai kriteria seperti:
+nama, size, type, time update, owner.
+
+Syntax dari find seperti di bawah ini:
+find [path] [expression]
+
+Jika kita mengosongkan expression dan pathnya . (root), kita akan lihat seluruh isi root
+find .
+
+Untuk mencari file dengan nama specific, bisa menggunakan name option name:
+find . -name "karyawan.txt"
+
+Kita bisa mengganti any sets of characters dengan *
+find . -name "*.sh"
+
+Dengan kita menerapkan * pada kanan dan kiri, kita akan mencari seluruh text yang mengandung OutputProcessing
+find . -name "*OutputProcessing*"
+
+Selain file, kita juga bisa mencari directory
+find . -name Target
+
+Tentu saja kita juga bisa mencari di directory lain.
+find ShellNotes -name "*OutputProcessing*"
+find Guides/ShellScript -name "*.sh"
+
+Untuk ignore lower atau uppercase, kita bisa menggunakan option -iname
+find . -iname "*outputprocessing*"
+
+Terkadang hasil pencarian kita bercampur antara directory dan file, contoh misalnya:
+find . -name "*Shell*"
+Dari hasil pencarian ini menghasilkan beberapa file dan directory yang namanya mengandung "Shell"
+Untuk directory saja:
+find . -type d -name "*Shell*"
+Untuk file saja:
+find . -type f -name "*Shell*"
+
+Untuk print nama filenya saja:
+find . -type f -name "*Shell*" -printf "%f"
+atau dengan new line
+find . -type f -name "*Shell*" -printf "%f\n"
+
+Kalau ingin print pathnya
+find . -type f -name "*Shell*" -printf "%p\n"
+
+Kita juga bisa menggunakan operasi delete pada find.
+Misalnya mencari dan menghapus semua file dengan nama Sembarang.txt
+find . -name "Sembarang.txt" -delete
+
+Kita juga bisa membatasi ke dalaman directory level pencarian kita:
+find . -maxdepth 1 -name "*Shell*"
+find . -mindepth 1 -name "*Shell*"
+
+Ada banyak kategori lain tolak ukur pencarian, misalnya
+waktu (7 hari terakhir)
+find . -mtime -7
+
+Atau dari patokan size
+find . -size +10M

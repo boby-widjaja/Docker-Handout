@@ -1,0 +1,6 @@
+FROM fedora:44
+
+RUN touch /alive.txt
+
+HEALTHCHECK CMD test -f /alive.txt
+CMD ["tail", "-f", "/dev/null"]

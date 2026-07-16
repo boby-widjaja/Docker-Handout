@@ -1,0 +1,20 @@
+========================================================================================================
+13. STOPSIGNAL
+Execution: Run-Time
+Statement: Overwrite
+========================================================================================================
+
+STOPSIGNAL : adalah docker instruction yang bisa mengganti mode signal linux pada saat container di stop.
+Instruction ini jarang dipakai, karena kebanyakan orang memang sudah suka dengan defaultnya, yaitu SIGTERM.
+
+Apa itu Signal?
+
+Di Linux, signal adalah pesan yang dikirim ke sebuah proses.
+Beberapa signal yang sering dipakai:
+- SIGTERM : Meminta proses berhenti dengan baik
+- SIGKILL : Memaksa proses langsung mati
+- SIGINT : Sama seperti menekan Ctrl+C
+- SIGHUP : Biasanya reload konfigurasi
+- SIGQUIT : Keluar dan membuat core dump
+
+Mengenai Signal bisa di baca Shell Notes nya untuk lebih lengkapnya.

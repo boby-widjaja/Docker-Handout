@@ -1,0 +1,4 @@
+FROM alpine:3.22.4
+ARG NAME
+ARG JOB
+RUN echo "Name: ${NAME}, Job: ${JOB}"

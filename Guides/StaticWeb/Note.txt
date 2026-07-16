@@ -1,0 +1,10 @@
+(Untuk memperlancar process build, lebih baik image nginx:latest atau nginx:alpine sudah ada terlebih dahulu)
+
+1. Pindah ke directory Static web dari 
+cd Guides/StaticWeb
+
+2. Build image web 
+docker build --tag static-web:1.0 .
+
+3. Lalu buat container
+docker create --name s_web -p 8000:80 static-web:1.0

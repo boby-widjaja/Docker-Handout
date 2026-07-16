@@ -1,0 +1,15 @@
+1|Budi|IT|Jakarta|5000|ACTIVE
+2|Ani|HR|Bandung|4500|ACTIVE
+3|Candra|IT|Jakarta|7000|INACTIVE
+4|Dewi|Finance|Surabaya|8000|ACTIVE
+5|Eka|IT|Jakarta|5000|ACTIVE
+6|Fajar|HR|Bandung|4500|INACTIVE
+7|Gina|Finance|Jakarta|9000|ACTIVE
+8|Hadi|IT|Surabaya|6000|ACTIVE
+9|Indra|IT|Jakarta|7000|ACTIVE
+10|Joko|HR|Jakarta|4000|INACTIVE
+11|Budi|IT|Jakarta|5000|ACTIVE
+12|Ani|HR|Bandung|4500|ACTIVE
+13|Kevin|IT|Jakarta|7000|ACTIVE
+14|Lina|Finance|Surabaya|8500|ACTIVE
+15|Maya|IT|Bandung|6200|INACTIVE

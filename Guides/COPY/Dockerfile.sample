@@ -1,0 +1,27 @@
+FROM fedora:44
+WORKDIR /myproject
+
+#hasil yang diharapkan: /myproject/italy.txt
+COPY aboutItaly.txt italy.txt
+
+#hasil yang diharapkan: /myproject/sub/karyawan.txt
+COPY karyawan.txt sub/karyawan.txt
+
+#hasil yang diharapkan: 
+#/data/people/namesAC.txt
+#/data/people/namesDF.txt
+#/data/people/namesGI.txt
+COPY people /data/people
+
+#hasil yang diharapkan: 
+#/groupOne/aboutItaly.txt
+#/groupOne/karyawan.txt
+COPY aboutItaly.txt karyawan.txt /groupOne/
+
+#hasil yang diharapkan:
+#/groupTwo/namesAC.txt
+#/groupTwo/namesDF.txt
+#/groupTwo/namesGI.txt
+COPY people/namesAC.txt people/namesDF.txt people/namesGI.txt /groupTwo/
+
+CMD ["tail", "-f", "/dev/null"]

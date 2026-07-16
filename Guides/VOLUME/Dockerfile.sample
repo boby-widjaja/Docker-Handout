@@ -1,0 +1,7 @@
+FROM fedora:44
+WORKDIR /persistent
+RUN dnf install tree -y \
+    && dnf install neovim -y \
+    && dnf clean all
+VOLUME /persistent
+CMD ["tail", "-f", "/dev/null"]

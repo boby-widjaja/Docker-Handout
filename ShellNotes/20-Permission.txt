@@ -1,0 +1,143 @@
+Ketika ingin mengetik bash command, lihatlah kalau di depan input commandnya terdapat sebuah syntax seperti:
+bobywidjaja@LAPTOP-PGM7PMEH:~/Container/Parent$
+username@hotsName:workingDirectory(userType)
+
+Dimana:
+
+bobywidjaja --> username (user yang saat ini sedang menjalankan terminalnya)
+
+@ --> separator
+
+LAPTOP-PGM7PMEH --> host name (perangkat komputer yang sedang menjalankan sistem operasinya, 
+    untuk nanti bisa diindentifikasikan dalam satu jaringan yang lebih besar)
+
+: --> separator
+
+~/Container/Parent --> working directory (directory saat ini kita berada)
+
+$ --> user type. User Type bisa ada 2 kemungkinan:
+    $ : artinya user biasa
+    # : artinya user root
+
+------------------------------------------------------------------------------------------------------
+
+Untuk mendapatkan return text username yang saat ini lagi log in:
+whoami
+
+Untuk pindah ke username lain, gunakan:
+su [username]
+su bobywidjaja
+
+Untuk pindah ke root (super user):
+su -
+
+atau pindah ke root dengan:
+su
+su root
+
+Perbedaannya adalah:
+su - tidak mempertahankan environment dan working directory saat ini.
+su mempertahakan environment dan working directory saat ini. (Tidak jalan dengan semestinya di WSL, karena konfigurasi tidak tercipta di etc/bashrc)
+
+Perbedaan WSL dengan linux aslinya salah satunya adalah, tidak adanya banyak hal di root directory, seperti:
+/boot : digunakan untuk booting os
+/dev : system devices, hardware2 yang nempel pc
+/etc : configuration files
+/bin -> /usr/bin : everyday user commands
+/sbin -> /usr/sbin : System/file system commands
+/opt : optional add-on apps, bukan bagian dari os
+/proc : running process (only access in memory)
+/lib -> usr/lib : C programming library files needed by commands and apps 
+/tmp : Directory for temporary files
+/home : Directory for user
+/var : System logs
+/run : System daemons yang dijalankan sangat awal untuk menyimpan temporary runtime files seperti PID Files
+/mnt : to mount external filesystem (NFS)
+/media : untuk mountaing CD drive
+
+Setiap file atau directory memiliki permission yang bisa diakses oleh user.
+Permission tersebut bisa diakses dengan cara (long format option):
+ls -l
+
+Untuk menambahkan formating yang lebih mudah dibaca manusia:
+ls -lh
+
+Untuk melakukan sorting dari yang paling recent:
+ls -t 
+ls -lt
+
+lalu kita bisa kombinasikan semuanya:
+(long, top recent, human formatting, all hidden)
+ls -ltha
+
+Untuk melakukan reverse dari sorting:
+ls -ltr
+
+Ketika kita melihat long format, ada beberapa column di sini.
+1. Permission dan file type
+2. Jumlah hard link
+3. Owner
+4. Group
+5. Size
+6. Updated Date 
+7. File dan Directory name 
+
+Tolong check bagian permission dan file type, misalnya:
+drwxrwxrwx
+ini akan dipecah menjadi d - rwx - rwx - rwx
+
+Huruf d menandakan itu directory, dan - adalah file.
+directory : drwxrwxrwx
+file : -rwxrwxrwx
+
+Di sini ada 3 macam permission:
+r : readd
+w : write
+x : execute
+
+Permission ditulis dalam 3 column, jadi rwx ada untuk 3 column.
+-rwxrwxrwx
+-, rwx(u), rwx(g), rwx(o)
+
+Dimana u, g dan o adalah permission untuk 3 role:
+u: user
+g: group
+o: other
+
+Saat ada sign seperti ini:
+drwxr-xr-x : d | rwx | r-x | r-x
+
+itu artinya ini adalah sebuah directory dimana:
+user dibolehkan untuk membaca, merubah dan mengeksekusi,
+group dibolehkan hanyak untuk membaca dan mengeksekusi,
+begitu juga dengan other user hanya bisa membaca dan mengeksekusi.
+
+-rw-------
+artinya adalah sebuah file yang hanya bisa dibaca dan diedit oleh user.
+
+Untuk merubah permission, kita bisa menggunakan command (change mode):
+chmod
+
+Dalam command chmod ada beberapa sign yang harus kita pahami:
+a: all
+u: user
+g: group
+o: other
+-: hapus permission
++: beri permission
+
+Jadi:
+chmod g-w new-name.txt : artinya hapus kemampuan write dari group pada file ini.
+chmod a-r new-name.txt : artinya hapus kemampuan read dari semua role.
+chmod a+r new-name.txt : artinya menambahkan kemampuan read untuk semua role.
+chmod u+rwx new-name.txt : artinya menambahkan read, write and execution untuk user.
+chmod a-rwx new-name.txt : artinya mengurangi read, write and execution untuk semua role.
+chmod ug-rw new-name.txt : artinya mengurangi read dan write untuk role user dan group.
+
+Untuk directory atau folder, masuk ke dalamnya termasuk ke dalam execute (x)
+
+Apabila menjalankan satu command mengharuskan super user atau root yang melakukannya, 
+bisa menambahkan command sudo (super user do).
+
+Misalnya:
+sudo chmod ug-rw new-name.txt

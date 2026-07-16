@@ -1,0 +1,97 @@
+Kita akan menggunakan neo vim sebagai text editor.
+Install neo vim terlebih dahulu kalau memang belum ada:
+sudo dnf install neovim
+
+neo vim adalah text editor sederhana yang cukup berguna bila kita tidak memiliki akses ke GUI.
+
+Untuk melakukan navigasi, neo vim membagi operasi ke dalam beberapa mode:
+-Normal Mode : mode netral sebagai perantara pindah ke mode lain
+-Insert Mode : mode untuk mengetik text
+-Visual Mode : mode untuk memilih text dan melakukan copy, paste, change, delete, dan lain-lain
+-Command Mode : mode untuk memasukan command macam-macam
+
+Untuk membuka aplikasi:
+nvim
+
+Untuk membuat file baru atau edit file lama:
+nvim [nama file]
+nvim belajar.txt
+
+Untuk pindah ke normal mode:
+esc
+
+Untuk pindah ke insert mode:
+Insert sebelum posisi cursor saat ini:
+i
+Insert di awal baris:
+I
+
+Untuk pindah ke visual mode:
+v 
+
+Untuk pindah ke command mode:
+:
+
+Command untuk keluar <In Command Mode>:
+quit
+atau
+q
+
+Command untuk keluar tanpa save <In Command Mode>:
+quit!
+atau
+q!
+
+Untuk simpan text <In Command Mode>:
+write
+atau
+w
+
+Bisa menggunakan kombinasi command <In Command Mode>:
+wq
+
+Kalau kondisinya buka dulu appnya baru memilih nama file dan akan edit:
+edit [namafile]
+edit belajar.txt
+atau
+e [namafile]
+e belajar.txt
+
+Pada nvim, copy juga disebut sebagai Yank <In Visual Mode>, pakai key:
+y 
+
+Untuk paste <In Normal Mode>:
+p
+
+Untuk delete atau cut <In Visual Mode>:
+d
+
+Untuk me-recover swap file:
+vim -r config.txt
+atau
+vim -r
+
+lalu command
+:w
+
+Untuk melakukan undo <In Visual Mode>:
+u 
+
+Untuk melakukan redo <In Visual Mode>;
+ctrl+r
+
+Untuk melakukana pencarian <In Normal Mode>:
+/
+
+----------------------------------------------------------------------------------
+
+Perhatikan pada sistem penulisan text antara windows dan linux berbeda.
+Windows menggunakan CRLF (Carriage Return + Line Feed)
+dan
+Linux menggunakan LF (Line Feed)
+
+Ini mungkin bisa mengakibatkan efek yang berbeda nanti pada shell script,
+dimana linux tidak menggunakan carriage return symbol dalam textnya.
+
+\r → kembali ke awal baris (carriage return)
+\n → turun ke baris berikutnya (line feed)

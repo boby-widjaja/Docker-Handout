@@ -1,0 +1,15 @@
+Hello World
+total 8
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  219 May 29 14:02 characters.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  497 May 29 14:02 employee.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  497 May 29 14:02 karyawan.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   24 Jun 18 11:11 namesAC.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   20 Jun 18 11:11 namesDF.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   21 Jun 18 11:11 namesGI.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   19 Jun 18 11:11 namesJL.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   18 Jun 18 11:15 namesMO.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   21 Jun 18 11:17 namesPR.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   46 Jun 22 14:14 namesSU.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   12 Jun 23 16:36 output.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  211 Jun 18 15:32 pancasila.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja 1219 Jun 18 14:57 scarboroughFair.txt

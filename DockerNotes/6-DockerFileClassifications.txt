@@ -1,0 +1,139 @@
+========================== 1. DOCKER FILE =============================
+
+Dockerfile adalah sebuah file yang berisi sekumpulan instruksi yang dijalankan secara procedural yang dimana
+instruksi-instruksi ini berfungsi sebagai perintah untuk membangun sebuah image.
+Dimana file ini digunakan sebagai langkah otomatis yang konsisten apabila kita ingin memperbarui atau membuat
+image baru.
+
+Tentu saja image yang dibuat oleh instruksi-instruksi dockerfile akan memberikan efek pada saat image
+ini nanti sudah dipakai untuk membuat sebuah container. Jadi bisa dibilang dockerfile adalah blueprint atau
+template untuk membuat image yang nantinya siap untuk di deploy menjadi container.
+
+========================== 2. INSTRUCTIONS TABLE =============================
+
+Seperti yang tadi disebut sebelumnya kalau Dockerfile berisi sederet Instruction (ada yang menyebutnya Stanza tapi tidak umum), 
+dan value dari setiap Instruction disebut juga Argument.
+
+Berikut ini adalah 16 Instructions yang masih sering digunakan (karena ada beberapa yang sudah deprecated):
+
++-------+-------------+----------------+----------------+-----------------+
+| Order | Instruction | Execution Time | Statement Type | Script Executor |
++-------+-------------+----------------+----------------+-----------------+
+| 01    | ARG         | BUILD-TIME     | Overwrite      | No              |
+| 02    | FROM        | BUILD-TIME     | Additive*      | No              |
+| 03    | LABEL       | CONFIGURATION  | Overwrite      | No              |
+| 04    | ONBUILD     | BUILD-TIME     | Additive       | No              |
+| 05    | ENV         | CONFIGURATION  | Overwrite      | No              |
+| 06    | SHELL       | CONFIGURATION  | Overwrite      | No              |
+| 07    | WORKDIR     | CONFIGURATION  | Overwrite      | No              |
+| 08    | COPY / ADD  | BUILD-TIME     | Additive       | No              |
+| 09    | RUN         | BUILD-TIME     | Additive       | Yes             |
+| 10    | EXPOSE      | RUN-TIME       | Additive       | No              |
+| 11    | USER        | CONFIGURATION  | Overwrite      | No              |
+| 12    | VOLUME      | RUN-TIME       | Additive       | No              |
+| 13    | STOPSIGNAL  | RUN-TIME       | Overwrite      | No              |
+| 14    | HEALTHCHECK | RUN-TIME       | Overwrite      | Yes*            |
+| 15    | ENTRYPOINT  | RUN-TIME       | Overwrite      | Yes             |
+| 16    | CMD         | RUN-TIME       | Overwrite      | Yes             |
++-------+-------------+----------------+----------------+-----------------+
+
+List ini menunjukan 5 informasi, yaitu: 
+- Order: Urutan proses instruksi dijalankan pada umumnya. Ini hanya panduan karena ada beberapa instruksi yang nanti 
+    mungkin akan jalan berkali-kali secara bergantian.
+- Instruction: Nama dari instruksi yang nanti harus diketik di Dockerfile.
+- Execution Time: Kapan waktu instruksi ini akan dijalankan.
+- Statement Type: Ketika instruksi diketik berkali-kali apakah sifatnya menambah argumentnya atau menimpanya dengan argumen baru.
+- Script Executor: Apakah instruksi ini menjalankan shell script atau tidak.
+
+========================== 3. EXECUTION TIME =============================
+
+Sebelum saya menjelaskan perbedaan execution time, mungkin boleh terlebih dahulu di check Sources/Images/Cycle of Creation.jpg
+
+Execution Time pada instruction tergolong dalam 3 macam berdasarkan waktu eksekusinya:
+
+1. Build-Time: Berarti instruksi ini dijalankan ketika Dockerfile dengan semua value argument dan resources files di dalam 
+    Build Contextnya dipakai untuk membuat sebuah image. Berarti bisa saya simpulkan seluruh instruksi ini adalah instruksi
+    yang dipakai dalam pembuatan image sendiri.
+
+2. Run-Time: Berarti instruksi ini akan standby di dalam image dan di container yang sedang inactive. Instruksi ini
+    baru akan dijalankan ketika container mulai distart. Jadi bisa dibilang instruksi-instruksi ini tidak membantu
+    pembuatan image, melainkan sekumpulan procedure yang nantinya akan dijalankan pada saat container bekerja.
+
+3. Configuration: Sebenarnya adalah sejenis Run-Time yang cara bekerjanya ketimbang melakukan execution dia malah
+    melakukan configuration. Configuration terkadang dianggap sebagai 2-phase-time, karena ketika di build-time
+    dia melakukan tahap konfigurasi lalu benar-benar di aplikasikan ketika di proses run-time. Ini yang membuatnya 
+    terkesan membingungkan dia sebenarnya masuk ke build time atau run time.
+
+========================== 4. STATEMENT TYPE =============================
+
+Statement Type disini dibagi 2, yaitu:
+
+Overwrite : Instruction ini bersifat seperti single value variable, yang artinya bila instruction ini dilakukan lagi 
+    dengan argument baru, maka argument lamanya akan digantikan dan yang baru akan di set.
+
+Additive : Instruction ini bersifat seperti collection, dimana artinya bila instrunction ini dilakukan lagi
+    dengan argument baru, maka argument barunya akan ditambahkan ke dalam koleksi, dan argument lamanya tetap ada.
+
+Pada contoh saya, Additive* pada FROM saya beri dengan tanda asterisk, karena cara kerjanya yang sedikit berbeda.
+FROM dapat dianggap Additive untuk tujuan pembelajaran dasar karena menambahkan base image ke proses build. 
+    Namun secara teknis setiap FROM memulai build stage baru dan mengganti base image yang aktif.
+    (Nanti akan dicontohkan)
+
+========================== 5. SCRIPT EXECUTOR =============================
+
+Setiap Instruction yang termasuk ke dalam golongan Script Executor adalah instruction yang
+argumentnya berisikan terminal script. Bisa berupa bash script, shell script atau app CLI.
+
+Note: Perhantikan pada table, HEALTHCHECK saya tandai sebagai yes, tapi dengan asterisk (*)
+HEALTHCHECK dapat menjalankan command/script, tetapi tujuannya
+   adalah melakukan health checking container, bukan menjalankan aplikasi utama. 
+   Oleh karena itu dia sering dianggap bukan primary script executor seperti RUN, ENTRYPOINT, dan CMD.
+
+Dalam penulisan setiap instruction script executor, ada 2 pilihan macam agrument, yaitu
+Shell Form dan Exec Form.
+
+Shell Form ditulis dalam format seperti shell script, dan juga bisa menulis logika dan bisa menjalankan command-command bash.
+Exec Form ditulis dalam bentuk array string yang lebih simple, dan bisa di kombinasi dengan instruction lain. 
+
+Contoh format penulisan shell form seperti dibawah ini:
+CMD command param1 param2
+
+Contoh format penulisan exec form seperti dibawah ini:
+CMD ["executable","param1","param2"]
+
+Di sini ada 4 Script Executor, dan biasanya devops suka bingung memilih mana yang harusnya pakai exec form dan
+mana yang harus pakai shell form, karena technically masing-masing bisa keduanya. Tapi supaya lebih mudah,
+saya punya anjurannya:
+
+| Instruction | Shell Form  | Exec Form   |
+| ----------- | ----------- | ----------- |
+| RUN         | Sangat umum | Jarang      |
+| ENTRYPOINT  | Jarang      | Sangat umum |
+| CMD         | Cukup umum  | Lebih umum  |
+| HEALTHCHECK | Cukup umum  | Cukup umum  |
+
+Yang lebih umum digunakan itu artinya lebih mudah menggunakan Form tersebut untuk menjalankan task-tasknya.
+Saya sarankan kalian juga menggunakan yang lebih umum, kurang lebih ini beberapa alasan dari saya.
+
+RUN: Selalu pakai Shell Form
+- RUN sesekali menggunakan bash command dan feature-feature bash, misalnya seperti menggunakan feature multi-line
+    dan parameter interpolation.
+- Syntax RUN akan cenderung kepangjangan bila memaksakan untuk diketik dalam exec form.
+- Backlash bisa ambigu pada Windows, dimana pada windows black slash adalah path separator.
+    Bila kita membuat exec form seperti dibawah ini, kita harus membuat double back slash dengan tujuan excaping character.
+    
+    RUN ["c:\windows\system32\tasklist.exe"]
+    Syntax yang benar seharusnya seperti yang di bawah:
+    RUN ["c:\\windows\\system32\\tasklist.exe"]
+
+    Kalau tidak ditulis dengan escaping character, malah bisa dianggap sebagai shell form karena dia tidak valid,
+    akhirnya script malah tidak works.
+
+ENTRYPOINT: Selalu pakai Exec Form.
+    - Keperluan ENTRYPOINT adalah bisa dikombinasi dengan CMD, dan itu tidak bisa dilakukan jika menggunakan Shell Form.
+
+CMD: Bisa keduanya, tapi bila tidak ada specific kebutuhan gunakan Exec Form sebagai pilihan default.
+    - Gunakan Shell Form jika membutuhkan shell atau bash feature.
+    - Gunakan Shell Form dimana Dockerfile tidak menggunakan Instruction ENTRYPOINT sama sekali.
+
+https://docs.docker.com/reference/dockerfile/#shell-and-exec-form

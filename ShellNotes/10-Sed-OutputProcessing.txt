@@ -1,0 +1,55 @@
+Sed atau Stream EDitor digunakan untuk mengedit string dari file text. Jangan samakan sed dengan text editor 
+seperti vim, sed tidak membuka file untuk diedit secara interaktif. Sed untuk edit text lewat stdin lalu mengeluarkan
+hasilnya ke stdout.
+
+Struktur syntax sed kurang lebih seperti dibawah ini:
+sed [options] 'command' file
+
+Apabila sed tidak melakukan apapun, dia akan meneruskannya ke output:
+sed '' aboutItaly.txt
+
+Kita akan mencoba command Subtitusi atau kemampuan untuk menggantikan deret string dengan string yang lain.
+Syntax dari subtitusi kurang lebih seperti di bawah ini:
+s/pattern/replacement/
+
+Kita bisa mengubah semua Italy menjadi Yunani dalam text dengan menggunakan command ini:
+sed 's/Italia/Yunani/' aboutItaly.txt
+
+Tapi command subtitusi biasa memiliki masalah seperti ini:
+sed 's/Kota/City/' aboutItaly.txt
+hasilnya akan:
+dalam bidang seni, arsitektur, dan ilmu pengetahuan. City-Kota seperti Florence, Venice, Milan, dan Naples memiliki karakter yang unik
+Kata Kota kedua dalam line ini tidak berubah menjadi City.
+
+Untuk seluruh kata di dalam satu baris berubah semua, gunakan command global
+sed 's/Kota/City/g' aboutItaly.txt
+
+Dengan menambahkan i kita juga bisa membuatnya case insensitive
+echo "Apel aPel APEL" | sed 's/apel/mangga/gi'
+
+Kita juga bisa secara khusus hanya mengganti line tertentu saja
+sed '2 s/Merah/Red/g' rainbowGrid.txt
+
+Untuk merubah dari baris 2 sampai 4
+sed '2,4 s/Merah/Red/g' rainbowGrid.txt
+
+Kita bisa menghapus baris dengan menggunakan command delete
+sed '2d' karyawan.txt
+
+Di sini contoh menghapus baris 2 sampai 4
+sed '2,4d' karyawan.txt
+
+Sebaliknya, untuk menampilkan baris tertentu:
+sed -n '2p' karyawan.txt
+sed -n '2,4p' karyawan.txt
+
+Untuk memberi tambahan setelah baris tertentu, kita bisa menggunakan command add:
+(Di sini misalnya setelah baris 3)
+sed '3a Tambahan' karyawan.txt
+
+Kita juga bisa mengkombinasikan add dengan pencarian text:
+sed '/Ani/a Tambahan' karyawan.txt
+
+Bila ingin menambahkan di posisi baris sebelum target tersebut, kita bisa pakai command insert:
+sed '/Ani/i Tambahan' karyawan.txt
+sed '3i Tambahan' karyawan.txt

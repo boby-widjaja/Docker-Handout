@@ -1,0 +1,16 @@
+========================================================================================================
+16. CMD
+Execution: Run-Time
+Statement: Overwrite
+Script: Exec Form lebih umum, Shell Form
+========================================================================================================
+
+CMD: instruksi yang menjalankan shell script dan dijalankan ketika di run-time, jadi persis seperti ENTRYPOINT.
+Yang menjadi pembeda paling besar adalah CMD dirancang untuk di override oleh command start atau command run
+dari container. Jadi bisa dibilang CMD adalah default run-time script.
+
+Seperti yang sudah dijelaskan di ENTRYPOINT notes, kalau CMD digunakan sebagai combination default dengan
+ENTRYPOINT atau hanya default full commandnya.
+
+Best practice penggunaan CMD, hanya gunakan shell form jika memang membutuhkan shell feature,
+kalau tidak selalu pakai exec form agar bisa di kombinasi dengan ENTRYPOINT.

@@ -1,0 +1,100 @@
+
+======================================================================
+
+Busybox salah satu jenis image yang gak punya CMD atau ENTRYPOINT
+
+docker inspect busybox
+"Config": {
+    "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    ],
+    "Cmd": [
+        "sh"
+    ]
+},
+
+harus jalankan pakai -it
+
+docker run -it busybox
+ls /bin --> untuk lihat seluruh commandnya
+
+pergi ke path /dockerfiles/entrypoint/entrypoint-1
+docker build -t hostname .
+
+docker run hostname
+
+Ini bisa jalan kalau di CMD karena di override, tapi tidak di entry point
+docker run hostname date
+
+coba override ENTRYPOINT dengan command entry point
+docker run --entrypoint date hostname
+
+===========================================================================================
+
+Bila sebuah Dockerfile memiliki perintah ENTRYPOINT dan CMD sekaligus, maka docker akan menggabungkan dan meng-eksekusikan keduanya.
+Di eksekusi dalam bentuk:
+ENTRYPOINT [space] CMD
+
+2 case dimana kombinasi entrypoint dan cmd berguna:
+
+1. Ingin memperlakukan container seperti command line tool (CLI):
+  Jalankan container menulis command lalu exit
+2. Menggunakan container sebagai startup script, sebelum main program start
+
+Saya ingin membuat image dari ubuntu dengan feature curl
+
+Kalau Dockerfile saya seperti ini:
+-----------------------------------------------------------
+FROM ubuntu:latest
+
+RUN apt-get update && \ 
+    apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+CMD ["curl"]
+-----------------------------------------------------------
+docker run curl-image:1.0 --name test_app curl google.com
+Kita harus ketik seluruh CMD lagi --> 'curl google.com'
+
+Kalau pakai entry point
+-----------------------------------------------------------
+FROM ubuntu:latest
+
+RUN apt-get update && \ 
+    apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+ENTRYPOINT ["curl"]
+-----------------------------------------------------------
+docker run curl-image:1.0 --name test_app google.com
+
+Kalau kita pakai sekaligus:
+-----------------------------------------------------------
+FROM ubuntu:latest
+
+RUN apt-get update && \ 
+    apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+ENTRYPOINT ["curl"]
+
+CMD ["--help"]
+-----------------------------------------------------------
+Jika lupa tulis alamat web google.com nya, maka yang keluar secara default adalah petunjuk --help
+docker run curl-image:1.0 --name test_app
+
+
+Contoh official MySQL image script
+-----------------------------------------------------------
+COPY docker-entrypoint.sh /usr/local/bin
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["mysqld"]
+-----------------------------------------------------------
+docker run --name myshell -it mysql sh
+
+docker top myshell
+UID                 PID                 PPID                C                   STIME               TTY                 TIME                CMD
+root                6608                6584                1                   08:31               pts/0               00:00:00            sh

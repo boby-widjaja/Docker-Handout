@@ -1,0 +1,47 @@
+Bash (Bourne Again Shell) adalah CLI (Command Line Interpreter) untuk shell command pada linux,
+dimana kalau windows menggunakan prompt dan power shell, di sini kita menggunakan bash untuk linux.
+
+Strucktur bash yang basic bisa terlihat seperti di bawah ini:
+
+command [option] [argument]
+ls -la /home/johndoe
+
+ls : adalah contoh command. Command adalah executor dari apa yang kita ingin OS untuk jalankan.
+
+-la : adalah contoh option. Setiap command punya prilaku yang bisa di custom atau di modify dengan option
+option terdiri dari short option atau long option, misalnya
+ls -a : short option
+ls --all : long option
+
+Short option memiliki keunggulan lebih singkat dan bisa digabungkan, misalnya
+ls -la adalah kombinasi dari ls -a + ls -l
+Long option tidak bisa dikombinasikan seperti short option, tapi lebih deskriptif.
+Kalau ingin kedua option jalan, silahkan ketik seperti ini.
+ls --long --all
+
+/home/johndoe : adalah contoh argument, atau nilai parameter dari command.
+
+Lalu contoh struktur lain:
+command [option] [option value] [argument]
+ping -c 5 8.8.8.8
+
+ping: command
+-c : option
+5: option value
+8.8.8.8: argument
+
+option value: adalah argument untuk mengisi parameter dari option, sedangkan argument biasa mengisi parameter dari command itu sendiri.
+
+Untuk lebih tau lebih detail, kita bisa menggunakan command
+man ls (melihat manual, tapi harus di linux)
+
+atau menggunakan option
+ls --help 
+
+===================================================================================================================
+
+Ada 4 Control Key pada bash command:
+Ctrl + u : hapus semua yang lu uda ketik di command line
+Ctrl + c : stop or kill proses dari command
+Ctrl + z : suspend perintah
+Ctrl + d : keluar dari interactive program

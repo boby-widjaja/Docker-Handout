@@ -1,0 +1,39 @@
+========================================================================================================
+7. WORKDIR
+Execution: Configuration
+Statement: Overwrite
+========================================================================================================
+
+WORKDIR (WORKing DIRectory): instruksi yang digunakan untuk set current working directory dari directory di dalam container yang nanti dibuat dari image.
+Karena WORKDIR adalah tipe Configuration, ini akan dijalankan di build process untuk disimpan pada image metadata, lalu ketika
+dijalankan menjadi container dan di run, maka konfigurasi tersebut akan diterapkan.
+
+Oleh karena WORKDIR dijalankan, maka instruksi RUN, CMD, ENTRYPOINT, COPY, ADD tidak perlu menulis path lebih panjang 
+karena current working directorynya sudah di pindahkan ke lokasi yang sesuai.
+
+(Apabila existing directory ditemukan, nah itu akan jadi working directory, 
+tapi apabila tidak ditemukan, instruksi ini akan membuatkannya.)
+
+Pada sample dockerfile di WORKDIR, bisa dilihat WORKDIR memindahkan directory linux ubuntu dari
+directory ke directory. Dari root, pindah ke etc, lalu ke bin dan pada akhirnya membuat directory /projectSaya/umum/koleksi sendiri.
+Jalankan dengan:
+docker build --no-cache --progress=plain -t workdir:1.0 -f Dockerfile.sample .
+
+WORKDIR bisa dipakai berkali-kali, itu artinya working directorynya di set atau di update beberapa kali.
+Seperti global variable yang di set berkali-kali, karena tipe WORKDIR adalah overwrite.
+
+Untuk membuktikan keberadaan bisa menggunakan command run ini:
+docker run -it --name working_dir workdir:1.0 bash
+
+option -i berarti interactive dan -t berarti terminal tty.
+Ini artinya kita ingin container dijalankan dengan kita bisa memberi input interaksi dengan terminal,
+lalu kita menjalankan bash, sehingga kita bisa check kondisi directory di dalam containernya.
+Mengenai ini akan dijelaskan di chapter lainnya.
+
+Gunakan command bash untuk melakukan manuver pada directorynya, kalau sudah selesai bisa ketik:
+exit
+
+Atau alternatifnya bisa dengan simple create, start, lalu execute bash
+docker create --name working_dir workdir:1.0
+docker start working_dir
+docker exec -it working_dir bash

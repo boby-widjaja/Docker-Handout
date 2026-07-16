@@ -1,0 +1,5 @@
+FROM fedora:44
+SHELL ["/bin/bash", "-c"]
+RUN echo "$BASH_VERSION"
+RUN bash --version
+RUN echo "Current shell: $0"

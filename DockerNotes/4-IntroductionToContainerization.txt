@@ -1,0 +1,159 @@
+Sebelumnya kita harus memahami konsep Image dan Container terlebih dahulu.
+
+Image: Di sini image berperan seperti installer atau compression dari sesuatu yang
+akan buatkan containernya. Tetapi lebih dari itu, image memiliki blueprint atau snapshot
+rancangan container yang nantinya akan dia buat.
+Jadi image adalah sebuah paket read only berisikan bahan dan rancangan untuk
+nantinya membuat sebuah container berisikan satu aplikasi.
+
+Container: adalah hasil akhir yang dibuat sesuai dengan instruksi paket image, dimana seluruh
+hal di dalam container ini akan terisolasi dari container lain secara default, terkecuali memang ingin dihubungkan.
+Seluruh container meminjam OS kernel dari docker hostnya, jadi setiap container tidak memiliki OS indenpendentnya masing-masing.
+Itu yang membuatnya jauh lebih ringan dari VM. Tapi setiap container memiliki, file system, network, resources dan dependencynya masing-masing.
+
+Docker Registry: Registry adalah repository untuk image-image kita. Kalau public registry berarti akan banyak orang atau perusahaan
+yang berbagi image di public registry, sehingga kita tinggal build sebuah container dari image yang sudah ada.
+
+Docker Daemon (dockerd)
+Ini adalah otak dan jantung dari system kita. Kita bisa membuat container, menarik image, mengolah network, dan lain sebagainya itu
+berkat docker daemon. Docker daemon adalah setengah service dan setengah program yang selalu standby untuk mendengar dan melaksanakan
+kegiatannya dari docker CLI.
+
+Docker CLI (Docker Command): Bisa dibilang ini adalah front-end daripada docker daemon, yaitu list command-command yang akan
+menjadi controller daripada docker daemon.
+
+Docker Host : Computer host yang menjadi dasar dari docker mengambil kernel OS, serta tempat docker menyimpan banyak hal
+seperti image dan lain sebagainya. Bila kalian menggunakan linux pc, maka PC dan linux anda yang akan jadi hostnya, 
+bila kita pakai linux pada WSL maka WSL dan linux itu yang akan jadi hostnya, sekalipun kalau kita pakai VM.
+
+Docker Engine : Docker Engine adalah keseluruhan dari yang sudah saya jelaskan di atas, terkecuali Registry.
+Di dalamnya ada:
+- Docker CLI
+- Docker Daemon
+- Pengaturan ke Host
+- Tempat Container dijalankan (Container Runtime)
+- Management network, volume, dll.
+
+Note: Tolong liat Sources/Images/Arsitektur Docker.png
+
+
+================================================= IMAGES ====================================================
+
+Menarik image dari dockerhub ke pc kita.
+docker pull [image name:tag]
+docker pull hello-world:latest
+
+Untuk menarik banyak tag sekaligus:
+docker pull -a [image name]
+docker pull -a hello-world
+(Hati-hati, ini bisa narik terlalu banyak nantinya, lebih baik dengan menggunakan tag)
+
+Note: saat kita tidak menulis tag, misalnya:
+docker pull hello-world
+Dia akan menggunakan default tag, yaitu latest
+
+****************************************************************************************************
+Dockerhub: layanan registry yang disediakan perusahaan Docker, sama seperti github, kita nanti bisa
+menaruh dan membagikan image kita ke orang-orang atau untuk keperluan kita sendiri.
+
+Saat ini dockerhub memiliki banyak image yang di distribusi oleh banyak orang dan perusahaan,
+dimana saat image ini bersifat public kita bisa pull seperti pada command di atas.
+****************************************************************************************************
+
+Kita bisa check seluruh images yang kita miliki di docker engine kita dengan menggunakan command:
+docker images
+docker image ls
+
+Untuk menghapus images yang ada di dalam docker engine kita:
+(Sebagai default proteksi, image tidak bisa dihapus begitu saja saat masih ada container yang dibuat dari image ini.)
+docker image rm hello-world:latest
+
+Kita juga bisa melihat detail metadata dari sebuah image (dalam bentuk json) yang biasanya tujuannya untuk sebuah konfigurasi,
+dengan menggunakan command:
+docker image inspect hello-world:latest
+
+JSON dari metadata hasil inspect akan dibicarakan lebih detail di note-note lain.
+
+================================================= CONTAINER =======================================================
+
+Untuk membuat container dari image, kita bisa gunakan command:
+docker container create hello-world:latest
+
+Tanpa menyebutkan nama sebagai option value, docker akan memberi nama random pada container.
+Untuk memberikan nama sendiri, kita bisa gunakan command:
+docker container create --name hello_indonesia hello-world:latest
+docker create --name hello_indonesia hello-world:latest
+
+(Note: 1 buah image bisa membuat banyak container)
+
+Untuk melihat seluruh container kita bisa gunakan beberapa alternatif command ini:
+docker container ls --all
+docker container ls -a
+docker container ps -a 
+docker container ps --all
+
+Untuk melihat seluruh container yang aktif, kita tidak perlu menggunakan option all:
+docker container ls
+docker container ls
+docker container ps
+docker container ps
+
+Untuk melakukan pull image sekaligus create container, kita bisa lakukan command:
+docker run --name hello_run hello-world:latest
+
+Note: bila image sudah pernah di pull, docker tidak akan melakukan download ulang dari registry,
+docker akan secara otomatis mengambil dari image yang sudah ada di docker engine di local.
+
+Cara menghapus container adalah dengan menggunakan command
+docker container rm hello_indonesia
+docker rm hello_indonesia
+
+Untuk menjalankan container yang sedang dalam keadaan stop, kita bisa menggunakan command:
+docker start hello_indonesia
+
+Aplikasi hello-world harusnya menampilkan beberapa string di terminal, tapi kalian mungkin hanya melihat proses itu
+sebentar lalu container langsung stop ketika di run, bukan ketika di start.
+
+Yang menjadi perbedaannya sebenarnya bukan antara start dan run, tapi karena secara default
+proses start tidak melakukan terminal attach ke output dari hello-world app.
+(Terminal attachment adalah bagian dari pelajaran Linux Terminal)
+
+Untuk start container dengan attach process:
+docker start -a hello_indonesia
+
+Apabila ada suatu container yang prosesnya anda ingin lepas atau dettached dari terminal:
+docker start -d hello_indonesia
+
+Tetapi walaupun sudah lewat start dan aktifnya sebuah container, kita tetapi bisa melihat lognya:
+docker container logs hello_indonesia
+docker logs hello_indonesia
+
+Hello world adalah contoh app dimana setelah selesai diproses, container akan langsung stop.
+Kita akan coba menarik image dan menjalankan container dari sebuah image yang prosesnya akan running terus.
+docker run --name mynginx nginx:latest
+
+Di proses ini kita malah dalam keadaan attached.
+Untuk melakukan detach, kita gunakan
+Ctrl + P   
+lalu   
+Ctrl + Q (Tidak bisa kalau key direserve di VS Code)
+
+Untuk exit
+Ctrl + C
+
+Untuk bisa mengaksesnya, kita akan buat container dari nginx dengan proteksi
+docker container create --name mynginx -p 80:80 nginx:latest
+lalu coba browse localhost
+
+untuk menghentikan jalannya container:
+docker container stop mynginx
+docker stop mynginx
+
+Kita juga bisa melakukan kill selain stop, tetapi sangat tidak di sarankan, karena kill artinya
+immediate force stop (bisa corrupt database dalam kasus-kasus tertentu)
+
+Kita juga bisa me-restart container dengan command
+docker container restart mynginx
+
+Untuk lebih jelasnya bisa lihat dulu contoh Images/Cycle of Creation.jpg
+sebelum ke chapter selanjutnya.

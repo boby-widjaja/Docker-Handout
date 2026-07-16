@@ -1,0 +1,18 @@
+Multi-Stage Build
+
+FROM node:24 AS builder
+WORKDIR /app
+COPY . .
+RUN npm install
+RUN npm run build
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+
+Multiple FROM
+Dockerfile boleh memiliki lebih dari satu FROM.
+
+FROM node:24 AS builder
+RUN npm install
+FROM nginx:alpine
+COPY --from=builder ...

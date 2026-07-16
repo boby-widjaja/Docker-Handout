@@ -1,0 +1,14 @@
+1. Pindah ke direoctory StaticWebENV
+cd Guides/StaticWebENV
+
+2. Build image:
+docker build -t web-env:1.0 .
+
+3. Build container:
+docker container create --name web -p 8001:80 web-env:1.0
+
+4. Jalankan container:
+docker start web
+
+5. Buka di browser dengan:
+localhost:8001

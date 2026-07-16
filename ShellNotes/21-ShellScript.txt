@@ -1,0 +1,36 @@
+Shells adalah program yang menjadi perantara antara pengguna dan sistem operasi, atau bisa dibilang kalau Kernel 
+adalah daging dari os, shell adalah kulitnya.
+
+Shell pada OS ada yang interaksinya bersifat GUI (Graphical User Interface) dan CLI (Command Line Interface).
+Macam-macam Linux Shell:
+GUI : Gnome, KDE
+CLI : sh, bash, csh, tcsh, ksh
+(Note: csh, tcsh, ksh bercampur dengan C and C++)
+
+Pada shell script file, terdapat:
+1. Shell definition : (#!/bin/bash)
+2. Comments : (# comments)
+3. Commands : (echo, cp, grep, etc...) Command biasa
+4. Logical statement: (if, while, for, etc...)
+
+Persyaratan shell script:
+1. File harus memiliki ijin executable, kalau tidak, tidak mungkin di execute.
+2. Best practice menulis path di dalam shell script harus bersifat absolute path. 
+3. Kalau dipanggil dari current working directory: ./script.sh
+
+Kita bisa check tipe file shell script sebenarnya, kita bisa menggunakan command file.
+file 1-Variable.sh
+Outputnya:
+1-Variable.sh: Bourne-Again shell script, ASCII text executable
+Menandakan ini bash script.
+
+-----------------------------------------------------------------------------------------------------
+
+Cron job
+Shell script untuk DevOps dan automation (Docker, deployment, backup, monitoring, dsb.)
+Export (-x)
+Membuat variable menjadi environment variable.
+declare -x APP_ENV=production
+Sama seperti:
+export APP_ENV=production
+Anak proses dapat melihat variable tersebut.

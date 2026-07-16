@@ -1,0 +1,22 @@
+FROM fedora:44
+
+#WORKDIR ini harus jalan lebih dahulu, karena touch berlari dan sisa COPY kebergantungan dengan ini.
+WORKDIR /myproject
+
+#RUN cukup berat, saya taruh dia sebelum COPY, karena kebetulan RUN saya juga prosesnya tidak membutuhkan
+#file dan directory yang diambil dari COPY. Kalau butuh saya harus taruh RUN setelah proses COPY.
+RUN sudo dnf install tree -y \
+    && sudo dnf install neovim -y \
+    && sudo dnf clean all \
+    && touch berlari.txt
+
+#Ketiga COPY ini saya nilai lebih jarang berubah, jadi saya tulis duluan.
+COPY people /data/people
+COPY aboutItaly.txt karyawan.txt /groupOne/
+COPY people/namesAC.txt people/namesDF.txt people/namesGI.txt /groupTwo/
+
+#Kedua COPY ini memiliki kecenderungan sering berubah, jadi belakangan saja.
+COPY aboutItaly.txt italy.txt
+COPY karyawan.txt sub/karyawan.txt
+
+CMD ["tail", "-f", "/dev/null"]

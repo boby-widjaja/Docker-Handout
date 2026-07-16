@@ -1,0 +1,12 @@
+Command tee (T-pipe) digunakan mengeluarkan output tapi juga masih menyimpannya dalam file.
+Sekaligus men-display hasilnya.
+ls -l | tee output2.txt
+
+Kita bisa munculkan line number dengan command numbered line
+nl characters.txt
+
+Memberi separator pada line number
+nl -s ": " characters.txt
+
+Kita juga mengecilkan wide of column
+nl -w1 -s ": " characters.txt

@@ -1,0 +1,80 @@
+========================================================================================================
+3. LABEL
+Execution: Configuration
+Statement: Overwrite
+========================================================================================================
+
+LABEL : instruksi yang sederhana, gunanya untuk menambah metadata ke image dalam bentuk key value pair.
+    Bila statement dengan key yang sama akan terjadi Overwrite, seperti jenis statementnya, tetapi LABEL bisa menyimpan dalam
+    banyak key. Semua yang dilabel tidak akan mempengaruhi jalannya aplikasi, tapi metadatanya bisa dicheck dengan sub command inspect.
+    
+Hal-hal yang disimpan pada label biasanya seperti:
+Nama Maintainer, Version Appnya, Environmentnya, Descriptionnya, dan lain sebagainya (Sesuai kebutuhan)
+
+Format:
+LABEL key=value
+
+Misalnya seperti:
+LABEL maintainer="Boby"
+LABEL version="1.0"
+LABEL description="Backend API service"
+
+Cobalah jalankan Guides/LABEL/Dockerfile.sample1
+
+FROM alpine:latest
+LABEL maintainer="Boby"
+LABEL version="1.0"
+LABEL description="Backend API service"
+RUN apk add curl
+
+cara lain penulisannya (Bisa di check di Guides/LABLE/Dockerfile.sample2):
+
+FROM alpine:latest
+LABEL maintainer="Boby" \
+      version="1.0" \
+      description="Backend API service"
+RUN apk add curl
+
+Command: 
+docker build -t label:1.0 -f Dockerfile.sample1 .
+
+Silahkan check image dengan command:
+docker inspect label:1.0
+
+Baca JSON metadatanya, cari property Config.Labels
+"Config": {
+    "Labels": {
+        "description": "Backend API service",
+        "maintainer": "Boby",
+        "version": "1.0"
+    }
+}
+
+Setelah itu cobalah membuat containernya dengan:
+docker container create --name label_sample1 label:1.0
+
+Setelah itu inspect containernya dengan:
+docker inspect label_sample1
+
+Maka metada Config.Labels nya masih akan tetap sama.
+LABEL masuk ke dalam configuration, konfigurasi label ini akan ada di Image dan Container.
+
+Label juga bisa menerima ARG value, check Guides/LABEL/Dockerfile.sample3
+
+FROM alpine:latest
+ARG NAME="John Doe"
+ARG VERSION="1.0"
+ARG DESCRIPTION="Backend API service"
+LABEL maintainer=$NAME \
+      version=$VERSION \
+      description=$DESCRIPTION
+RUN apk add curl
+
+Command: 
+docker build \
+    --build-arg NAME="Ben" \
+    --build-arg VERSION="3.0" \
+    -t label3:1.0 \
+    -f Dockerfile.sample3 .
+
+Silahkan inspect hasilnya.

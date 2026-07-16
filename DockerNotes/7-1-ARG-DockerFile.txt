@@ -1,0 +1,75 @@
+========================================================================================================
+1. ARG
+Execution: Build-Time
+Statement: Overwrite
+========================================================================================================
+
+ARG: instruksi yang digunakan untuk membuat dan menyiapkan parameter, supaya ketika di build time value argument
+bisa di siapkan ke parameter yang sudah dibuat. Ingat karena ARG itu masuk kategory instruction yang Build-Time,
+value-value ARG digunakan untuk process Building Image.
+
+Syntax Format:
+ARG NAMA_PARAMETER
+atau
+ARG NAMA_PARAMETER=default value
+(Note: NAMA_PARAMETER ditulis dalam SCREAMING_CASE.)
+
+Mari kita coba membuat sebuah image dengan mengunakan image alpine:latest (distro linux yang sangat kosong dan ringan).
+Pada saat image ini dibuat, akan di print Hello di terminal dengan parameter NAME yang sudah diberikan.
+Note: Check Guides/ARG/Dockerfile.sample1
+
+FROM alpine:latest
+ARG NAME="John Doe"
+RUN echo "Hello $NAME"
+
+Kita bisa jalankan dockerfile ini dengan:
+docker build -t arg-1:1.0 -f Dockerfile.sample1 .
+docker build --tag arg-1:1.0 --file Dockerfile.sample1 .
+
+John Doe adalah default value, kita bisa coba membuatnya dengan mengganti nama kita:
+docker build \
+    --build-arg NAME="Boby Widjaja" \
+    -t arg-1:1.0 \
+    -f Dockerfile.sample1 .
+
+Sekarang kita coba sample yang lain di Guides/ARG/Dockerfile.sample2
+Di sini adalah lebih dari 1 arguments
+
+FROM alpine:latest
+ARG NAME
+ARG JOB
+RUN echo "Name: ${NAME}, Job: ${JOB}"
+
+Coba jalankan command ini:
+docker build \
+    --build-arg NAME="Boby Widjaja" \
+    --build-arg JOB="Developer" \
+    -t arg-2:1.0 \
+    -f Dockerfile.sample2 .
+
+Untuk membuktikan kalau ARG itu overwrite statement, kita gunakan sample berikut di
+Guides/ARG/Dockerfile.sample3
+
+FROM alpine:latest
+ARG NAME="John Doe"
+ARG NAME="World"
+RUN echo "Hello $NAME"
+
+Kita coba jalankan command ini, maka World menimpa John Doe.
+docker build -t arg-3:1.0 -f Dockerfile.sample3 .
+
+Semua ARG instruction pada dockerfile di contoh sebelumnya ditulis setelah FROM instruction.
+Tapi anehnya di dokumentasi saya, ARG jadi urutan nomor 1 pada order instruction.
+Itu semua ARG adalah satu-satunya instruksi yang bisa jalan sebelum FROM tapi masih berada di dalam satu stage.
+ARG yang ditulis sebelum FROM memiliki kemampuan unik lain, yaitu dengan menerima argument yang
+bisa dipakai di dalam FROM, misalnya saya pakai ARG untuk menerima version yang diterima pada saat build.
+
+ARG VERSION="latest"
+FROM nginx:${VERSION}
+RUN echo "Hello World"
+
+Jalankan command berikut agar nginx yang dipakai adalah yang versi alpine.
+docker build \
+    --build-arg VERSION="alpine" \
+    -t arg-4:1.0 \
+    -f Dockerfile.sample4 .

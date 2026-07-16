@@ -1,0 +1,233 @@
+========================================================================================================
+9. RUN
+Execution: Build-Time
+Statement: Additive
+Script: Shell Form
+========================================================================================================
+
+RUN: instruksi pertama yang menjalankan shell script, dan shell script akan di ekseksi di waktu build.
+    Jadi shell script akan digunakan dalam pembuatan image, bukan pada saat di container.
+
+Setiap kali Docker menemukan instruction RUN, Docker akan:
+1. Membuat container sementara dari layer sebelumnya.
+2. Menjalankan perintah yang Anda tulis.
+3. Menyimpan hasil perubahan filesystem menjadi layer baru pada image.
+4. Menghapus container sementara tersebut.
+
+Biasanya RUN digunakan sebagai pembuat dan peng-update image, misalnya di project kita punya begitu banyak dependency, 
+di sini kita bisa tarik dan install setiap dependency nya dulu, atau bisa untuk membuat rancangan directory,
+menyiapkan sebuah file di awal, mem-build app project, dan lain sebagainya.
+
+Contoh RUN dengan Shell Form:
+RUN sudo dnf install tree
+RUN echo "Hello World"
+
+Untuk mencoba instruksi run ini, saya akan menggunakan contoh yang serupa dengan COPY.
+Kalau kalian coba lagi contoh container landing pada pelajaran COPY, kita tidak bisa menggunakan 2 bash command ini
+pada linux fedora:44.
+
+tree
+nvim italy.txt
+
+Dimana tree adalah program untuk melihat directory dan file di dalam linux dalam tree view dan nvim adalah neo vim text editor.
+Tree dan Neovim bukan program default yang dari awal sudah ada di dalam image linux fedora, kita harus install itu terlebih dahulu.
+
+Oleh sebab itu kita akan improve Dockerfile yang sama dengan contoh pada COPY, dan kita tambahkan instruksi RUN
+untuk menginstall tree dan nvim. (Lihat pada directory RUN).
+Lalu buat lagi image dan containernya:
+
+docker build -t exodus:2.0 -f Dockerfile.sample .
+docker run -it --name landing_two exodus:2.0 bash
+
+Lalu coba jalankan:
+
+tree --version
+tree v2.2.1 © 1996 - 2024 by Steve Baker, Thomas Moore, Francesc Rocher, Florian Sesser, Kyosuke Tokoro
+
+jalankan tree
+[root@d490de0e500e myproject]# tree
+.
+├── berlari.txt
+├── italy.txt
+└── sub
+    └── karyawan.txt
+
+Bisa coba juga untuk neo vim, contoh pengoperasian neo vim bisa di check di ShellNotes (5-NeoVim.txt):
+nvim --version
+nvim italy.txt
+
+Seperti yang bisa dilihat pada contoh, kalau RUN juga menjalankan shell script berdasarkan current working directory
+dari WORKDIR
+
+Selain itu, RUN juga bisa menggunakan environment variable dari ENV instruction.
+FROM ubuntu:26.04
+ENV APP=/project
+RUN mkdir $APP
+
+--------------------------------------------------- Layers and Cache --------------------------------------------------------
+
+Sebelum mempelajari apa yang best practice dari RUN, sebaiknya kita memahami cara kerja Layer dan Cache dari Dockerfile.
+Seperti yang sudah pernah saya jelaskan di notes sebelumnya kalau setiap kali docker melakukan build, docker akan menciptakan dan
+menyimpan cache di memory. Cache tersebut berisi hasil dari instruction-instruction yang dijalankan.
+
+Kenapa docker menyimpan cache dari hasil build Dockerfile? Karena sudah sewajarnya build akan dilakukan ratusan kali.
+Setiap ada update dari project atau package, maka deployment harus build lagi. Itu sebabnya system automation dibuat.
+Dan docker ingin agar build ke 2, ke 3, ke 4 kali dan seterusnya lebih ringan dari build pertama kali.
+Jadi tidak perlu dikerjakan lagi semuanya.
+
+Misalnya docker file anda memiliki:
+Instruction 1
+Instruction 2
+Instruction 3
+Instruction 4
+Instruction 5
+
+Setelah build kedua kali dengan instruction yang sama, Docker sudah hafal dan dia akan skip proses Instruction 1 - 5.
+Karena di asumsi sama.
+
+Tapi seandainya setelah Instruction ke 2, kamu ada update dan melakukan berubahan di Instruction 3.
+Instruction 1
+Instruction 2
+NEW Instruction 3 (Update)
+Instruction 4
+Instruction 5
+
+Maka pada saat membuild ini ke 3 kalinya, Dockerfile tidak bisa memanfaatkan total cachenya,
+Dia hanya memanfaatkan cache pada Instruction 1 dan 2:
+Instruction 1     [Masih sama dengan instruction lama, skip process pakai memory cache saja]
+Instruction 2     [Masih sama dengan instruction lama, skip process pakai memory cache saja]
+NEW Instruction 3 --> Buang Cache lama dan proses ini lagi, lalu simpan cache baru lagi
+Instruction 4     --> Buang Cache lama dan proses ini lagi, lalu simpan cache baru lagi
+Instruction 5     --> Buang Cache lama dan proses ini lagi, lalu simpan cache baru lagi
+
+Kenapa Instruction 4 dan 5 tetap diproses walaupun hanya Instruction 3 yang mengalami perubahan?
+Itu dikarenakan docker build process menggunakan layer system. Layer system adalah bangunan balok domino yang berlapis-lapis
+tapi arahnya terbalik dengan urutan Instructionnya (stack system, bukan queue system)
+
+Instruction 1 --> Layer 1 (Urutan ke 5)
+Instruction 2 --> Layer 2 (Urutan ke 4)
+Instruction 3 --> Layer 3 (Urutan ke 3)
+Instruction 4 --> Layer 4 (Urutan ke 2)
+Instruction 5 --> Layer 5 (Urutan ke pertama)
+
+Kalau diibaratkan balok dalam susunan piramid atau seperti permainan balok Jenga(Uno Staco), maka akan seperti dibawah ini.
+          ▲
+        ┌───┐
+        │L5 │
+      ┌───────┐
+      │  L4   │
+    ┌───────────┐
+    │    L3     │
+  ┌───────────────┐
+  │      L2       │
+┌───────────────────┐
+│        L1         │
+└───────────────────┘
+
+Kita tidak bisa membuang layer 3 dan berharap layer 4 dan 5 tidak jatuh.
+Karena layer 4 dan 5 dibuat dengan kondisi dependency ke layer 3. Membuang layer 3 berarti meruntuhkan layer 4 dan 5 nya juga.
+Sementara itu layer 2 dan layer 1 tidak akan kena dampak. 
+Layer yang baru tidak akan mengubah layer yang lama karena layer yang lama bersifat immutable.
+
+Yang bertahan:
+  ┌───────────────┐
+  │      L2       │
+┌───────────────────┐
+│        L1         │
+└───────────────────┘
+
+Yang dibuang dan dibuat ulang:
+        ┌───┐
+        │L5 │
+      ┌───────┐
+      │  L4   │
+    ┌───────────┐
+    │    L3     │
+
+
+Suatu hal yang tidak bijak adalah menaruh Instruction yang naturenya sering berubah di lantai dasar atau di Instruction 
+dan Layer dengan nomor kecil.
+
+Dan juga tidak bijak memiliki kecenderungan menaruh instruction yang berat dan lama di layer dengan angka tinggi, atau 
+menaruhnya dekat atau di puncak piramid. Karena setiap kali di proses ulang akan lama. Segala hal yang performancenya mahal
+kalau bisa di ingat di cache dan memakai cache yang lama.
+
+Nah sejauh ini diantara ARG, FROM, LABEL, ONBUILD, ENV, SHELL, COPY dan RUN, 
+RUN adalah instruction yang paling mahal kecenderungannya. Dan prosesnya memakan waktu yang lebih lama.
+Jadi kita akan taruh perhatian khusus dalam membuat RUN agar performance lebih baik.
+
+-------------------------------------------------- Best Practice -------------------------------------------------------
+
+1. Hemat Cache
+
+Selalu usahakan menulis instruction yang memiliki kecenderungan banyak berubah di belakang, terkecuali
+Instruction tersebut memang dependent atau kebergantungan dengan instruction tertentu, maka mau tidak mau ditulis agak 
+awal. Cobalah tulis RUN seawal mungkin kalau memang bisa.
+
+Saya ada contoh:
+
+FROM node:20        [Layer 1]
+COPY . .            [Layer 2 : kecenderungan sering berubah]
+RUN npm install     [Layer 3 : Berpotensi dijalankan lagi, dan berat meng-install macam-macam gara-gara proses COPY berubah]
+RUN npm run build   [Layer 4 : Berpotensi dijalankan lagi, tapi memang harus dijalankan terakhir karena build mau mau gak paling akhir]
+
+Salah satu solusinya:
+
+FROM node:20
+COPY package.json package-lock.json ./    [package.json adalah dependency yang mendikte npm install, dan jarang berubah, kita pisahkan tidak termasuk dalam COPY all]
+RUN npm install                           [hanya akan diubah jika package.json berubah, dan memang sudah seharusnya, kalau tidak hasil install akan berbeda]
+COPY . .                                  [COPY sisa file memang dipisah dengan package.json karena jangan sampai npm install jalan lagi hanya karena ada perbedaan dalam mengcopy 1 file txt.]
+RUN npm run build                         [Memang harus di build saat seluruh proses COPY dan install selesai]
+
+
+2. Hemat Jumlah Layers
+
+Semakin banyak jumlah layers, pastinya akan lebih pusing dalam menata urutan Instructionnya.
+Jadi kalau memang tidak ada keperluan untuk men-split dan memperbanyak Instruction, bisa dihemat jadi satu.
+Setiap kali pembuatan layer, docker membuat container sementara untuk update imagenya, jadi kalau bisa dihemat jumlah
+layer akan lebih baik.
+
+Ini akan menimbulkan kompleksitas dan memperbesar ukuran cache juga.
+Untuk mengurangi jumlah layer, ukurang image dan ukuran cache yang terlalu besar, membuat multiple RUN kurang disarankan.
+Contohnya seperti dibawah ini:
+RUN sudo dnf upgrade -y
+RUN sudo dnf install -y curl
+RUN sudo dnf install -y git
+
+Lebih baik:
+RUN sudo dnf upgrade -y && sudo dnf install -y curl git
+atau
+RUN sudo dnf upgrade -y \
+ && sudo dnf install -y curl \
+ && sudo dnf nstall -y git
+
+Dari 3 layers RUN menjadi 1 layer RUN.
+Instalasi git juga tidak perlu dipengaruhi oleh instalasi curl.
+
+
+3. Membersihkan cache hasil dari installasi
+
+RUN dnf install -y git curl && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf
+
+atau cara lebih elegan:
+
+RUN dnf upgrade -y && \
+    dnf install -y git curl && \
+    dnf clean all
+
+
+4. Gunakan && daripada ;
+
+Ini jelek:
+RUN apt update ; apt install -y git
+
+Lebih baik:
+RUN apt update && \
+    apt install -y git
+
+Jika apt update gagal, langkah berikutnya tidak dijalankan sehingga build berhenti dengan jelas.
+
+Bisa di check hasil dari Dockerfile.sample2 pada RUN directory.
+Ini adalah perbaikan dari Dockerfile.sample

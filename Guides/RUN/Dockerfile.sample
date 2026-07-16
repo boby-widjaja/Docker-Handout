@@ -1,0 +1,18 @@
+FROM fedora:44
+WORKDIR /myproject
+
+#RUN bisa menggunakan current directory dari WORKDIR, sehingga berlari akan beradai di dalam myproject
+RUN touch berlari.txt
+
+COPY aboutItaly.txt italy.txt
+COPY karyawan.txt sub/karyawan.txt
+COPY people /data/people
+COPY aboutItaly.txt karyawan.txt /groupOne/
+COPY people/namesAC.txt people/namesDF.txt people/namesGI.txt /groupTwo/
+
+#Kita install tree explorer dan neovim editor yang sebelumnya fedora:44 tidak punya.
+#option -y ditambahkan untuk auto accept yes untuk terms and condition tanpa input dari terminal.
+RUN sudo dnf install tree -y \
+    && sudo dnf install neovim -y
+
+CMD ["tail", "-f", "/dev/null"]

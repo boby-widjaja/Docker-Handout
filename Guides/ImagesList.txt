@@ -1,0 +1,14 @@
+Berikut ini adalah beberapa image yang akan dipakai dalam training docker saat ini:
+
+docker pull hello-world:latest
+docker pull nginx:alpine
+docker pull nginx:1.31.1
+docker pull alpine:3.22.4
+docker pull ubuntu:26.04
+docker pull fedora:44
+docker pull mysql:9.7
+docker pull mcr.microsoft.com/mssql/server:2022-latest
+docker pull mcr.microsoft.com/mssql/rhel/server:2022-latest
+docker pull eclipse-temurin:21-jdk
+docker pull eclipse-temurin:21-jre
+docker pull httpd:2.4.68

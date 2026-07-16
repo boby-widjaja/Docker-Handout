@@ -1,0 +1,11 @@
+ID   Nama            Departemen  Gaji  Kota
+101  Budi_Santoso    IT          5500  Bandung
+102  Ani_Wijaya      HR          4800  Jakarta
+103  Siti_Rahma      Finance     6200  Surabaya
+104  Andi_Pratama    IT          5700  Bandung
+105  Rina_Lestari    Marketing   5000  Yogyakarta
+106  Dedi_Kurniawan  Sales       5300  Semarang
+107  Maya_Putri      HR          4900  Jakarta
+108  Rizky_Saputra   Finance     6500  Bandung
+109  Tina_Marlina    Marketing   5100  Bogor
+110  Fajar_Nugroho   Sales       5400  Surabaya

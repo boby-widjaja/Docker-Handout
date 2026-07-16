@@ -1,0 +1,77 @@
+Pada note di sini saya menjelaskan dengan cara singkat tentang beberapa Distribusi Linux yang mungkin sangat umum dan terkenal,
+beserta informasi pengembangan kelompoknya. Karena tidak mungkin disebut semua karena akan banyak sekali.
+Banyak distribusi linux pun sebenarnya pengembangan dari distribusi yang lain yang membuat mereka jadi satu keluarga.
+
+
+1. Debian Family
+Kelompok keluarga Debian biasanya dikenal dengan user friendly, konfigurasi lebih mudah untuk penggunaan user serhari-hari,
+dan banyak feature-feature dan setting-setting dasar yang sudah lengkap dari awal, sehingga tidak akan merepotkan pengguna.
+Komunitas cukup besar, dokumentasi cukup lengkap, sehingga kalau ada kesulitan, mencari petunjuk di internet akan lebih mudah.
+Jadi ini family yang lebih rasa Windows atau Mac OS.
+Karena tujuannya adalah user friendly, security pada distribusi ini juga paling forgiving atau tidak over protect.
+
+1.1. Debian
+Distribusi pertama yaitu Debian itu sendiri. Seperti yang sudah dijelaskan di bagian familynya, kalau ini user-friendly.
+Dan debian juga dikenal sangat stabil (jarang ada bugs), releasenya lambat karena setiap versi yang keluar biasanya harus
+melewati test yang cukup ketat.
+
+1.2. Ubuntu
+Distribusi Ubuntu dikembangkan dari Debian, dan Debian yang tadinya sudah cukup user-friendly dibuat lebih user-friendly lagi pada Ubuntu.
+Oleh karena itu komunitas Ubuntu semakin besar karena dinilai tidak merepotkan untuk para user.
+
+1.3. Kali
+Kali Linux mungkin salah satu distribusi yang paling terkenal digunakan oleh para hacker.
+Fokus utama dari pengembangan Kali adalah security feature yang kuat yang disertai dengan tool-tool untuk penetration testing. 
+Distribusi ini dikembangkan langsung oleh Offensive Security.
+Walaupun dikembangkan dari Debian family, tapi sebenarnya distribusi ini tidak dioptimalkan untuk pekerjaan kantor atau multimedia sehari-hari.
+Banyak tool di distribusi ini yang membutuhkan ilmu teknis mengenai networking dan security.
+
+
+2. Red Hat Family
+Keluarga Red Hat dikenal dengan stabil, reliable, dan banyak versi yang LTS (Long Time Support).
+Kualitas keamanan baik, ter-control, dan strict, dimana cocok untuk kebutuhan sensitif.
+Module yang terkenal pada family ini adalah SELinux (Security-Enhanced Linux) yang dirancang oleh NSA (National Security Agency)
+Linux distribusi ini dirancang untuk kebutuhan Enterprise dan Education.
+Itu sebabnya banyak perusahaan dan universitas menggunakan distribusi ini.
+Note: bash command pada Red Hat Family sebagian berbeda dengan command pada Debian Family.
+
+2.1 Red Hat Enterprise Linux (RHEL)
+Distribusi pertama adalah Red Hat itu sendiri yang lebih dikenal dengan RHEL.
+E berasal dari kata Enterprise karena cocok dan populer digunakan di server-server perusahaan.
+RHEL memiliki SLA (Service Level Agreement) yang memungkinkan perusahaan bisa mendapatkan support service.
+Banyak juga sertifikasi yang bisa diperoleh untuk berbagai macam skill dalam utilisasi RHEL.
+
+2.2 Fedora
+Fedora adalah versi RHEL yang lebih cutting-edge dan lebih banyak feature baru bahkan feature yang sifatnya
+masih experimental dan masih di testing.
+Fedora populer di lingkungan edukasi dan training, dan bisa digunakan sebagai langkah awal untuk pelatihan
+penggunaan RHEL.
+
+2.3 CentOS Stream
+CentOS tidak se-experimental fedora, dia sudah lebih mendekati RHEL.
+Feature-feature dicoba di CentOS lebih lama dulu sebelum pada akhirnya di adopsi oleh RHEL dalam versi LTS.
+
+
+3. Arch Family
+Arch Linux terkenal sebagai Linux yang paling sulit digunakan. Banyak featurenya yang tidak ada dan harus
+install dan set sendiri semuanya. Sangat nol dan ringan.
+Arch Family cocok untuk power user yang memang ingin menyusun distribusi linux sesuai dengan selera dan kebutuhannya sendiri.
+Contoh distribusi dari keluarga ini:
+    3.1. Arch Linux: Sangat dari nol, semua kerjakan sendiri.
+    3.2. Manjaro → versi lebih mudah
+    3.3. EndeavourOS → semi-Arch
+
+
+4. SUSE Family
+SUSE sebenarnya adalah kompetitor keluarga Debian, tapi popularitasnya sekarang kalah.
+Itu membuat komunitas SUSE di internet tidak sebanyak keluarga Debian.
+SUSE adalah distribusi linux yang sudah cukup tua, dikembangkan di Jerman pada tahun 1992, dan companynya masih aktif sampai sekarang.
+Yang paling terkenal dari SUSE adanya administration tools yang centralized, namanya YaST (Yet Another Setup Tool).
+Dimana di linux distribusi lain biasanya urusan network, security, user management, boot loader, instalation ditangani
+tool yang berbeda-beda, di sini semua di handle YaST.
+
+Beberapa distribusi yang dikenal:
+    4.1 openSUSE : Versi Ubuntunya, dimana YasT cukup powerful untuk kemudahan.
+    4.2 Leap
+    4.3 Tumbleweed
+    4.4 SUSE Linux Enterprise (SLE): Distribusi SUSE family yang lebih seperti RHEL, atau versi Enterprisenya.

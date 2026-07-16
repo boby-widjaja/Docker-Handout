@@ -1,0 +1,5 @@
+FROM alpine:3.22.4
+LABEL maintainer="Boby"
+LABEL version="1.0"
+LABEL description="Backend API service"
+RUN apk add curl

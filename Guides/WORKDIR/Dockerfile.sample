@@ -1,0 +1,27 @@
+FROM ubuntu:26.04
+
+#Ini membuktikan pada awalnya kita berada di root
+RUN pwd
+#Untuk melihat list isi dari etc kita harus menulis directory etc
+RUN ls -l etc
+
+#Untuk memindahkan current working directory kita bisa menggunakan WORKDIR.
+WORKDIR /etc
+#Ini akan menghasilkan list yang sama dengan sebelumnya.
+RUN ls -l
+
+#WORKDIR tipe OVERRIDE, jadi kita bisa timpa value dan merubah dari etc ke bin directory
+WORKDIR /bin
+
+#Maka seluruh RUN yang jalan saat ini mengarah ke bin working directory
+RUN pwd
+RUN ls
+
+#Kalau directory tidak ada, maka WORKDIR akan membuatkannya.
+WORKDIR /projectSaya/umum/koleksi
+RUN pwd
+#file text ini akan berada di dalam directory koleksi
+RUN touch hello.txt
+
+#agar command tidak berhenti. Tail dari suatu proses terus di follow lewat option -f
+CMD ["tail", "-f", "/dev/null"]

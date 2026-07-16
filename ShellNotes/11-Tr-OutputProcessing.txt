@@ -1,0 +1,33 @@
+Tr adalah singkatan dari Translate, command yang digunakan untuk proses text output, tetapi bedanya
+kalau awk dan sed memanipulasi setiap baris, tr lebih fokus untuk manipulasi character.
+
+Syntax tr seperti di bawah ini:
+tr [OPTION] SET1 [SET2]
+
+Contoh yang sederhana, kita akan mengganti beberapa character pada output ini.
+dari x --> e
+dan z --> i
+echo "pxrcaya kxpada znvxstasznya" | tr 'xz' 'ei'
+sehingga hasilnya:
+percaya kepada investasinya
+
+Merubah seluruh huruf upper case menjadi lower case:
+echo "HEllo World" | tr 'A-Z' 'a-z'
+
+Dan sebaliknya:
+echo "HEllo World" | tr 'a-z' 'A-Z'
+
+Kalau dibuat reverse case:
+echo "HEllo World" | tr 'a-zA-Z' 'A-Za-z'
+
+tr juga memiliki delete seperti sed, tetapi fokus pada character.
+echo "PexrjuaxngXan bzezrhZasiZl" | tr -d 'xzXZ'
+
+Kita juga bisa reverse delete, menghapus character kecuali range tertentu:
+echo "Si88 Vis Pa1c1em Para 27Bellum" | tr -cd 'a-z'
+echo "Si88 Vis Pa1c1em Para 27Bellum" | tr -cd 'a-zA-Z'
+echo "Si88 Vis Pa1c1em Para 27Bellum" | tr -cd 'a-zA-Z '
+echo "Si88 Vis Pa1c1em Para 27Bellum" | tr -cd '0-9'
+
+Untuk meng-compress character yang berulang, kita bisa menggunakan command squeeze
+echo "hello     world" | tr -s ' '

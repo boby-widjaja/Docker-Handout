@@ -1,0 +1,34 @@
+Kita juga bisa mengurukan output dengan menggunakan command sort
+sort fruits.txt
+
+Untuk mengurutkannya secara descending bisa kita reverse
+sort -r fruits.txt
+
+Tapi apabila kita sort data karyawan secara langsung akan jadi aneh, karena
+sorting yang biasa adalah sort secara alphabetical, untuk secara numerical kita harus memberi command numeric.
+sort karyawan.txt
+sort -n karyawan.txt
+
+Atau reverse numeric
+sort -nr karyawan.txt
+
+Kita juga bisa menghapus duplikat dengan cara:
+sort -u fruits2.txt
+
+Note kalau kita tidak menggunakan sort, malah menggunakan unique, nanas masih ada duplikat
+uniq fruits2.txt 
+
+Atau solusinya bisa digabung dengan pipe.
+sort fruits2.txt | uniq
+
+Untuk menggunakan sorting unique tapi ignore case:
+sort -uf fruits2.txt
+
+Saya ingin sort table di bawah ini, tapi berdasarkan namanya, bukan idnya
+awk 'NR != 1' peopleTable.txt
+Maka saya harus memilih kolom kedua dari table di bawah ini sebagai patokan sort
+awk 'NR != 1' peopleTable.txt | sort -k2
+
+Apabila kita ingin sorting 2 hal, misalnya sorting kolom pertama dengan number secara ascending,
+saat kolom pertama ada yang sama, sorting dengan kolom kedua dengan descending
+sort -k1n -k2r balances.txt

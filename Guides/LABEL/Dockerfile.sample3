@@ -1,0 +1,8 @@
+FROM alpine:3.22.4
+ARG NAME="John Doe"
+ARG VERSION="1.0"
+ARG DESCRIPTION="Backend API service"
+LABEL maintainer=$NAME \
+      version=$VERSION \
+      description=$DESCRIPTION
+RUN apk add curl

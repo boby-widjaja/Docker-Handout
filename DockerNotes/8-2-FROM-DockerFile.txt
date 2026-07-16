@@ -1,0 +1,71 @@
+========================================================================================================
+2. FROM
+Execution: Build-Time
+Statement: Additive*
+========================================================================================================
+
+FROM : digunakan untuk menentukan base image (parent image) yang menjadi titik awal pembuatan image baru,
+yang akan diwarisi oleh image yang sekarang kita sedang buat. Bila image tidak ada di dalam docker host,
+akan diambil dari registry secara otomatis.
+
+Yang diwarisi oleh image baru adalah:
+- Filesystem
+- Package Manager
+- Shell
+- Library
+- Default User
+- Metadata tertentu
+
+Format penulisan:
+FROM image name:tag
+
+Contohnya seperti:
+FROM golang:1.25.6
+FROM nginx:latest
+
+Untuk membuktikan kalau pewarisan sifat ini benar dan FROM jalan lebih awal dari proses lain,
+saya akan mencoba install curl di linux dengan distro yang berbeda-beda.
+
+Pada alpine menginstall curl hanya bisa dengan: apk add curl
+Pada ubuntu: apt install curl
+Pada fedora: dnf install curl
+
+Karena program yang handle instalasi berbeda-beda jadi tidak mungkin bisa ditukar.
+
+Coba jalankan beberapa sample yang ada di Guides/FROM
+
+Dockerfile.alpine
+FROM alpine:latest
+RUN apk add curl
+
+command:
+docker build -t alpine-curl:1.0 -f Dockerfile.alpine .
+
+Dockerfile.ubuntu
+FROM ubuntu:latest
+RUN apt update && apt install -y curl
+
+command:
+docker build -t ubuntu-curl:1.0 -f Dockerfile.ubuntu .
+
+Dockerfile.fedora
+FROM fedora:latest
+RUN dnf install -y curl && dnf clean all
+
+command:
+docker build -t fedora-curl:1.0 -f Dockerfile.fedora .
+
+FROM bisa menggunakan alias dengan as.
+Itu nanti akan dipakai pada Multi Stage Build yang akan kita pelajari di chapter depan.
+Penggunaan multi FORM juga mentrigger multi stage build, sehingga FROM tidak bisa dikategorikan additive biasa.
+
+Contoh:
+FROM node:24 AS builder
+
+Apabila image anda tidak menggunakan parent image apapun, bisa diketik dengan scratch
+FROM scratch
+
+Note: sebenarnya menggunakan image yang bukan dengan tag:latest lebih baik,
+karena latest akan menyembabkan ke dinamisan yang tidak terduga. 
+Latest itu versi berapa? 8? atau 9?
+Dan ada kemungkinan konfigurasi di kedua versi berbeda.

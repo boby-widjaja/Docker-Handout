@@ -1,0 +1,5 @@
+docker build -f Dockerfile.runner -t java-hello:1.0 .
+
+docker container create --name java_hello_cli java-hello:1.0
+
+docker start -a java_hello_cli

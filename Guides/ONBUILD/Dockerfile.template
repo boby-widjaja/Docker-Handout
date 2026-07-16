@@ -1,0 +1,2 @@
+FROM nginx:alpine
+ONBUILD RUN echo "Template Triggered"

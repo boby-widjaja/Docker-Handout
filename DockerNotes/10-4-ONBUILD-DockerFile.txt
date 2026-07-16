@@ -1,0 +1,38 @@
+========================================================================================================
+4. ONBUILD
+Execution: Build-Time
+Statement: Additive
+========================================================================================================
+
+ONBUILD : instruksi yang cukup unik, karena bukan dieksekusi pada saat image ini di build, melainkan kalau image
+ini dipakai oleh FROM oleh Dockerfile lain dan docker file lain itu mem-build image baru.
+Jadi ini seperti trigger atau event listener terhadap ON event another Image BUILD.
+Instruction ini disimpan sebagai trigger dulu untuk eksekusi image berikutnya.
+
+ONBUILD akan dikombinasikan dengan instruction lain, misalnya:
+Format:
+ONBUILD INSTRUCTION ....
+
+ONBUILD COPY ./app
+ONBUILD RUN echo "Hello World"
+
+Instruction yang tidak bisa dilakukan oleh ONBUILD adalah
+Chaining ke ONBUILD lagi dan FROM
+
+ONBUILD biasanya digunakan untuk membuat suatu image yang menjadi standard template yang sudah 
+mengikuti konsistensi tertentu atau SOP dari perusahaan.
+Misalnya company tidak mau pakai linux Fedora atau Nginx langsung dari public registry karena
+ingin ditambahkan sesuatu dulu sebelumnya.
+
+Jalankan dulu Dockerfile pada Guides/ONBUILD/Dockerfile.template
+
+FROM nginx:alpine
+ONBUILD RUN echo "Template Triggered"
+
+Commandnya:
+docker build -t trigger:1.0 -f Dockerfile.template .
+
+Lalu selanjutnya jalankan Dockerfile.sample pada directory yang sama:
+docker build -t final:1.0 -f Dockerfile.sample .
+
+Lihat log pada saat di build.

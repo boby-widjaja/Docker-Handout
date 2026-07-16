@@ -1,0 +1,58 @@
+grep (Global Regular Expression Print), salah satu command yang sering digunakan System Administrator untuk
+melakukan pencarian text dengan menggunakan pola regex.
+
+Mencari baris yang mengandung kata Seinfeld:
+grep Seinfeld characters.txt
+
+Kalau kita ingin mencari tetapi dengan ignore uppercase and lower case
+grep -i seinfeld characters.txt
+
+Kita bisa membuatnya menghitung jumlah baris ketimbang memberikan output string untuk tiap baris,
+dengan menggunakan command count:
+grep -c Seinfeld characters.txt
+grep -ci seinfeld characters.txt
+
+Operation new line bisa memberi informasi line keberapa text ini ada di dalam file.
+grep -n Seinfeld characters.txt
+
+Ambil semua terkecuali Seinfeld
+grep -v Seinfeld characters.txt
+grep -vin seinfeld characters.txt
+
+Masalah menggunakan search egrep biasa adalah grep apple fruits.txt akan menarik data pineapple juga,
+untuk exclusive pencariannya dalam satu kata bisa menggunakan option word:
+grep -w apple fruits.txt
+
+Mencari di multiple file sekaligus di dalam directory Target, kita bisa menggunakan option Recursive.
+grep -r "Bandung" Target
+grep -R "Bandung" Target
+grep -rn "Bandung" Target
+
+Kalau ingin mencari dari banyak file tapi hanya melisting nama filenya saja, kita bisa menggunakan option list.
+grep -l "Bandung" *
+grep -l "Bandung" *.txt
+
+Sesuai namanya Regular Expression bisa dipakai di sini untuk pencarian lewat pattern:
+
+Cari semua yang diawali ca
+grep -E "^ca" file.txt
+
+Cari semua yang diakhiri "g"
+grep "g$"
+
+Cari semua yang panjangnya tiga huruf.
+grep "^...$"
+
+Cari huruf keduanya a atau o
+grep "^c[ao]t$"
+
+dan lain sebagainya...
+
+Kita bisa menggunakan syntax regex modern dengan menggunakan option Expression.
+
+Contohnya di bawah adalah operation or
+grep -Ei "Seinfeld|Kramer" characters.txt
+grep -Ein "Seinfeld|Kramer" characters.txt
+
+Cari semua yang diawali ca
+grep -E "^ca" file.txt

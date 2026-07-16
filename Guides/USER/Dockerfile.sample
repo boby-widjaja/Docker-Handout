@@ -1,0 +1,28 @@
+FROM fedora:44
+
+#Karena belum ada USER instruction, super adalah directory yang di own oleh root
+WORKDIR /super
+
+#Begitu juga dengan file oldHistory.txt, dibuat oleh root
+RUN touch oldHistory.txt
+
+#Instalasi tidak memerlukan statement sudo, karena masih root
+#Tapi di bagian run ini juga saya menambahkan seorang user baru
+RUN dnf install tree -y \
+    && dnf clean all \
+    && useradd bobywidjaja
+
+#User baru bisa dipakai oleh USER statement karena sudah dibuat di RUN sebelumnya
+USER bobywidjaja
+
+#Directory myproject menjadi milik bobywidjaja si user baru
+WORKDIR /myproject
+
+#Begitu pula updateHistory.txt adalah milik bobywidjaja
+RUN touch updateHistory.txt
+
+#Tetapi italy.txt tidak menjadi milik bobywidjaja, karena file italy.txt ini 
+#tidak dibuat oleh command linux yang berasal dari dalam image/container.
+COPY aboutItaly.txt italy.txt
+
+CMD ["tail", "-f", "/dev/null"]

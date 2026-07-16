@@ -1,0 +1,82 @@
+========================================================================================================
+12. VOLUME
+Execution: Run-Time
+Statement: Additive
+========================================================================================================
+
+VOLUME : adalah instruksi yang digunakan mempertahankan data yang berada di dalam container, saat kondisi container
+dihapus dan dibuat ulang. Karena pada dasarnya pasti seluruh data dan file system di dalam container akan ikut terhapus
+saat container juga dihapus. 
+
+Jadi bisa disimpulkan VOLUME berguna untuk membuat data bersifat persistent atau membuat data bersifat STATEFUL.
+Karena itu VOLUME adalah solusi bagi pembuatan container database.
+
+Seperti yang tertulis pada keterangan, VOLUME dijalankan ketika run-time, itu artinya kemampuan VOLUME baru akan
+diperlihatkan saat container dalam keadaan run. VOLUME juga bersifat additive yang artinya setiap kali kita menulis
+value baru pada instruction VOLUME, value yang lama tidak akan di timpa atau di replace.
+
+VOLUME ditulis dengan syntax:
+VOLUME [path]
+
+Misalnya:
+VOLUME /data
+VOLUME /var/opt/mssql
+
+Kalau kalian langsung menjalankan sample tersebut, docker akan membuatkan nama volume sembarangan (secara random),
+dan akan sedikit repot dalam penggunaannya. Sebenarnya yang lebih populer adalah penggunakan named volume, tapi
+karena sekarang kita lagi belajar penggunaan VOLUME instruction, kita pakai yang auto generated volume dulu.
+
+Contoh jalankan:
+docker build -t example:1.0 -f Dockerfile.sample .
+docker run -it --name my_example example:1.0 bash
+
+Ikuti langkah-langkah berikut ini:
+
+1. Buat file dalam directory persistent: touch name.txt
+
+2. Edit dengan nvim: nvim name.txt
+
+3. Masuk insert mode dengan huruf i
+
+4. Masukan 3 nama orang, misalnya: Agus, Sarah, Laurensia
+
+5. Masuk normal mode dengan esc key
+
+6. Masuk command mode dengan : key, lalu ketik wq dan enter
+
+7. Setelah keluar check isi file dengan: cat name.txt
+(Pastikan nama Agus, Sarah, Laurensia ada)
+
+8. exit dari bash container ini dengan mengetik: exit
+
+9. Check volume dengan menggunakan: docker volume ls 
+Hasilnya kurang lebih mirip dengan ini:
+DRIVER    VOLUME NAME
+local     cccd16b41917f23867d2d410fdbf95bb9a3f122f2f13f470cbb5dc5bb7d54362
+
+10. Pastikan lagi volume yang dipakai sama, gunakan command: docker container inspect my_example
+Hanya JSON ini yang saya perlu pastikan. Lihat, nama volume sama dengan nama volume saya, yaitu:
+cccd16b41917f23867d2d410fdbf95bb9a3f122f2f13f470cbb5dc5bb7d54362
+"Mounts": [
+    {
+        "Type": "volume",
+        "Name": "cccd16b41917f23867d2d410fdbf95bb9a3f122f2f13f470cbb5dc5bb7d54362",
+        "Source": "/var/lib/docker/volumes/cccd16b41917f23867d2d410fdbf95bb9a3f122f2f13f470cbb5dc5bb7d54362/_data",
+        "Destination": "/persistent"
+    }
+],
+
+Nama yang sangat jelek karena auto generated, tapi kita harus simpan nama volume ini.
+
+11. Pastikan container dalam keadaan stop, lalu hapus containernya dengan: docker container rm my_example
+
+12. Check sekali lagi kalau volume kita masih ada di sana dengan: docker volume ls
+
+13. Buat lagi container dengan code berikut:
+(Ganti nama volume saya dengan nama volume yang kalian dapatkan)
+docker run -it --name my_example \
+    -v cccd16b41917f23867d2d410fdbf95bb9a3f122f2f13f470cbb5dc5bb7d54362:/persistent \
+    example:1.0 bash
+
+14. Check name.txt, seharusnya masih ada di dalam persistent directory dan juga coba lihat isinya dengan cat,
+seharusnya masih ada Agus, Sarah, Laurensia.

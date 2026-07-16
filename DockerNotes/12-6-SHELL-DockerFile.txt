@@ -1,0 +1,45 @@
+========================================================================================================
+6. SHELL
+Execution: Configuration
+Statement: Overwrite
+========================================================================================================
+
+Sebenarnya docker file secara default menjalankan sebuah shell script yang berasal dari linux container, yaitu: 
+/bin/sh -c
+ 
+Tetapi untuk kasus yang lebih langka, apabila menggunakan windows container, maka defaultnya:
+cmd /S /C
+(Karena sh tidak available di windows. Jadi windows menggunakan cmd)
+
+Jadi secara default sebenarnya, pada linux container dockerfile sudah run shell dalam bentuk seperti ini:
+SHELL["/bin/sh", "-c"]
+
+Dan pada windows container, defaultnya seperti ini:
+SHELL["cmd", "/S", "/C"]
+
+SHELL: Jadi apa kegunaan dari SHELL instruction? Instruction SHELL digunakan untuk mengganti shell default tersebut.
+Contohnya dari classic shell kita bisa menggantinya jadi bash script
+SHELL ["/bin/bash", "-c"]
+
+Tentu saja ketersediaan bash ini bergantung pada imagenya.
+Apabila classic shell sudah cukup untuk kebutuhan instruction-instruction yang jalan pada saat build dan run,
+maka menggunakan SHELL command untuk ganti ke bash sebenarnya tidak diperlukan.
+Itulah sebabnya SHELL instruction agak jarang digunakan.
+
+Tapi seperti yang kita sudah belajar dari Shell sample dan Shell notes pada handout di sini, ada beberapa command
+yang hanya available di bash.
+
+Contoh pada Dockerfile.sample di folder SHELL mencoba membuktikan eksistensi bash pada image.
+Terkadang command docker untuk build seperti di bawah ini belum membuktikan hasilnya.
+docker build -t check-bash:1.0 -f Dockerfile.sample .
+
+Cobalah menggunakan command ini untuk melihat keberadaan bashnya.
+docker build --no-cache --progress=plain -t check-bash:1.0 -f Dockerfile.sample .
+
+--progress=plain digunakan untuk mengubah cara Docker menampilkan progres dan log selama proses build.
+Perlu ditekankan bahwa opsi ini tidak mengubah cara Docker membangun image. Yang berubah hanyalah format output yang 
+Anda lihat di terminal.
+
+Note: Tapi saat ini banyak feature bash juga sudah ada pada shell script yang sudah dari awal di image.
+Jadi silahkan check dulu imagenya dan feature yang anda mau gunakan. Bila sudah cukup lengkap, maka SHELL command
+memang tidak dibutuhkan.

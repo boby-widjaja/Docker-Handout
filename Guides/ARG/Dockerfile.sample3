@@ -1,0 +1,4 @@
+FROM alpine:3.22.4
+ARG NAME="John Doe"
+ARG NAME="World"
+RUN echo "Hello $NAME"

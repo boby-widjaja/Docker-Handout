@@ -1,0 +1,124 @@
+Ada 3 macam standard stream pada bash yang bisa kita manfaatkan untuk kebutuhan redirection.
+Tapi sebelumnya kita akan coba mengenal 3 macam standard ini dulu.
+
+Setiap program pada Linux memiliki 3 arus komunikasi (stream) bawaan:
+
+             stdin
+               ↓
+          [ Program ]
+           ↙       ↘
+      stdout      stderr
+
+Standard Input (stdin)
+Jalur tempat program menerima input, paling default adalah command read.
+Nomor file descriptor: 0
+
+Standard Output (stdout)
+Jalur tempat program menampilkan output.
+Nomor file descriptor: 1
+
+Standard Error (stderr)
+Jalur khusus untuk pesan error.
+Nomor file descriptor: 2
+
+FD (File Descriptor) adalah jalur atau port standard dari Linux.
+Setiap standard ini bisa di Redirect oleh beberapa operation.
+
+==========================================================================================================
+
+1. > (Output Redirection)
+
+Contoh saja command echo dan ls yang biasanya mengeluarkan output di terminal dalam stdout bisa
+di redirect ke dalam suatu file:
+[stdout] > [destination path]
+
+echo "Hello World" > output.txt
+ls -l > output.txt
+
+Tapi dalam hal ini ls -l stdout akan me-replace Hello World text, untuk menambahkannya kita bisa
+menggunakan command append >>:
+echo "Hello World" > output.txt
+ls -l >> output.txt
+
+==========================================================================================================
+
+2. < (Input Redirection)
+
+Kita akan mencoba mempraktekan input redirection dengan command word count (wc)
+Word Count adalah tools yang berguna untuk menghitung total kata atau line atau character pada sebuah text.
+Coba perhatikan contoh berikut, saya menggunakan word count secara normal tanpa input redirection:
+
+wc scarboroughFair.txt
+output: 35  219 1219 scarboroughFair.txt
+
+Ini berarti text dari lyric lagu scarboroughFair memiliki:
+35 baris
+219 kata
+1219 characters
+
+Kalau ingin hanya barisnya, atau katanya atau characternya saja bisa menggunakan option:
+-l line/baris
+-w word/kata
+-m characters
+
+wc -l scarboroughFair.txt
+35 scarboroughFair.txt
+
+Nama file tetap muncul karena memang wc memperbolehkan multiple file menjadi parametersnya,
+dan yang terpenting di sini adalah scarboroughFair.txt dan pancasila.txt adalah argument untuk parameter dari commandnya.
+wc -l scarboroughFair.txt pancasila.txt
+Result:
+  35 scarboroughFair.txt
+   4 pancasila.txt
+  39 total
+
+kalau kita menggunakan input redirection, hasilnya akan berbeda:
+wc -l < scarboroughFair.txt
+35
+
+Nama file tidak keluar, di sini scarboroughFair.txt akan berperan sebagai input langsung
+
+Sayangnya kita tidak bisa langsung menggabungkan 2 file dengan character:
+
+wc -l < scarboroughFair.txt pancasila.txt 
+(Karena ini dianggapnya memberi 2 argument)
+
+dan tidak bisa juga
+wc -l < cat scarboroughFair.txt pancasila.txt
+(Karena kelemahan dari input atau output redirection adalah hanya menerima file setelah commandnya, 
+sedangkan hasil cat berupa text output langsung ke terminal bukan file)
+
+Kita bisa memanfaatkan Process Subtitution, untuk mem-parsing hasil cat, seolah-olah dia adalah file.
+<([command menghasilkan string])
+jadi:
+wc -l < <(cat scarboroughFair.txt pancasila.txt)
+wc -l < <(ls -l)
+
+==========================================================================================================
+
+3. | (Pipe)
+
+Kekurangan dari input and output redirection yang harus menggunakan file sebagai ujung dari stdin dan stdout bisa
+digantikan oleh pipe.
+
+Pipe command digunakan untuk menghubungkan stdout dari satu proses ke stdin dari proses lain.
+Sesuai namanya, dia bertindak sebagai pipa, air yang keluar dari sebuah output dihubungkan ke lubang input lain.
+cat scarboroughFair.txt | wc -l
+
+Lalu bisa kita kombinasikan dengan output redirection:
+cat scarboroughFair.txt | wc -l > jumlahBaris.txt
+
+==========================================================================================================
+
+4. 2> (Error Redirection)
+
+Ini redirection yang dirancang khusus untuk me-redirect output error ke dalam error log.
+Detail mengenai error handling akan ada chapternya sendiri, untuk saat kita akan melihat contoh sederhananya terlebih dahulu.
+
+Saya tidak memiliki file bernama something di dalam working directory saya,
+apa bila saya mencoba me-listingnya:
+ls something
+hasilnya: ls: cannot access 'something': No such file or directory
+
+Kita bisa simpan resultnya dengan:
+ls something 2> notFound.log

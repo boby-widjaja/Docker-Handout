@@ -1,0 +1,83 @@
+Kita akan implementasi atau men-deploy aplikasi di server, baik itu front-end, back-end, database, middleware, dan lain-lain.
+Ada 5 cara melakukan implementasi, yaitu:
+
+Note: Check Sources/Images/Arstitektur Implementasi.jpg untuk lebih jelasnya.
+
+1. Bare Metal
+Ini adalah cara paling primitif untuk implementasi app, yaitu dengan cara langsung di implement ke OS dari 
+si PC servernya.
+
+Beberapa kelemahan dan kelebihan cara ini:
+- Admin atau implementer tidak perlu memiliki pengetahuan tentang virtual machine atau containerization.
+- Performa hardware maximal karena tidak adanya layer tambahan.
+- Sering kali server PC memiliki spec yang sangat tinggi, sehingga akan overkill untuk penggunaan beberapa app saja.
+    Kita tidak bisa melakukan pembagian itu.
+- Seluruh app dipaksa untuk di install di satu OS yang sama, jadi bila ingin app 1 di install di windows, lalu app 2 dan database 
+    ingin di install di Linux itu tidak memungkinkan
+- Setiap app pasti ada dependencies seperti framework dan library dengan versi yang berbeda-beda.
+    Seluruh dependencies dari app 1 dan app 2 akan melebur bercampur aduk jadi 1 di OS yang sama.
+- Susah melakukan scaling bila kita membutuhkan server pc dengan spec yang lebih baik atau sedang improve spec.
+- Apa bila ada masalah pada hardware, misalnya kerusakan atau uptimenya terganggu ini akan repot sekali.
+
+
+2. Bare Metal Hypervisor
+Type 1 Hypervisor tau orang suka menyebutnya VM (Virtual Machine) yang langsung ke mesin. Di mana satu server PC memiliki beberapa OS.
+
+Beberapa kelemahan dan kelebihan cara ini:
+- Banyak app bisa di install pada OS yang berbeda-beda dengan konfigurasi yang berbeda-beda.
+- Karena terjadinya isolasi di setiap OS yang berbeda, tidak akan terjadinya campur aduk dependencies dari setiap app.
+- Kegagalan satu VM masih bisa memungkinkan kalau VM yang lain masih up.
+- Isi dari VM bisa dipindahkan ke VM lain dengan lebih mudah (Live Migration)
+- Terlalu boros performance karena setiap OS kernel dan shell akan memakan performa server PC.
+- System admin harus repot dan dengan cermat mengkonfigurasi pembagian VM nya.
+
+
+3. Hosted Hypervisor
+Type 2 Hypervisor adalah Virtual Machine yang menggunakan sebuah aplikasi yang kita install di atas OS dari PC nya.
+Contoh-contoh aplikasi yang terkenal yang bisa digunakan untuk Hosted Hypervisor seperti VirtualBox, VMWare, Parallels Desktop, QEMU, dan lain sebagainya.
+
+Beberapa kelemahan dan kelebihan cara ini:
+- Karena ada satu lapisan tambahan dari appnya, Hypervisor ini lebih makan memory dan performance ketimbang bare metal hypervisor.
+- Instalasi lebih mudah karena feature kenyamanan dari aplikasinya.
+- Cocok untuk belajar di desktop pc, jadi tidak perlu langsung dipraktekan di server juga.
+- Mempermudah dalam belajar dan ketika kita tidak membutuhkannya, menyingkirkannya juga lebih mudah.
+- Kegagalan pada host OS mengakibatkan kegagalan seluruh VM OS / Guest OS nya.
+- Tidak cocok untuk produksi skala besar karena lebih tidak stabil (Tidak dipakai data center).
+- App VM akan berebut resources dengan app lainnya pada host OS seperti layaknya aplikasi biasa.
+- Ada beberapa feature di Baremetal Hypervisor yang belum tentu tersedia di sini, seperti: 
+    Live Migration : kemampuan memindahkan VM dari satu host ke host lain tanpa mematikan VM tersebut
+    High Availability : agar layanan tetap tersedia meskipun terjadi kegagalan
+    VM Clustering : host yang bekerja sebagai satu kesatuan
+    Distributed Storage : Membuat replica storage, jika salah satu host bermasalah (misalnya SSDnya tidak lagi berfungsi)
+    Automatic Failover : proses otomatis memindahkan layanan ke sistem cadangan ketika sistem utama gagal.
+
+
+4. Containerized
+Container adalah technology baru sebagai solusi dari kekurangan Virtual Machine, yaitu berat performance.
+Hypervisor atau VM selalu berat performance karena menggunakan full Kernel, Shell (GUI dan CLI), serta service-servicenya di setiap guestnya.
+Sedangkan untuk kebutuhan implementasi sebenarnya tidak seharusnya selengkap ini.
+Multiple container bisa menggunakan Kernel dari Container Engine yang sama, dan tidak setiap container juga memiliki Shell dan 
+service yang lengkap. Di sisi lain keunggulan dari isolasi dan maintainability juga tetap bagus.
+
+Beberapa kelemahan dan kelebihan cara ini:
+- Tidak seperti pada Baremetal yang seluruh source bercampur, di system container malah isolasi sangat luar biasa.
+    bahkan di level setiap app akan memiliki 1 saja container, sehingga hal-hal seperti depedencies tidak akan tercampur.
+- Seperti yang sudah dijelaskan, karena 1 container bukan 1 virtualization yang memuat OS secara keseluruhan, maka
+    performance dan memory dari Container ringan karena meminjam kernel dari Host OS.
+- Feature-feature pada container mempermudah kita melakukan maintenance dan lebih reliable.
+- Kekurangannya dari sisi security isolasinya lebih lemah, sehingga butuh effort lebih untuk menjaganya.
+    Apa bila satu container kena hack, untuk hacker meretas container lain lebih mudah.
+    Meretas dua virtual machine akan butuh double effort.
+- Jika ada masalah pada kernel host, semua container akan terdampak. (walaupun ini jarang terjadi seharusnya)
+- Ini mungkin kekurangan terbesarnya, karena seluruh container berlandaskan pada host kernel yang sama, setiap container 
+    tidak bisa menjalankan OS yang berbeda-beda jika memang dibutuhkan.
+- Mungkin ada beberapa aplikasi yang membutuhkan kernel sendiri, tidak bisa sharing host kernel.
+    Ini tidak bisa dilakukan hanya dengan menggunakan system container.
+- Keuntungan terbesarnya adalah feature-feature otomatisasi yang akan sangat mempermudah kerja admin atau ops.
+
+
+5. Containerized on Virtualized
+Cara kelima ini adalah hybrid antara virtualization dan containerization. Biasanya di level enterprise memang pada 
+akhirnya banyak yang menggunakan ini agar feature hypervisor dan container bisa saling mengisi satu sama lain dan
+menutupi kelemahan satu sama lain.
+

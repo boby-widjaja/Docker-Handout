@@ -1,0 +1,25 @@
+Column adalah command yang bisa merapihkan data yang berbentuk list menjadi bentuk table.
+
+Gunakan option table untuk menyusun data karyawan dengan otomatis jadi table.
+column -t karyawan2.txt
+
+Untuk yang separatornya bukan spasi, misalnya pada contoh karyawan.txt adalah |, kita harus
+secara specific memberi tahu commandnya:
+column -s "|" -t karyawan.txt
+
+Kita bisa menggabungkan 2 file menjadi satu dalam bentuk column dengan menggunakan paste command
+paste characters.txt states.txt
+
+Jika ingin menggunakan delimiter atau separator tertentu:
+paste -d "," characters.txt states.txt
+
+Kita bisa gabungkan paste dan column untuk kebutuhan membuat data table:
+paste -d "," characters.txt states.txt | column -t -s ","
+
+Kalau kita ingin membuat columnya juga, kita bisa combo dengan sed editor
+paste -d "," characters.txt states.txt | sed "1i Name,State" | column -t -s "," | sed "1a -------------------------------"
+
+Kita juga bisa mem-horizontalkan list data dengan menggunakan serial option:
+paste -s namesJL.txt
+atau dengan delimiter
+paste -s -d "," namesJL.txt

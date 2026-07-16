@@ -1,0 +1,10 @@
+Command join digunakan untuk menggabungkan 2 file seperti paste, bedanya dia bisa mencocokan id number.
+Bisa diibartkan seperti Inner Join pada SQL dan mencocokan Foreign Key ke Primary Keynya.
+
+Kita akan coba menggabungkan 2 file ini:
+join products.txt categories.txt
+
+Kelemahan dari join adalah kondisi products.txt harus dalam keadaan sorted.
+Menggunakan products2.txt tidak akan berjalan kalau langsung di join.
+Solusinya:
+sort products2.txt | join - categories.txt

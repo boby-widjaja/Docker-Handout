@@ -1,0 +1,98 @@
+========================================================================================================
+14. HEALTHCHECK
+Execution: Run-Time
+Statement: Overwrite
+Script: Shell Form and Exec Form*
+========================================================================================================
+
+HEALTHCHECK: Instruction yang digunakan seperti automated testing, tetapi di level implementation.
+HEALTHCHECK jalan ketika di masa Container sedang run. Karena sebuah container yang statusnya sedang run,
+belum tentu app yang sedang di deploy baik-baik saja, jadi harus di check secara berkala.
+
+Misalnya aplikasi mengalami deadlock, infinite loop, atau web server tidak bisa menerima request lagi. 
+Process utama masih hidup sehingga Docker tetap menganggap container Running, padahal sebenarnya aplikasinya sudah 
+tidak bisa dipakai.
+
+Syntax penulisannya:
+HEALTHCHECK [OPTIONS] CMD command
+
+Kalau image dibangun atas dasar image yang lain, dimana image dasar/ image induknya sudah ada HEALTHCHECK,
+dan kita mau menghentikan HEALTHCHECK yang sudah exist dari image sebelumnya, bisa kita gunakan:
+HEALTHCHECK NONE
+
+Kita akan mencoba beberapa contoh di dalam directory HEALTHCHECK, mulai dari check existing file,
+Available domain dan available port.
+
+Untuk mencoba existing file, bisa dengan menjalankan command berikut
+docker build --tag file-checker:1.0 -f Dockerfile.existing .
+docker run -it --name file_tester file-checker:1.0 bash
+
+Selagi container berjalan, cobalah membuka terminal lain dan check status dari containernya:
+docker container ls
+
+Pada awalnya akan seperti di bawah ini:
+CONTAINER ID   IMAGE              COMMAND   CREATED          STATUS                             PORTS     NAMES
+265eb2bbd6f9   file-checker:1.0   "bash"    24 seconds ago   Up 23 seconds (health: starting)             file_tester
+
+Ketika terbukti healthy akan mendapat status seperti ini:
+CONTAINER ID   IMAGE              COMMAND   CREATED         STATUS                   PORTS     NAMES
+265eb2bbd6f9   file-checker:1.0   "bash"    4 minutes ago   Up 4 minutes (healthy)             file_tester
+
+Healthy atau Unhealthy dicheck docker lewat exit code dari Linux.
+| Exit Code | Arti                        |
+| --------- | --------------------------- |
+| 0         | Healthy                     |
+| 1         | Unhealthy                   |
+
+Percobaan ke-2 Melakukan check terhadap web server/ http response di sebuah container,
+bisa menggunakan contoh ke dua, Dockerfile.web di HEALTHCHECK directory.
+
+Silahkan jalankan dengan:
+docker build --tag web-checker:1.0 -f Dockerfile.web .
+docker run --name web_tester -p 8003:80 web-checker:1.0
+
+Untuk melakukan pengecheckan normal bisa dengan terminal lain menggunakan:
+docker container ls atau docker ps
+
+Tapi kalau mau melihat total history pengecheckan kita bisa inspect, lalu cari property bagian "Health":
+docker inspect web_tester
+
+"Health": {
+    "Status": "healthy",
+    "FailingStreak": 0,
+    "Log": [
+        {
+            "Start": "2026-07-13T08:17:04.812516197Z",
+            "End": "2026-07-13T08:17:04.893157128Z",
+            "ExitCode": 0,
+            "Output": "
+        },
+        ...
+    ]
+}
+
+Percobaan ke-3 untuk check availability sebuah port, bisa gunakan contoh ke tiga Dockerfile.porting
+dari directory HEALTHCHECK.
+
+docker build --tag port-checker:1.0 -f Dockerfile.porting .
+docker run --name port_tester -p 8004:80 port-checker:1.0
+
+Kalau kalian lihat di contoh, ktia juga bisa meng-custom durasi waktu HEALTHCHECK
+dengan option-option seperti dibawah ini:
+
+HEALTHCHECK \
+--interval=30s \
+--timeout=5s \
+--retries=3 \
+CMD curl -f http://localhost/ || exit 1
+
+Kalau kita tidak atur, secara default beginilah waktu durasi HEALTHCHECK nya.
+
+| Option             | Default | Arti                                                                                                                |
+| ------------------ | ------- | ------------------------------------------------------------------------------------------------------------------- |
+| `--interval`       | **30s** | Menjalankan health check setiap 30 detik.                                                                           |
+| `--timeout`        | **30s** | Jika command belum selesai dalam 30 detik, dianggap gagal.                                                          |
+| `--start-period`   | **0s**  | Tidak ada masa tunggu; health check langsung mulai dihitung sejak container dijalankan.                             |
+| `--start-interval` | **5s**  | Selama `start-period`, health check dijalankan setiap 5 detik. (Berlaku pada Docker versi yang mendukung opsi ini.) |
+| `--retries`        | **3**   | Setelah gagal 3 kali berturut-turut, status berubah menjadi `unhealthy`.                                            |
+

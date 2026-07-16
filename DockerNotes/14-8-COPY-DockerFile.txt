@@ -1,0 +1,46 @@
+========================================================================================================
+8. COPY & ADD
+Execution: Build-Time
+Statement: Additive
+========================================================================================================
+
+COPY dan ADD: adalah dua instruction yang memiliki kemampuan untuk meng-copy directory dan file 
+dari komputer host kita ke dalam image (bukan container, karena proses pemindahan pada saat Build-Time).
+
+Karena semua directory atau file yang kita copy itu masuk ke dalam image, jadi kalau kita memutuskan untuk
+share image ini, misalnya lewat registry, seluruh directory dan file itu akan ikut ke share. 
+Ini adalah hal yang wajar dan best practice, yang tidak best practice adalah bila file tersebut bersifat
+confidential.
+
+Karena COPY dan ADD bersifat Additive, jadi kalau proses COPY atau ADD kita jalankan berkali-kali,
+maka file yang di-copy juga akan terus bertambah, tidak menimpa yang lama.
+
+Lalu perbedaan COPY dan ADD apa?
+
+ADD: adalah Copy dengan Super Power.
+Seperti copy tapi bisa extract beberapa compression dan bahkan download file dari URL.
+Karena bisa mengambil sesuatu dari luar, itu artinya ada potensi berbahaya jika ada salah penggunaan.
+Unpredictable, hackable, tolong gunakan COPY kalau tidak ada keperluan yang memaksa.
+
+Syntax COPY kurang lebih seperti ini:
+COPY [OPTIONS] <source> ... <destination>
+COPY [OPTIONS] ["<source>", ... "<destination>"]
+
+Contoh:
+COPY main.go /app/main.go
+COPY file1.txt file2.txt /usr/src/things/
+
+Note: Path tidak boleh menggunakan ../../
+Karena Docker hanya mengizinkan COPY dan ADD mengakses file yang berada di dalam build context. 
+Path seperti ../../ berusaha keluar dari build context, sehingga Docker akan menolaknya demi keamanan 
+dan konsistensi proses build.
+
+Absolute path, ini artinya buat sub folder dari root:
+COPY karyawan.txt /sub/karyawan.txt
+
+Relative path, ini artinya buat sub folder dari posisi saat ini:
+COPY karyawan.txt sub/karyawan.txt
+
+Bisa dicoba pada Dockerfile.sample di COPY directory:
+docker build -t exodus:1.0 -f Dockerfile.sample .
+docker run -it --name landing exodus:1.0 bash

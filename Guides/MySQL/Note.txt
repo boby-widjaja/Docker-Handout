@@ -1,0 +1,46 @@
+1. Pull MySQL image dari dockerhub, kita akan menggunakan versi 9.7
+docker pull mysql:9.7
+
+2. Buat volume untuk persistent database:
+docker volume create mysql_volume
+
+3. Check volume:
+docker volume ls
+
+4. Cara buat container dengan run command:
+docker run -d \
+    --name mysql_container \
+    -p 3306:3306 \
+    -e MYSQL_ROOT_PASSWORD=nodecomplete \
+    -v mysql_volume:/var/lib/mysql \
+    mysql:9.7
+
+5. Gunakan DBeaver untuk merestore database.
+New Database Connection > MySQL
+Masukan Username dan Password 
+
+6. Lakukan setting di Driver Properties:
+allowPublicKeyRetrieval: true
+useSSL: false
+
+7. Restore database:
+Open File > mystore.sql
+
+8. Apabila connection belum terhubung ke database:
+Ctrl + 9
+Lalu pilih koneksi
+
+9. Masuk ke container dengan bash:
+docker exec -it mysql_container bash
+
+10. Check versi dari mysql di dalam container:
+mysql --version
+
+11. Login ke dalam mysql-nya:
+mysql -u root -p
+
+12. Gunakan database mystore:
+USE mystore;
+
+13. Coba select table products:
+SELECT * FROM products;

@@ -1,0 +1,26 @@
+total 12
+-rwxrwxrwx 1 bobywidjaja bobywidjaja 1742 Jun 26 16:50 aboutItaly.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  124 Jun 29 15:52 balances.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   27 Jul  1 13:47 categories.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  205 Jun 26 10:20 characters.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  483 Jun 26 10:20 employee.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   73 Jun 29 12:02 fruits2.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   57 Jun 26 15:05 fruits.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  542 Jul  1 10:03 karyawan2.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  484 Jul  1 09:59 karyawan.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   24 Jun 26 10:20 namesAC.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   20 Jun 26 10:20 namesDF.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   21 Jun 18 11:11 namesGI.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   19 Jun 18 11:11 namesJL.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   18 Jun 26 10:21 namesMO.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   21 Jun 26 10:21 namesPR.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja   44 Jun 26 10:21 namesSU.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  905 Jun 23 16:36 output.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  207 Jun 26 10:21 pancasila.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  517 Jun 26 10:14 peopleTable.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  102 Jul  1 13:59 products2.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  102 Jul  1 13:54 products.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  380 Jun 29 12:03 rainbowGrid.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja 1185 Jun 29 17:40 scarboroughFair.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  120 Jul  1 10:22 states.txt
+-rwxrwxrwx 1 bobywidjaja bobywidjaja  120 Jul  1 10:22 states.txt

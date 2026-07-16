@@ -1,0 +1,91 @@
+========================================================================================================
+5. ENV
+Execution: Configuration
+Statement: Overwrite
+========================================================================================================
+
+ENV : adalah Instruction yang memberikan Environment Variable ke app/egine/system yang nanti akan dijalankan
+di containernya. Oleh karena itu proses ENV di prepare di Build-Time dan di pakai di Run-Time.
+ENV juga ditulis dalam key value pair. Kebanyakan App pasti membutuhkan ENVIRONMENT VARIABLE untuk
+konfigurasi App nya sendiri.
+
+Di sini kita akan coba mengirim argument Environment Variable dan menampilkannya
+di output beberapa App. Yang pertama kita akan coba menjalankan static app biasa.
+Ubah directory kalian ke Guides/StaticWebENV
+
+Format:
+ENV key=value
+
+Di sana ada sebuah Dockerfile dengan content:
+FROM nginx:alpine
+
+ENV NAME="Boby Widjaja"
+ENV JOB="Developer"
+ENV DEPARTMENT="IT"
+
+COPY deploy/ /usr/share/nginx/html
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+CMD ["/entrypoint.sh"]
+
+Selain mengirim semua environment variable ini, saya juga menggunakan entrypoint shell script untuk
+merubah javascript config.template.js, karena javascript sendiri apalagi html tidak bisa langsung mengambil
+environment variable. Jadinya saya menggunakan shell script untuk memanipulasi javascriptnya.
+
+Build image pada directory Guides/StaticWebENV:
+docker build -t web-env:1.0 .
+
+Buat containernya:
+docker container create --name web -p 8001:80 web-env:1.0
+
+Jalankan containernya dengan:
+docker start web
+
+Kita bisa melihat environment variable akan tercetak di browser.
+Kita juga bisa melihat environment variable pada image dan container dengan inspect.
+docker inspect web-env:1.0
+docker inspect web
+
+Maka seluruh Environment Variable bisa terlihat di Config.Env
+
+"Config": {
+    "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "NGINX_VERSION=1.31.1",
+        "PKG_RELEASE=1",
+        "DYNPKG_RELEASE=1",
+        "NJS_VERSION=0.9.9",
+        "NJS_RELEASE=1",
+        "ACME_VERSION=0.4.1",
+        "NAME=Boby Widjaja",
+        "JOB=Developer",
+        "DEPARTMENT=IT"
+    ],
+}
+
+Bila kita ingin mengganti value dari environment variable setelah proses build-time, kita bisa
+menggunakan option -e
+
+docker container create \
+    -e NAME="Ben" \
+    -e JOB="Designer" \
+    -e DEPARTMENT="Marketing" \
+    --name web -p 8001:80 web-env:1.0
+
+atau
+
+docker run \
+    -e NAME="Ben" \
+    -e JOB="Designer" \
+    -e DEPARTMENT="Marketing" \
+    --name web -p 8001:80 web-env:1.0
+
+Dalam prakteknya, informasi sensitif seperti password atau secret key tidak boleh ditulis dalam Environment Variable
+di dalam dockerfile. Karena dockerfile cenderung bisa diakses banyak orang dan password juga akan mudah di inspect di
+image, karena image akan di share ke banyak orang.
+
+Informasi sensitif setidaknya di input dengan option -e hanya pada saat devops mau menjalankan containernya di
+server sendiri yang sudah terjaga keamanannya.
+
+Contoh:
+docker run -e DB_PASSWORD=supersecret myapp

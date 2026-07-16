@@ -1,0 +1,42 @@
+Kita bisa membuat file baru dengan command:
+touch [namafile]
+touch contoh.txt
+touch example.pdf
+
+Untuk membuat file dengan menggunakan text editor juga kita menggunakan vim atau neo vim.
+Tutorial penggunaannya bisa ditemukan di chapter berikut ShellNotes/5-NeoVim.txt
+
+Kita bisa memanfaatkan concate command untuk melihat isi file dengan cepat:
+cat [namafile]
+
+Menghapus file menggunakan:
+rm [namafile]
+rm belajar.txt
+
+Untuk menghapus directory beserta seluruh isinya. Disebut juga recursive remove.
+rm -r [NamaDirectory]
+rm -r Sample4
+
+Untuk menghapus dengan paksa, gunakan option force, dan tidak akan ditanya konfirmasi lagi:
+rm -f [filename]
+rm -f contoh.txt
+
+mencopy file dari satu directory ke directory lain:
+cp [filepath] [filepath baru]
+cp Sample1/contoh.txt Sample2/contoh.txt
+
+Melakukan copy secara recursive, digunakan untuk mengcopy Directory beserta SubDirectory dan filenya:
+cp -r Parent Container
+
+Kita bisa me-rename nama file juga dengan copy:
+cp Sample1/contoh.txt Sample3/example.txt
+
+Atau memindahkan file dengan command move:
+mv [filepath] [filepath baru]
+mv Sample1/contoh.txt Sample4/contoh.txt
+
+Feature Brace Expansion juga bisa dimanfaatkan untuk pembuatan file sekali banyak juga:
+touch file{1..5}.txt
+touch report{2023..2025}.txt
+touch chapter{A..D}.txt
+touch {red,green,blue}.txt

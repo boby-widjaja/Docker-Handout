@@ -1,0 +1,14 @@
+Docker Command memiliki structur mirip bash command biasa karena dockernya sendiri memang bash command.
+Tapi ada sedikit perbedaan.
+
+command subcommands [options] [argument]
+
+contoh:
+docker container ls --> command subcommand subcommand
+
+subcommand sendiri kalau kita sedang fokus belajar docker juga disebut sebagai command.
+karena satu-satunya command di sini adalah "docker" dan docker adalah bash command, jadi bisa dikatakan.
+docker container ls --> bash-command docker-command docker-command
+
+Sisanya keterangan command pada docker sendiri sama seperti pada bash command.
+Bisa dilihat di ShellNotes/BashCommands

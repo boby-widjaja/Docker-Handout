@@ -1,0 +1,7 @@
+FROM fedora:44
+
+RUN dnf update -y \
+    && dnf install -y iputils tree \
+    && dnf clean all
+
+ENTRYPOINT [ "ping", "google.com" ]

@@ -1,0 +1,70 @@
+Selama ini kita bisa pull image-image yang sudah tersedia di public registry seperti di dockerhub.
+Misalnya seperti yang sudah dipraktekan pada chapter sebelumnya kita bisa pull container dengan environment
+nginx webserver.
+Kita juga bisa menarik image dengan environment ubuntu, fedora, atau image yang sudah ada dependency 
+bahasa pemrograman tertentu seperti java, phyton, c#, sehingga aplikasi kita dengan language yang sesuai
+bisa jalan di dalam container yang dibuat dengan image-image tersebut.
+
+Tapi kita juga bisa membuat container dari image yang app nya sudah ready, seperti pada saat
+kita mempraktekan hello-world app. Dan itulah yang kita inginkan.
+Misalnya kita ingin melakukan implementasi kepada suatu aplikasi yang bisa digunakan untuk 
+membuat to-do list dengan menggunakan Java. Kita tidak hanya ingin image java (atau diimajinasikan sebagai installer java),
+tapi kita ingin membuat to-do image (buat to-do installernya), dimana java juga sudah include di dalamnya.
+Dan java development kit akan exclusive di-isolasi di dalam container tersebut, sehingga tidak akan tercampur dengan
+container lain.
+
+Itu artinya kita ada kepentingan untuk membuat image sendiri, dimana tindakan membuat image sendiri membutuhkan
+command build dan Dockerfile.
+
+Disini kita akan coba membuat sebuah static file dari 1 html di atas nginx webserver.
+Untuk lebih lengkapnya bisa di check di Guides/StaticWeb
+
+Pergilah ke directory Guides/StaticWeb:
+cd Guides/StaticWeb
+
+Build image baru dengan nama static-web dan tag 1.0
+dengan command: 
+docker build -t static-web:1.0 .
+docker build --tag static-web:1.0 .
+
+subcommand di sini adalah build.
+option --tag digunakan untuk menamai image dan tagnya.
+. di argument paling belakang menandai lokasi Build Context
+
+Build Context menandai lokasi directory yang boleh diakses docker daemon selama
+process build, dalam hal ini . berarti current directory, yaitu seluruh isi dari directory Static Web
+
+Di sini Dockerfile akan secara otomatis digunakan oleh process build.
+Dockerfile pada contoh ini memiliki 2 Instructions, yaitu FROM dan COPY.
+Mengenai Dockerfile nanti akan dibahas lebih lanjut di chapter setelahnya.
+
+Dockerfile harus diberi nama Dockerfile, tetapi bisa divariasikan dengan menulis nama filenya menggunakan
+suffix yang berbeda, misalnya Dockerfile.development
+
+Apabila tidak diberi keterangan, secara default command build akan mengambil Dockerfile yang ada pada Build Context.
+Jika misalnya nama Dockerfile berbeda dan berada di dalam sub directory:
+docker build --tag static-web:1.0 --file child/Dockerfile.development .
+
+Note: command bila terlalu panjang bisa diketik dengan teknik new line seperti dibawah ini:
+docker build \
+    --tag static-web:1.0 \
+    --file child/Dockerfile.development .
+
+Lalu berikutnya silahkan buat container dengan command:
+docker create --name s_web -p 8080:80 static-web:1.0
+
+Dimana:
+s_web adalah nama container
+8080 adalah port yang dipakai untuk static web ini. (Silahkan coba buka localhost:8000 di browser kalian kalau container sudah dijalankan)
+
+Dari sini bisa dilihat image static web sudah siap di host kita, dimana di dalamnya juga sudah include image dari nginx.
+Kapan pun kita ingin membuat container tentang app static web, kita tinggal menggunakan image ini.
+
+Sebelum pindah ke chapter selanjutnya tolong lihat dulu Sources/Images/Cycle of Creation.jpg
+agar lebih mengerti process dan terminology dari cycle antara image dan container.
+
+Note: Setiap kali Docker melakukan build pada satu Dockerfile, Docker akan menyimpan cache dari hasil build tersebut,
+jadi apabila Dockerfile yang sama melakukan build lagi, proses akan lebih cepat dan performance akan meningkat.
+Sehingga Build kedua, ketiga, dan seterusnya akan terasa lebih cepat.
+
+Cache akan diupdate apabila ada perubahan pada Dockerfilenya. Mengenai update ini akan dijelaskan nanti lebih detailnya.
