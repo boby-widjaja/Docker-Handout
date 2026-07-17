@@ -1,14 +1,186 @@
 Di sini kita akan belajar dan mempraktekan pembuatan container untuk berbagai macam DBMS (Database Management System)
 yang umum/mainstream.
 
-1. MySQL ==========================================================================================
+=========================================== MySQL ===========================================
 
+Kita akan coba membuatkan container untuk MySQL dan dan me-restore sebuah database sederhana yang
+hanya memiliki sebuah table. Sources dan notes yang dibutuhkan untuk melakukan ini juga dapat ditemukan di
+directory Guides/MySQL.
 
+Di sini kita akan menggunakan MySQL versi 9.7, dan tolong diingat kalau berbeda versi bisa memiliki perbedaan
+environment variable, jadi proses pembuatan containernya bisa jadi sedikit berbeda. Jadi tolong baca dokumentasinya juga.
+Untuk itu kita harus pull MySQL image dari dockerhub terlebih dahulu:
+docker pull mysql:9.7
+
+(Note: Kalau langsung di run juga bisa, tapi untuk lebih memitigasi resiko koneksi internet yang terputus, lebih baik di pull dulu)
+
+Kalau kita kembali melihat catatan VOLUME pada Dockerfile, kita mempraktekan VOLUME tanpa nama, tapi itu kurang
+best practice, untuk contoh kali ini kita akan membuatkan nama untuk volume kita.
+
+Pembuatan volume untuk database sangat penting, jika tidak ada volume maka re-creation dari container akan
+menghapus semua isi databasenya. Volume adalah kunci dari persistent data.
+docker volume create mysql_volume
+
+Setelah membuat volume dengan nama, bisa di check dengan:
+docker volume ls
+
+Untuk lebih detail bisa melihat semua perintah volume di:
+docker volume --help
+
+Karena pembuatan container DBMS seperti MySQL sederhana, jadi
+sebenarnya tidak diperlukan proses build dari Dockerfile, jadi bisa langsung di run.
+Kurang lebih seperti ini-lah hal essential untuk pembuatan container MySQL:9.7
+
+docker run -d \
+    --name mysql_container \
+    -p 3306:3306 \
+    -e MYSQL_ROOT_PASSWORD=nodecomplete \
+    -v mysql_volume:/var/lib/mysql \
+    mysql:9.7
+
+Mari kita lihat beberapa option di sini:
+
+Option -d artinya detatched mode.
+Artinya Docker menjalankan container di background dan tidak mengikat proses container ke terminal Anda.
+Jadi kita tidak akan melihat proses log dari MySQL di terminal, kita biarkan saja MySQL jadi di background.
+Jika Anda tidak menulis -d, default-nya adalah attached mode.
+
+Kalau kita menggunakan create dan start, kita tidak perlu detatched karena defaultnya sudah detatched.
+docker create \
+    --name mysql_container \
+    -p 3306:3306 \
+    -e MYSQL_ROOT_PASSWORD=nodecomplete \
+    -v mysql_volume:/var/lib/mysql \
+    mysql:9.7
+
+docker start mysql_container
+
+Option -p adalah publishing port.
+Ketika kita menginstall MySQL pertama kali, port number defaultnya adalah 3306.
+Kecuali ada kebutuhan mendesak (seperti contohnya port number sudah terpakai), saya sarankan tetap menggunakan default portnya
+agar developer MySQL sudah cukup familiar dengan port numbernya.
+Saya hanya mengarahkan port number mysql di dalam container 3306 ke port number host 3306.
+
+Syntax:
+-p HOST_PORT:CONTAINER_PORT
+
+Kalau tidak diarahkan ke host container, kita tidak bisa mengaksesnya dengan localhost:3306,
+karena container secara default sifatnya akan terisolasi dari host ataupun dari container lain.
+
+Option -e MYSQL_ROOT_PASSWORD=nodecomplete adalah setting password untuk root user dari MySQL,
+oleh pembuat si image dibuatkan Environment Variable MYSQL_ROOT_PASSWORD untuk menerima itu.
+
+Option -v digunakan untuk mengassign volume.
+-v [nama volume]:[path mysql menyimpan database di dalam file systemnya]
+-v mysql_volume:/var/lib/mysql
+
+Volume totaly di manage sama Docker di dalam docker host, dan sulit untuk kita lihat dan akses.
+(Note: Jangan menganggap kalau volume yang dimanage di docker host ter-enkripsi dan ter-compress. Jadi bukan solusi security)
+Tetapi ada cara supaya bisa mengaksesnya lebih mudah, yaitu dengan menggunakan Bind Mounts:
+
+docker run -d \
+    --name mysql_container \
+    -p 3306:3306 \ 
+    -e MYSQL_ROOT_PASSWORD=nodecomplete \
+	-v /Users/Boby/Desktop/MyData:/var/lib/mysql \
+	mysql:9.7
+
+/Users/Boby/Desktop/MyData adalah absolute path HDD saya.
+Posisinya persis menggantikan nama volume
+
+Multiple container bisa share volume yang sama?
+Bisa tapi tidak disarankan dan berbahaya
+
+Kita juga bisa membuat dengan build dari Dockerfile, tapi untuk kasus MySQL ini sebenarnya
+tidak begitu diperlukan, karena terlalu simple untuk dibuatkan Dockerfilenya, tapi opsinya juga sudah
+dibuatkan di Guidesnya.
+
+docker build -t mysql-private:1.0 .
+docker run -d \
+    --name mysql_container \
+    -p 3306:3306 \
+    -v mysql_volume:/var/lib/mysql \
+    mysql:9.7
+
+Untuk mempermudah proses, kita akan menggunakan DBMS IDE untuk me-restore database.
+Pada pelajaran ini, saya menggunakan DBeaver. Kalau kalian punya pilihan IDE favourite tersendiri, silahkan pakai.
+(DBeaver saya pilih karena MySQL Workbench sudah discontinue, dan DBeaver free)
+New Database Connection > MySQL
+Masukan Username dan Password 
+
+Pada Driver Properties di DBeaver, atur agar:
+allowPublicKeyRetrieval: true
+useSSL: false
+
+2 ini adalah security configuration, dimana digunakan untuk koneksi ter-enkripsi yang saat ini kita belum pakai.
+
+Lalu kita bisa restore dengan:
+Open File > mystore.sql
+
+Apabila connection belum terhubung ke database:
+Ctrl + 9
+Lalu pilih koneksi
+
+Selanjutnya kita akan eksekusi containernya dengan menggunakan command:
+docker exec -it mysql_container bash
+
+Untuk memastikan bahwa CLI dari mysql memang bisa di-eksekusi, kita coba check versinya:
+mysql --version
+(Note: kalau install di host windows sendiri, pastikan mysql sudah ada di dalam 
+Environment Variables path untuk bisa menggunakan mysql command based)
+
+Kalau mysql command bekerja, silahkan coba login dengan password yang sudah dibuat awalnya:
+mysql -u root -p
+
+Gunakan database mystore yang sebelumnya sudah di restore:
+USE mystore;
+
+Cobalah melakukan simple query untuk melihat data table:
+SELECT * FROM products;
+
+Kalau kita inspect image dari mysql tadi:
+docker image inspect mysql-private:1.0
+
+Kita bisa melihat informasi volumenya.
+"Volumes": {
+    "/var/lib/mysql": {}
+}
+
+Kita bisa melihat informasi volumenya juga di container:
+docker container inspect mysql_container
+
+"Mounts": [
+    {
+        "Type": "volume",
+        "Name": "mysql_volume",
+        "Source": "/var/lib/docker/volumes/mysql_volume/_data",
+        "Destination": "/var/lib/mysql",
+        "Driver": "local",
+        "Mode": "z",
+        "RW": true,
+        "Propagation": ""
+    }
+],
+
+Kita juga bisa melihat informasi tentang volumenya, dan bisa diinspect.
+docker volume inspect mysql_volume
+[
+    {
+        "CreatedAt": "2026-07-16T08:56:55Z",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/mysql_volume/_data",
+        "Name": "mysql_volume",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+
+=========================================== Microsoft SQL Server ===========================================
 
 
 
 -------------------------------------------------
 PostgreSQL
-Microsoft SQL Server
 OracleDB
 MariaDB

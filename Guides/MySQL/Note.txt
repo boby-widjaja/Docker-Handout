@@ -7,6 +7,8 @@ docker volume create mysql_volume
 3. Check volume:
 docker volume ls
 
+======================== RUN ==============================
+
 4. Cara buat container dengan run command:
 docker run -d \
     --name mysql_container \
@@ -14,6 +16,23 @@ docker run -d \
     -e MYSQL_ROOT_PASSWORD=nodecomplete \
     -v mysql_volume:/var/lib/mysql \
     mysql:9.7
+
+======================== DOCKERFILE ==============================
+
+4.1. Cara buat container dengan Dockerfile, change directory ke MySQL
+cd Guides/MySQL
+
+4.2. Build MySql image
+docker build -t mysql-private:1.0 .
+
+4.3. Run image yang sudah dibuat
+docker run -d \
+    --name mysql_container \
+    -p 3306:3306 \
+    -v mysql_volume:/var/lib/mysql \
+    mysql:9.7
+
+==================================================================
 
 5. Gunakan DBeaver untuk merestore database.
 New Database Connection > MySQL

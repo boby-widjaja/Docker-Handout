@@ -1,0 +1,76 @@
+1. Pull Microsoft SQL Server image dari dockerhub, kita akan menggunakan versi 2022
+docker pull mcr.microsoft.com/mssql/server:2022-latest
+
+2. Buat volume untuk persistent database:
+docker volume create sqlserver_volume
+
+3. Check volume:
+docker volume ls
+
+======================== RUN ==============================
+
+4. Cara buat container dengan run command:
+docker run -d \
+    --name sqlserver_container \
+    -p 1433:1433 \
+    -e ACCEPT_EULA=Y \
+    -e SA_PASSWORD='SmithWessonMagnum357!' \
+    -v sqlserver_volume:/var/opt/mssql \
+    mcr.microsoft.com/mssql/server:2022-latest
+
+======================== DOCKERFILE ==============================
+
+4.1. Cara buat container dengan Dockerfile, change directory ke MSSQLServer
+cd Guides/MSSQLServer
+
+4.2. Build SQL Server image
+docker build -t sqlserver-private:1.0 .
+
+4.3. Run image yang sudah dibuat
+docker run -d \
+    --name sqlserver_container \
+    -p 1433:1433 \
+    -v sqlserver_volume:/var/opt/mssql \
+    mcr.microsoft.com/mssql/server:2022-latest
+
+==================================================================
+
+5. Gunakan SSMS atau DBeaver untuk akses container. Gunakan detail di bawah ini:
+server name: localhost,1433
+username: sa
+password: SmithWessonMagnum357!
+encryption: Trust Certificate
+
+
+-------------------------------- STEP 3: CREATE NEW USER ---------------------------------------
+
+Buat user baru lewat SSMS dengan:
+username: rootadmin
+password: nodecomplete
+uncheck password policy
+role: sysadmin
+
+-------------------------------- STEP 4: COPY BACKUP DB KE CONTAINER ---------------------------------------
+
+Masuk ke container dari sqlserver2022:
+docker exec -it -u root sqlserver2022 bash
+
+Dari dalam sqlserver container, buat satu folder / directory backup:
+mkdir backup
+
+Lalu pindahkan bak file ke dalam directory container:
+docker cp AppExperiment/BasiliskNext.bak sqlserver2022:/backup/BasiliskNext.bak
+
+-------------------------------- STEP 5: RESTORE KE LINUX PATH ---------------------------------------
+
+Ketika restore, pastikan path Restore As directory pathnya di ubah, karena windows dan linux berbeda:
+
+dari:
+C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\
+jadi
+/var/opt/mssql/data/
+
+/var/opt/mssql/data/BasiliskNext.mdf
+/var/opt/mssql/data/BasiliskNext_log.ldf
+
+-------------------------------------------------------------
