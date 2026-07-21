@@ -178,9 +178,53 @@ docker volume inspect mysql_volume
 
 =========================================== Microsoft SQL Server ===========================================
 
+Implementasi container di MS-SQL Server hampir mirip dengan MySQL, hanya ada beberapa variasi perbedaan.
+Pada contoh kali ini versi yang saya pilih untuk percobaan adalah MS-SQL Server 2022.
+
+Saat ini Microsoft tidak lagi menyimpan image-imagenya di dockerhub, itu sebabnya alamat dari imagenya:
+mcr.microsoft.com/...
+
+Tolong diperhatikan, kalau kalian membuat container dengan menggunakan MS-SQL Server 2022 dengan menggunakan
+guide ini, mungkin akan berbeda dengan MS-SQL Server versi yang lain.
+Bisa dilihat dengan detail Pada Guides/MSSQLServer/Notes.txt langkah demi langkahnya.
+
+Sama seperti pada MySQL, kita juga akan membuat volume terlebih dahulu untuk persistent data pada MS-SQL Server.
+Yang menjadi perbedaan adalah letak directory MS-SQL Server meletakan database dan lognya.
+lokasinya ada di: /var/opt/mssql
+
+Dan perbedaan lain pada guide saya adalah di sini kita ada alternatif penggunaan IDE.
+SSMS (SQL Server Management Studio) dari Microsoft dan DBeaver.
+
+Dengan menggunakan SSMS kita bisa menggunakan file backup dengan format .bak, kalau kita pakai DBeaver
+kita akan menggunakan klasik DDL untuk penciptaan database, table dan datanya.
+
+Default port number yang digunakan juga berbeda dengan MySQL, untuk MS-SQL Server, bisa menggunakan: 1433.
+Container yang disediakan oleh microsoft untuk sql server sudah membuka port TCP, lain dengan kalau kalian
+instal langsung di Windows, karena pada container Microsoft sudah mengantisipasi penggunaanya pada Docker container
+dimana standard komunikasinya menggunakan TCP.
+
+Untuk penggunaan SSMS dan bak, kita harus terlebih dulu melakukan copy bak filenya ke container linux.
+Yaitu dengan menggunakan command docker copy, karena SSMS akan membuka atau mem-browse directory yang sesuai dengan lokasinya
+host dari pada koneksi DBMSnya ini sendiri.
+Dan untuk bagian bak ini, hati-hati untuk mengubah path dari mdf dan log databasenya, karena saya backup dari Windows,
+alamat pathnya bisa kena patch terkadang di SSMS (terkadang kalau di beda SSMS dengan settingan yang berbeda tidak),
+jadi kita harus ganti dengan linux directory file system.
+
+Perbedaan yang cukup terlihat di sini juga adalah Environment Variable yang diminta.
+Untuk starternya:
+ACCEPT EULA dan SA Password
+ACCEPT EULA (End-User License Agreement): hanya butuh yes agar kita agree dengan terms and conditionnya dia.
+SA PASSWORD: sama seperti root password, bedanya first user dari MS-SQL Server namanya adalah sa (system admin). 
+
+Pada akhir notes, saya menggunakan mssql-tools18 untuk tujuan test database dengan menggunakan CLI.
+Jadi apabila kalian tidak ada kebutuhan untuk menggunakan sqlcmd (CLI untuk shell command),
+mssql-tools18 dan pengaturan bin path dari app ini untuk tujuan shortcut di Environment Variable juga
+tidak dibutuhkan.
+
+=========================================== PostgreSQL ===========================================
+
 
 
 -------------------------------------------------
-PostgreSQL
 OracleDB
 MariaDB

@@ -9,7 +9,7 @@ docker volume ls
 
 ======================== RUN ==============================
 
-4. Cara buat container dengan run command:
+4a.1. Cara buat container dengan run command:
 docker run -d \
     --name mysql_container \
     -p 3306:3306 \
@@ -19,13 +19,13 @@ docker run -d \
 
 ======================== DOCKERFILE ==============================
 
-4.1. Cara buat container dengan Dockerfile, change directory ke MySQL
+4b.1. Cara buat container dengan Dockerfile, change directory ke MySQL
 cd Guides/MySQL
 
-4.2. Build MySql image
+4b.2. Build MySql image
 docker build -t mysql-private:1.0 .
 
-4.3. Run image yang sudah dibuat
+4b.3. Run image yang sudah dibuat
 docker run -d \
     --name mysql_container \
     -p 3306:3306 \
@@ -49,17 +49,20 @@ Open File > mystore.sql
 Ctrl + 9
 Lalu pilih koneksi
 
-9. Masuk ke container dengan bash:
+9 Execute Script:
+Execute SQL Script (Alt + X)
+
+10. Masuk ke container dengan bash:
 docker exec -it mysql_container bash
 
-10. Check versi dari mysql di dalam container:
+11. Check versi dari mysql di dalam container:
 mysql --version
 
-11. Login ke dalam mysql-nya:
+12. Login ke dalam mysql-nya:
 mysql -u root -p
 
-12. Gunakan database mystore:
+13. Gunakan database mystore:
 USE mystore;
 
-13. Coba select table products:
+14. Coba select table products:
 SELECT * FROM products;
