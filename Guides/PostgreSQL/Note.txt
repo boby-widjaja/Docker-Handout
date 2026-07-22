@@ -2,130 +2,103 @@
 docker pull postgres:17.10
 
 2. Buat volume untuk persistent database:
-docker volume create postgre_volume
+docker volume create postgres_volume
 
 3. Check volume:
 docker volume ls
 
 ======================== RUN ==============================
 
-
-
-
-======================== RUN ==============================
-
 4a.1. Cara buat container dengan run command:
 docker run -d \
-    --name sqlserver_container \
-    -p 1433:1433 \
-    -e ACCEPT_EULA=Y \
-    -e SA_PASSWORD='SmithWessonMagnum357!' \
-    -v sqlserver_volume:/var/opt/mssql \
-    mcr.microsoft.com/mssql/server:2022-latest
+  --name postgres_container \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=nodecomplete \
+  -e POSTGRES_DB=mystore \
+  -p 5432:5432 \
+  -v postgres_volume:/var/lib/postgresql/data \
+  postgres:17.10
 
 ======================== DOCKERFILE ==============================
 
-4b.1. Cara buat container dengan Dockerfile, change directory ke MSSQLServer
-cd Guides/MSSQLServer
+4b.1. Cara buat container dengan Dockerfile, change directory ke PostgreSQL
+cd Guides/PostgreSQL
 
-4b.2. Build SQL Server image
-docker build -t sqlserver-private:1.0 .
+4b.2. Build PostgreSQL image
+docker build -t postgres-private:1.0 .
 
 4b.3. Run image yang sudah dibuat
 docker run -d \
-    --name sqlserver_container \
-    -p 1433:1433 \
-    -v sqlserver_volume:/var/opt/mssql \
-    sqlserver-private:1.0
+    --name postgres_container \
+    -p 5432:5432 \
+    -v postgres_volume:/var/lib/postgresql/data \
+    postgres-private:1.0
 
-============================== SSMS ====================================
+============================== PgAdmin dan backup file ====================================
 
-5a.1. Untuk penggunaan lewat SSMS kita akan masuk dulu ke dalam containernya dengan bash.
-docker exec -it -u root sqlserver_container bash
+5a.1. Membuat Connection ke database
+Servers > Click Kanan > Register > Server
+General Tab
+    Name: Container
+Connection Tab
+    Host name/address: localhost
+    Port: 5432
+    Username: postgres
+    Password: nodecomplete
 
-5a.2. Dari dalam sqlserver container, buat satu folder / directory backup:
-mkdir backup
+5a.2. Membuat database
+Databases > Klik Kanan > Create > Database
+Berikan nama mystore, lalu save 
 
-5a.3. Lalu keluar dari bash dengan exit.
-
-5a.4. Di working directory MSSQLServer, pindahkan bak file ke dalam directory container:
-docker cp Sources/MyStore.bak sqlserver_container:/backup/MyStore.bak
-
-5a.4. Akses SSMS dengan menggunakan detail di bawah ini:
-server name: localhost,1433
-username: sa
-password: SmithWessonMagnum357!
-encryption: Trust Certificate
-
-5a.5. Restore bak backup file lewat SSMS dengan cara:
-di directory Databases, click kanan.
-Restore Database > Device > ... > Add > Pilih folder backup yang sudah dibuat sebelumnya > Pilih MyStore.bak > Ok.
-Tapi jangan OK sampai selesai.
-
-5a.6. Pergi ke Tab Options.
-Ketika restore, pastikan path Restore As directory pathnya di ubah, karena windows dan linux berbeda:
-dari:
-C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\
-jadi
-/var/opt/mssql/data/
-
-Replace Restore AS:
-Rows Data: /var/opt/mssql/data/MyStore.mdf
-Log : /var/opt/mssql/data/MyStore_log.ldf
-
-Lalu OK
+5a.3. Me-restore database
+Pertama pastikan tidak ada public di dalam schema dengan menghapusnya.
+mystore > klik kanan > restore > General > File Name > brows backup file > Restore.
 
 ============================== DBeaver ====================================
 
-5b.1. Gunakan DBeaver untuk merestore database.
-New Database Connection > SQL Server
-Input data: 
-server name: localhost
-port: 1433
-username: sa
-password: SmithWessonMagnum357!
-Show All Schemas: checked
-Trust Certificate: checked
+5b.1. Buat connection
+New Database Connection > PostgreSQL
+Host: localhost
+Port: 5432
+Username: postgres
+Password: nodecomplete
 
-5b.3. Restore database:
-Open File > MyStore.sql
+5b.2. Restore database:
+Open File > mystore.sql
 
-5b.4. Apabila connection belum terhubung ke database:
+5b.3. Apabila connection belum terhubung ke database:
 Ctrl + 9
 Lalu pilih koneksi
 
-5b.5.
+5b.4. Execute Script:
 Execute SQL Script (Alt + X)
 
 =====================================================================
 
 6. Masuk ke container dengan bash:
-docker exec -it -u root sqlserver_container bash
+docker exec -it postgres_container psql -U postgres
 
-7. Setelah instalasi berarti bisa check path dari sqlcmd
-find /opt -name sqlcmd -type f 2>/dev/null
+7. Kalau setelah execute container hasilnya:
+postgres=#
+Berarti sudah masuk ke postgres.
 
-8. Apabila tidak ditemukan mssql-tools18 (seharusnya ada), dan
-Dockerfile belum menginstall mssql-tools18, silahkan install.
-apt install mssql-tools18
-(Note: ini untuk bisa melakukan cli ke sql)
+8. Check version dengan:
+SELECT version();
 
-9. Misalnya path yang di dapat di:
-/opt/mssql-tools18/bin/sqlcmd
-maka check version caranya
-/opt/mssql-tools18/bin/sqlcmd -?
+9. Kita bisa check seluruh database kita dengan:
+\list
 
-10. Agar lebih pendek, kita bisa taruh itu di Environment Variablenya:
-export PATH="$PATH:/opt/mssql-tools18/bin"
-(Sesuaikan dengan path yang ada diproses sebelumnya)
-sehingga untuk command tinggal sqlcmd:
-sqlcmd -?
+10. Untuk connect ke database yang kita mau:
+\connect mystore
 
-11. Kita bisa coba select data dengan ini:
-sqlcmd \
-    -S localhost \
-    -U sa \
-    -P 'SmithWessonMagnum357!' \
-    -d MyStore \
-    -C \
-    -Q "SELECT * FROM dbo.Products;"
+11. Untuk lihat semua schema dan table:
+\dt
+
+12. Untuk check structure table:
+\d products
+
+13. Coba untuk select data products:
+SELECT * FROM products;
+
+14. Keluar dengan:
+\q

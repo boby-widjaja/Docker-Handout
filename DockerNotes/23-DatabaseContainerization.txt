@@ -223,8 +223,10 @@ tidak dibutuhkan.
 
 =========================================== PostgreSQL ===========================================
 
+Ini akan jadi experiment yang mirip dengan MySQL dengan MS-SQL Server.
+Untuk PostgreSQL kita akan menggunakan image postgres:17.10 dan versi ini masih akan di maintain sampai 2029.
 
+Yang menjadi pembeda adalah kita membuat databasenya terlebih dahulu baru me-restore structure
+dan datanya.
 
--------------------------------------------------
-OracleDB
-MariaDB
+Command line pada postgre juga sedikit berbeda.
