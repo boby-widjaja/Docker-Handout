@@ -1,0 +1,10 @@
+#Kita improve sample 2 ke sample 3 ini
+#CMD juga membuat bash sehingga yang menulis command nanti tidak perlu execute dalam bash lagi.
+#Berarti di sini ada 2 command, bash dan cmatrix
+#option -c pada bash digunakan untuk menangkap info kalau cmatrix -s -C blue adalah string command, bukan parameter biasa.
+
+FROM fedora:44
+USER root
+RUN dnf install -y cmatrix \
+    && dnf clean all
+CMD ["bash", "-c", "cmatrix -s -C blue"]

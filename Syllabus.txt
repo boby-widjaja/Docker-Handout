@@ -14,15 +14,16 @@
 - Image X
 - Container X
 - Docker File X
+- Environment Variable X
+- Database X
+- Volume X
+- Build X
+- Multi Stage Build
 - Registry 
-- Database
 - Backend
 - Frontend
 - Docker Compose
-- Environment Variable
-- Build
 - Pruning
 - Network
-- Volume
 - Swarm
 

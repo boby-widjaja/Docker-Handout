@@ -1,0 +1,58 @@
+============================ SAMPLE 1 ==================================
+
+1. Build Dockerfile.sample1 dengan menggunakan command di bawah ini:
+docker build -f Dockerfile.sample1 -t cmatrix:1.0 .
+
+2. Run container dengan command ini.
+option --rm adalah auto remove, dimana setelah container stop beroperasi dia akan di remove dengan sendirinya.
+option -d artinya detatched process, jadi kita tidak perlu liat running lognya setelah container jalan.
+docker run --rm -d --name cmatrix-container cmatrix:1.0 
+
+3. Execute containernya dengan bash command.
+docker exec -it cmatrix-container bash
+
+4. Kita akan install cmatrix lewat bash.
+sudo dnf install -y cmatrix
+
+5. Silahkan coba jalankan aplikasi cmatrixnya
+cmatrix
+cmatrix -s -C blue
+cmatrix --help
+
+============================ SAMPLE 2 ==================================
+
+1. Build Dockerfile.sample2 dengan menggunakan command di bawah ini:
+docker build -f Dockerfile.sample2 -t cmatrix:2.0 .
+
+2. Run container dengan command ini:
+docker run --rm -d --name cmatrix-container cmatrix:2.0
+
+3. Jalankan dengan execute dan bash command
+docker exec -it cmatrix-container bash
+
+4. Langsung jalankan cmatrix, kita tidak perlu install lagi karena proses instal sudah dijalankan di build time.
+cmatrix -s -C blue
+
+============================ SAMPLE 3 ==================================
+
+1. Build Dockerfile.sample2 dengan menggunakan command di bawah ini:
+docker build -f Dockerfile.sample3 -t cmatrix:3.0 .
+
+2. Sekarang yang kita perlu lakukan hanya execute, karena shell command semua sudah dibuat di dalam dockerfilenya.
+docker run --rm -it --name cmatrix-container cmatrix:3.0
+
+============================ SAMPLE 4 ==================================
+
+1. Build Dockerfile.sample2 dengan menggunakan command di bawah ini:
+docker build -f Dockerfile.sample4 -t cmatrix:4.0 .
+
+2. Proses tidak terlihat berbeda dengan sample sebelumnya, hanya dockerfilenya memisahkan shell scriptnya dalam ENTRYPOINT dan CMD
+docker run --rm -it --name cmatrix-container cmatrix:4.0
+
+============================ SAMPLE 5 ==================================
+
+1. Build Dockerfile.sample2 dengan menggunakan command di bawah ini:
+docker build -f Dockerfile.sample5 -t cmatrix:5.0 .
+
+2. Setelah dijalankan, press key apapun di keyboard untuk merubah warna cmatrix sampai 3 kali.
+docker run --rm -it --name cmatrix-container cmatrix:5.0

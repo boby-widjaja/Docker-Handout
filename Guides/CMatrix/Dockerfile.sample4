@@ -1,0 +1,10 @@
+#Final improve sample 3 ke sample 4 ini.
+#Di sini kita memisahkan bash command dan cmatrix command dengan ENTRYPOINT dan CMD
+#Karena saya yakin bash akan selalu dijalankan, tapi bisa jadi cmatrix digantikan dengan command lain.
+
+FROM fedora:44
+USER root
+RUN dnf install -y cmatrix \
+    && dnf clean all
+ENTRYPOINT [ "bash", "-c" ]
+CMD ["cmatrix -s -C blue"]

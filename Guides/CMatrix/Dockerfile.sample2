@@ -1,0 +1,9 @@
+#Kita improve code sample 1 dengan code sample 2
+#Walaupun default sudah di user root, kita tetap memastikan.
+#Di sini kita sudah menginstall dulu cmatrix-nya terlebih dulu dan clean cachenya
+
+FROM fedora:44
+USER root
+RUN dnf install -y cmatrix \
+    && dnf clean all
+CMD ["tail", "-f", "/dev/null"]

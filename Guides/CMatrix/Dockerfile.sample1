@@ -1,0 +1,5 @@
+#Gunakan fedora 44 sebagai basic image container
+#Agar tidak langsung stop, kita jalankan tail command dengan follow option
+
+FROM fedora:44
+CMD ["tail", "-f", "/dev/null"]

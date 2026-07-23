@@ -1,0 +1,9 @@
+#Pada sample ini saya membuat cmatrix berjalan bergantian dari warna ke warna
+#setelah warna biru selesai, dia akan berpindah ke merah lalu ke hijau.
+
+FROM fedora:44
+USER root
+RUN dnf install -y cmatrix \
+    && dnf clean all
+ENTRYPOINT [ "bash", "-c" ]
+CMD ["cmatrix -s -C blue; cmatrix -s -C red; cmatrix -s -C green"]
