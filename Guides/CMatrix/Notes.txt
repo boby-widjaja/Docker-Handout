@@ -48,6 +48,8 @@ docker build -f Dockerfile.sample4 -t cmatrix:4.0 .
 
 2. Proses tidak terlihat berbeda dengan sample sebelumnya, hanya dockerfilenya memisahkan shell scriptnya dalam ENTRYPOINT dan CMD
 docker run --rm -it --name cmatrix-container cmatrix:4.0
+bila butuh di override:
+docker run --rm -it --name cmatrix-container cmatrix:4.0 "cmatrix -bs -C red"
 
 ============================ SAMPLE 5 ==================================
 
