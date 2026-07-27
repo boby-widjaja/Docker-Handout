@@ -98,6 +98,10 @@ docker container ls
 docker container ps
 docker container ps
 
+Untuk melihat container beserta ukuran memorynya:
+docker container ls -a --size
+docker ps -a --size
+
 Untuk melakukan pull image sekaligus create container, kita bisa lakukan command:
 docker run --name hello_run hello-world:latest
 

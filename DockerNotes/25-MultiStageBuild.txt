@@ -1,3 +1,25 @@
+Ketika kita membuat sebuah aplikasi, tentu saja kita akan menulis code di atas source code sebuah project app.
+Dimana app tersebut memiliki dependency manager untuk mengatur dependency atau library apa saja yang dibutuhkan oleh project itu.
+Selain itu juga project kita memiliki sebuah build tool, dimana build tool digunakan untuk merubah source code project menjadi artifact.
+
+Artifact adalah Hasil (output) yang dihasilkan dari suatu proses pembangunan (build process) dan dapat digunakan, 
+didistribusikan, atau dideploy. Artifact sendiri akan dijalankan dengan suatu tindakan execution oleh shell dari OSnya.
+Bisa jadi lewat UI atau bisa lewat perintah command line diatas shell script.
+
+Tentu saja besar project source code lebih besar daripada artifact itu sendiri, dan tujuannya juga masih develop-able,
+bukan deploy-able. Ketika kita akan deploy app kita ke dalam container agar running di production, tentu
+saja tujuan utama kita adalah menggunakan artifactnya.
+
+Untuk melakukan ini, kita memiliki 2 option: 
+-) Menggunakan IDE: build artifact menggunakan IDE
+-) Docker Image: Build menggunakan development kit dari dokcer image.
+
+Dari cara pertama, artifact baru akan di buatkan image untuk docker setelah dibuat oleh IDE.
+Tetapi cara ini tidak dapat di automation oleh docker atau orchestration lainnya.
+
+Sedangkan menggunakan docker image untuk melakukan build akan membuat seluruh source code
+berada di dalam image dan image pun ukurannya menjadi besar.
+Untuk mengatasi hal ini kita akan menggunakan Multi Stage Build process.
 
 
 =============================================================================

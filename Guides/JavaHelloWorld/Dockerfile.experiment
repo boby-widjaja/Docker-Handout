@@ -1,0 +1,8 @@
+FROM eclipse-temurin:21-jdk
+WORKDIR /app
+COPY /HelloWorld .
+RUN javac -d out src/Main.java
+RUN jar --create \
+    --file app.jar \
+    --main-class Main \
+    -C out .

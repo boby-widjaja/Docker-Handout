@@ -1,5 +1,21 @@
+
+============================== JAR Only ================================
+
+1. Kita akan menggunakan Jar file di dalam Jar folder, pastikan ada HelloWorld.jar di dalamnya.
+
+2. Build menggunakan Dockerfile.runner dengan command dibawah ini:
 docker build -f Dockerfile.runner -t java-hello:1.0 .
+
+docker run --name java_hello_cli java-hello:1.0
+
+atau
 
 docker container create --name java_hello_cli java-hello:1.0
 
 docker start -a java_hello_cli
+
+============================ Multi Stage ==================================
+
+docker build -f Dockerfile.builder -t java-hello:2.0 .
+
+docker run --name java_hello_cli java-hello:2.0

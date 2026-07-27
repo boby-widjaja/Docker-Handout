@@ -1,4 +1,9 @@
+# Gunakan eclipse-temurin:21-jre untuk menjalankan java dalam jar file (siap run)
+# Image ini digunakan untuk menjalakan app dengan java 21
+# Copy HelloWorld.jar ke dalam /app directory
+# jalankan dengan java -jar command
+
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY Jar/HelloWorld.jar /app/HelloWorld.jar
-CMD ["java", "-jar", "HelloWorld.jar"]
+COPY Jar/HelloWorld.jar .
+ENTRYPOINT ["java", "-jar", "HelloWorld.jar"]
