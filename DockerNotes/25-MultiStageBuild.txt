@@ -21,8 +21,102 @@ Sedangkan menggunakan docker image untuk melakukan build akan membuat seluruh so
 berada di dalam image dan image pun ukurannya menjadi besar.
 Untuk mengatasi hal ini kita akan menggunakan Multi Stage Build process.
 
+==================================== Experiment dengan Java App =========================================
+
+Untuk lebih memahami proses Multi-Stage ini, kita akan mencobanya dengan simple Java App yang hanya
+melakukan print "Hello World" di command line yang nantinya akan kita attached projeksinya ke terminal.
+Contoh berada pada Guides/JavaHelloWorld.
+
+Perhatikan di sini ada 3 demo Dockerfile yang melakukan 3 proses berbeda:
+Dockerfile.compiler: proses source code berubah menjadi artifact
+Dockerfile.runner: proses artifact di jalankan di dalam container
+Dockerfile.builder: gabungan dari compiler dan runner menjadi satu multi-stage.
+
+Compile Process
+
+Proses compile java membutuhkan image eclipse-temurin:21-jdk.
+Ini adalah Java Development Kit yang memiliki Java Build Tool untuk mengcompile source code Java
+menjadi code yang siap dijalankan di run-time.
+
+Dengan JDK, kita mendapatkan command berupa:
+-) javac (Java Compiler) untuk mengcompile Java
+-) jar (Java Archive) untuk membuat jar file, sebuah artifcat java dalam keadaan di compress.
+
+Seperti yang bisa dilihat pada proses dockerfile, proses ini mengambil seluruh source code
+yang berada di dalam folder HelloWorld. Di mana isi structure directory source codenya adalah:
+
+├── app.jar
+├── .gitignore
+├── HelloWorld.iml
+├── .idea
+│   ├── artifacts
+│   │   └── HelloWorld_jar.xml
+│   ├── .gitignore
+│   ├── misc.xml
+│   ├── modules.xml
+│   └── workspace.xml
+└── src
+    ├── Main.java
+    └── META-INF
+        └── MANIFEST.MF
+
+java compiler akan mengcompile isi source Main.java, menjadi Main.class.
+Pada command javac, kita akan menulis parameter destination directory dan lokasi directory sourcenya.
+Pada contoh kali ini kita akan buat directory baru bernama out.
+
+Silahkan coba execute dan akses file system di dalam containernya. Di dalam app directory,
+kita akan melihat seluruh source code yang ada pada folder HelloWorld, ditambah dengan out directory
+berisi Main.class.
+
+├── app.jar
+├── .gitignore
+├── HelloWorld.iml
+├── .idea
+├── out
+│   └── Main.class
+└── src
+
+Tetapi di sini tidak hanya penambahan Main.class, tetapi juga app.jar.
+app.jar sendiri dibuat oleh command jar yang jalan setelah javac.
+jar pada docker file akan membuat file jar baru dengan nama app.jar yang diproses dari
+hasil compile, yaitu Main.class di dalam directory out.
+
+Running Process
+
+Running process yang dilakukan Dockerfile.runner hanya membutuhkan jar file di dalam container,
+lalu execute dengan command java.
+
+Jar file ini sama seperti app.jar yang ada di process compiler sebelumnya, bedanya di sini saya
+sudah membuatkan jar file tersebut menggunakan IDE, tinggal siap pakai.
+Jar file bisa di temukan di dalam folder Jar dengan nama HelloWorld.jar.
+Kalau mau di rename menjadi app.jar agar sedikit lebih familar dengan contoh sebelumnya juga tidak masalah.
+
+jar ini di eksekusi dengan menggunakan java command dan diberi option jar,
+sehingga JRE (Java Runtime Environment) tau kalau kita menjalankan file dengan format jar.
+
+Builder Process
+
+Kita akan coba gabungkan 2 konsep di atas, yaitu compile process dan running process, sehingga melahirkan 
+satu Dockerfile dengan 2 FROM instructions, dimana inilah yang disebut juga dengan multi-stage build.
+
+Hal yang paling terlihat berbeda pada dockerfile kali ini adalah alias yang ditulis dengan keyword
+"AS" pada instruction FROM lalu nama alias di sini terserah kalian selama itu masih bersifat semantic dan
+masuk akal. Contoh di sini saya beri nama builder.
+
+Itu artinya seluruh proses image dari stage 1 (compiler) akan diberi nama builder.
+Dimana builder ini disebut juga sebagai build stage.
+Pada build stage, file system sudah tercipta, tetapi docker tidak membuat file baru,
+sehingga seluruh source code yang sudah kita copy ke stage 1, tidak akan masuk ke dalam final image.
+Di sini permasalahan besarnya source code di dalam image sudah terselesaikan.
+Jadi di container akhir kalau kalian execute dan browse isi directorynya, kalian tidak akan menemukan
+source code, melainkan hanya jar nya saja. Dimana ini menghasilkan container yang persis dengan runner process.
+
+Pada stage selanjutnya, build stage yang pertama bisa diakses dengan menggunakan command:
+--from=builder
 
 =============================================================================
+
+
 
 Multi-Stage Build
 

@@ -1,4 +1,3 @@
-
 ============================== JAR Only ================================
 
 1. Kita akan menggunakan Jar file di dalam Jar folder, pastikan ada HelloWorld.jar di dalamnya.
@@ -6,16 +5,47 @@
 2. Build menggunakan Dockerfile.runner dengan command dibawah ini:
 docker build -f Dockerfile.runner -t java-hello:1.0 .
 
+3. Kita bisa membuat container dengan run command seperti ini:
 docker run --name java_hello_cli java-hello:1.0
 
 atau
 
+Dengan create dan start process seperti dibawah ini:
 docker container create --name java_hello_cli java-hello:1.0
-
 docker start -a java_hello_cli
+
+Note: run defaultnya adalah attached process dan start defaultnya adalah dettached.
+Kita menginginkan process dari java CLI attached ke terminal kita agar bisa melihat string Hello World nya.
 
 ============================ Multi Stage ==================================
 
+1. Gunakan Dockerfile.builder untuk multi stage build dari project source code.
 docker build -f Dockerfile.builder -t java-hello:2.0 .
 
+2. Run dengan menggunakan command ini:
 docker run --name java_hello_cli java-hello:2.0
+
+============================ Experiment Compiler ==================================
+
+Kalau kita tertarik untuk mencari tau hasil dari build pertama di proses multi-stage,
+bisa gunakan Dockerfile.compiler untuk melihatnya
+
+1. Gunakan command ini untuk build image.
+docker build -f Dockerfile.compiler -t hello-experiment:1.0 .
+
+2. Gunakan command ini untuk run containernya.
+docker run --rm -d --name java_hello_exp hello-experiment:1.0
+
+3. Exec dan masuk ke bash
+docker exec -it java_hello_exp bash
+
+4. Berdasarkan instruction dockerfile, landing working directory kalian adalah app directory.
+gunakan command cd dan ls --all untuk navigasi dan lihat isi baik source codenya, maupun jarnya.
+(Note: kalau kalian install tree, bisa check menggunakan tree)
+
+5. Kalau mau install tree
+apt update
+apt install -y tree
+
+6. Gunakan command tree untuk explore directorynya:
+tree -a
