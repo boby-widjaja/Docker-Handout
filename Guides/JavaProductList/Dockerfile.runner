@@ -1,4 +1,4 @@
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY Jar/ProductList.jar /app/ProductList.jar
+COPY Jar/ProductList.jar .
 CMD ["java", "-jar", "ProductList.jar"]

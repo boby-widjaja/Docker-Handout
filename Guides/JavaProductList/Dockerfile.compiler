@@ -1,0 +1,9 @@
+FROM eclipse-temurin:21-jdk
+WORKDIR /app
+COPY /ProductList .
+RUN javac -d out src/*.java
+RUN jar --create \
+    --file app.jar \
+    --main-class Main \
+    -C out .
+CMD ["tail", "-f", "/dev/null"]

@@ -32,7 +32,7 @@ Dockerfile.compiler: proses source code berubah menjadi artifact
 Dockerfile.runner: proses artifact di jalankan di dalam container
 Dockerfile.builder: gabungan dari compiler dan runner menjadi satu multi-stage.
 
-Compile Process
+------------------ Compile Process ------------------
 
 Proses compile java membutuhkan image eclipse-temurin:21-jdk.
 Ini adalah Java Development Kit yang memiliki Java Build Tool untuk mengcompile source code Java
@@ -81,7 +81,7 @@ app.jar sendiri dibuat oleh command jar yang jalan setelah javac.
 jar pada docker file akan membuat file jar baru dengan nama app.jar yang diproses dari
 hasil compile, yaitu Main.class di dalam directory out.
 
-Running Process
+------------------ Running Process ------------------
 
 Running process yang dilakukan Dockerfile.runner hanya membutuhkan jar file di dalam container,
 lalu execute dengan command java.
@@ -94,7 +94,7 @@ Kalau mau di rename menjadi app.jar agar sedikit lebih familar dengan contoh seb
 jar ini di eksekusi dengan menggunakan java command dan diberi option jar,
 sehingga JRE (Java Runtime Environment) tau kalau kita menjalankan file dengan format jar.
 
-Builder Process
+------------------ Builder Process ------------------
 
 Kita akan coba gabungkan 2 konsep di atas, yaitu compile process dan running process, sehingga melahirkan 
 satu Dockerfile dengan 2 FROM instructions, dimana inilah yang disebut juga dengan multi-stage build.
@@ -114,24 +114,22 @@ source code, melainkan hanya jar nya saja. Dimana ini menghasilkan container yan
 Pada stage selanjutnya, build stage yang pertama bisa diakses dengan menggunakan command:
 --from=builder
 
-=============================================================================
+----------------------------------------------------------------------------------
 
+Silahkan juga coba experiment java lainnya dengan menggunakan contoh JavaProductList pada Guides.
+Di sini kita menggunakan multiple class untuk Java appnya, sehingga hasil compile akan menjadi seperti di bawah ini:
+.
+├── app.jar
+├── out
+│   ├── Main.class
+│   ├── Product.class
+│   └── ProductManager.class
+├── ProductList.iml
+└── src
+    ├── Main.java
+    ├── META-INF
+    │   └── MANIFEST.MF
+    ├── Product.java
+    └── ProductManager.java
 
-
-Multi-Stage Build
-
-FROM node:24 AS builder
-WORKDIR /app
-COPY . .
-RUN npm install
-RUN npm run build
-FROM nginx:alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-Multiple FROM
-Dockerfile boleh memiliki lebih dari satu FROM.
-
-FROM node:24 AS builder
-RUN npm install
-FROM nginx:alpine
-COPY --from=builder ...
+Hasil compile akan terdiri dari beberapa class, tetapi hasil final compressed artifactnya tetap 1 jar.
