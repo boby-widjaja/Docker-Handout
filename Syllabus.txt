@@ -18,7 +18,7 @@
 - Database X
 - Volume X
 - Build X
-- Multi Stage Build
+- Multi Stage Build X
 - Registry 
 - Backend
 - Frontend

@@ -1,0 +1,3 @@
+Database, API atau sebagian aplikasi butuh berkomunikasi satu dengan yang lainnya melalui communication port dengan protocol tertentu,
+misalnya HTTP, UDP, TCP, atau yang lainnya. Setiap communication port tentu ada angkanya agar satu host atau satu ip address 
+bisa memiliki banyak communcation port.

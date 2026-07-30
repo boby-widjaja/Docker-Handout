@@ -1,0 +1,12 @@
+FROM eclipse-temurin:21-jre
+
+ENV DB_HOST=postgres_container
+ENV DB_PORT=5432
+ENV DB_NAME=mystore
+ENV DB_USERNAME=postgres
+ENV DB_PASSWORD=nodecomplete
+
+WORKDIR /app
+COPY target/MyStore-1.0-SNAPSHOT.jar app.jar
+
+ENTRYPOINT [ "java", "-jar", "app.jar" ]
