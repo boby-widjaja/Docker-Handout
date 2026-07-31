@@ -1,5 +1,6 @@
 FROM eclipse-temurin:21-jre
 
+#DB_HOST tidak lagi berisi localhost atau ip address, melainkan nama container db nya
 ENV DB_HOST=postgres_container
 ENV DB_PORT=5432
 ENV DB_NAME=mystore

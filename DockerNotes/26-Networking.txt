@@ -1,3 +1,268 @@
-Database, API atau sebagian aplikasi butuh berkomunikasi satu dengan yang lainnya melalui communication port dengan protocol tertentu,
-misalnya HTTP, UDP, TCP, atau yang lainnya. Setiap communication port tentu ada angkanya agar satu host atau satu ip address 
-bisa memiliki banyak communcation port.
+=============================== Basic Network ===============================
+
+Setiap aplikasi akan kita tempatkan di tiap container tersendiri di dalam docker, begitu juga dengan database.
+Koneksi dan komunikasi pasti dibutuhkan antara aplikasi dengan database, maupun antar aplikasi dengan aplikasi lainnya lewat API.
+Setiap komunikasi pasti terbungkus oleh sebuah protocol (HTTP, UPD, TCP, dan lain-lain) dan setiap jalur komunikasi ini
+berada di sebuah port number.
+
+Di dalam virtualization antar system akan berkomunikasi lewat domain atau lewat ip dan port number lewat sebuah komunikasi protocol.
+Tetapi di dalam container, komunikasi akan berlangsung antar container ke container.
+Container bersifat isolated dan ecapsulated (tertutup), terhadap sesuatu diluarnya, baik ke virtual machine lainnya,
+ke container lainnya, maupun ke host itu sendiri.
+
+Isolation ini sebenarnya hal yang baik dari sisi security maupun dari sisi struktur, tetapi kalau total di isolasi maka komunikasi
+tidak bisa terjadi. Solusinya antar container harus terhubung dalam private network sendiri, dimana terbuka untuk sesama 
+networknya tetapi tetap terisolasi dengan segala hal di luar networknya. Di sinilah kegunaan docker network.
+Networking pada docker bisa diakses lewat command: docker network.
+
+Melihat ada commands apa saja pada network:
+docker network --help
+
+Untuk membuat network baru:
+docker network create my_network
+
+Melihat semua network yang ada:
+docker network ls
+
+Untuk menambahkan container ke existing network:
+docker network connect my_network my_app_1
+docker network connect my_network my_db_1
+
+(Note: my_app_1 dan my_db_1 adalah contoh nama container)
+
+Setelah itu, network bisa di check lewat inspect command, dan hasilnya:
+docker network inspect my_network
+docker container inpect my_app_1
+"Networks": {
+    "my_network": {...}
+}
+
+Seperti yang sudah dibahas sebelumnya antar container dalam sebuah network akan berkomunikasi dengan port number.
+Kita bisa check port sebuah container dengan:
+docker container port s_web
+(Saya test ini dengan menggunakan contoh pada Guides/StaticWeb)
+
+Maka hasilnya:
+80/tcp -> 0.0.0.0:8000
+80/tcp -> [::]:8000
+
+Arti dari baris pertama adalah:
+-) 80/tcp → aplikasi di dalam container mendengarkan pada port 80 menggunakan protokol TCP.
+-) 0.0.0.0 → semua alamat IPv4 milik host.
+-) 8000 → port pada host
+
+Ini semua hasil dari tindakan option publish -p (-p 8000:80) pada container yang dijalankan. 
+-p membuka port container menjadi port pada host yang sifatnya public dan tidak terisolasi lagi.
+
+Jadi, jika komputer host memiliki alamat IPv4 seperti  127.0.0.1, 192.168.1.100 atau yang lainnya, semua
+dapat mengakses container dengan:
+http://127.0.0.1:8000
+http://192.168.1.100:8000
+
+Arti dari baris kedua sebenarnya sama seperti baris pertama tapi hanya untuk komunikasi lewat IPv6.
+
+Tetapi kalau semua container kita buka ke host dengan menggunakan -p option, maka keuntungan isolasi tidak lagi menjadi
+kelebihan containerization. Jadi dalam sebuah network kita harus memilih container mana yang aksesnya encapsulated
+dan hanya berkomunikasi di dalam network, tapi salah satu container bisa berkomunikasi secara terbuka lewat host pc dengan
+API lain, sekalipun dari deployment lain di dalam VM atau Container.
+
+
+=============================== Exercise and Experiment ===============================
+
+Untuk lebih memahami pengaplikasian network, kita bisa melakukan percobaan yang sudah di sediakan di dalam:
+Guides/JavaMyStore
+Pada percobaan ini, hasil akhir akan memberikan kita 2 container:
+-) postgres_container: Database container dengan PostgreSQL
+-) mystore_cli: sebuah app java yang datanya berasal dari postgres_container
+
+mystore_cli akan akses postgres_container lewat port 5432 lewat sebuah network yang bernama mystore_network.
+Komunikasi ini akan terjadi antar container tanpa perantara host port.
+
+Dari sini dibedakan lah 2 jenis network:
+1) Physical Network: Network yang terhubung antar ip dan port dari luar container
+2) Virtual Network: Network yang disediakan docker untuk menghubungkan antar container.
+
+Itu sebabnya kalau kalian lihat bahwa postgres_container yang dibuat pada latihan ini berbeda dengan
+postgres_container yang dibuat di Guides/PostgreSQL. Pada percobaan kali ini postgres_container tidak mempublish (-p) containernya
+sama sekali. Sehingga postgres_container sekarang inaccessible dengan localhost:5432.
+Dari sini tingkat keamanan database postgreSQL juga bertambah lebih baik, dan juga bisa menghindari kesalahan akses port dari
+aplikasi lain.
+
+Antar container tidak menggunakan ip, melainkan menggunakan nama containernya.
+Jadi ketimbang localhost:5432 atau 127.0.0.1:5432, kita menggunakan postgres_container:5432.
+
+Untuk aplikasi mystore_cli, sedikit update untuk mempermudah proses saya menggunakan maven sebagai project managemen, builder tool,
+dan dependency managementnya. Sehingga sedikit berbeda dengan yang dilakukan di app Java CLI biasa.
+
+Kalau kita inspect container kita, misalnya postgres_container yang terhubung dengan network,
+di sana akan ada 2 ip address dan 2 default gateway yang mengarah ke mystore_network dan mengarah ke bridge.
+Mungkin untuk lebih cepatnya bisa menggunakan command di bawah ini untuk melihat ip masing-masing:
+docker inspect --format '{{.NetworkSettings.Networks.bridge.IPAddress}}' postgres_container
+docker inspect --format '{{.NetworkSettings.Networks.mystore_network.IPAddress}}' postgres_container
+
+Itu dikarenakan seluruh container yang sempat dibuat tanpa menggunakan network akan secara default di pasangkan
+dengan network bernama bridge.
+
+NETWORK ID     NAME              DRIVER    SCOPE
+f491536c8975   bridge            bridge    local <--
+4603783d32be   host              host      local
+86e82c115cd9   mystore_network   bridge    local
+e41ec863d3fa   none              null      local
+
+Jik dari awal kita ingin membuat container dengan network yang kita inginkan tanpa dipasangkan dengan bridge, kita
+bisa menggunakan option --network pada run dan create:
+
+docker run -d \
+  --name postgres_container \
+  --network mystore_network \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=nodecomplete \
+  -e POSTGRES_DB=mystore \
+  postgres:17.10
+
+docker run -it \
+    --name mystore_cli \
+    --network mystore_network \
+    java-mystore:1.0
+atau...
+docker container create -it \
+    --name mystore_cli \
+    --network mystore_network \
+    java-mystore:1.0
+
+Atau kalau memang tidak ingin container terhubung dengan bridge bisa di disconnect:
+docker network disconnect bridge postgres_container
+docker network disconnect bridge mystore_cli
+
+Mungkin kalian berpikir, kenapa harus repot membuat mystore_network, kenapa tidak manfaatkan saja bridge dari awal
+untuk menghubungkan mystore_cli dengan postgres_container. Itu karena bridge tidak bisa menghubungkan container ke container
+karena network bridge yang ada secara default tidak memiliki: DNS (Discovery Network Service) antar container,
+sehingga container tidak bisa resolve nama container lain.
+
+
+=============================== Driver and Scope ===============================
+
+Ketika kita melihat network lewat "docker network ls", kita bisa melihat ada beberapa informasi tentang network, seperti
+id, name, driver dan scope.
+
+Driver adalah jenis mechanism yang dipakai docker untuk menghubungkan container ke jaringan.
+Driver bisa di-set dengan menggunakan --driver options:
+
+docker network create --driver bridge mystore_network
+docker network create --driver host mystore_network
+atau bisa lebih short-hand dengan:
+docker network create host mystore_network
+
+Ada 5 jenis Driver yang akan saya bahas di sini
+1. bridge
+2. host
+3. none
+4. overlay
+5. macvlan
+
+1. Bridge (Default)
+Bridge adalah driver default dan yang paling sering dipakai.
+Ciri-ciri dari bridge adalah:
+-) Container mempunyai IP sendiri. Dalam range 172.17.0.1 -> 172.18... dan seterusnya
+-) Memiliki default gateway.
+-) Karena memiliki default gateway dan ip seperti yang kita sudah lihat, artinya bridge memiliki subnet.
+-) Ada DNS internal Docker untuk mendiscover network dari nama container.
+-) Cocok untuk komunikasi antar-container yang sifatnya terisolasi.
+
+2. Host (Ikut Host PC)
+Host artinya seluruh container mengikuti ip dari host secara langsung. Itu artinya:
+-) Tidak ada IP container.
+-) Tidak ada DNS antar container dan tidak ada NAT
+-) Tidak ada publish port mapping (-p diabaikan).
+-) Tidak bisa memanfaatkan isolasi antar container. (security melemah dan conflict antar port bisa terjadi)
+-) Kenapa menggunakan host dan tidak pakai -p publish saja? Karena performance lebih cepat.
+    Tidak ada mechanism NAT atau DNS antar container.
+
+3. None (Full Isolated)
+Ini full isolasi, untuk container-container yang dimaksudkan untuk dikurung dan tidak berhubungan dengan container lain
+atau dunia luar (server lain ataupun internet).
+Biasa digunakan untuk: app yang memang stand-alone, security, testing dan experiment.
+
+4. Overlay (Multi-Host Swarm)
+Overlay digunakan untuk komunikasi antar container tetapi satu container dengan container lainnya berada di server yang berbeda,
+tetapi tetap berada di network yang sama. Driver ini akan digunakan pada docker swarm dan nanti akan dibahas secara spesifik
+di notes tentang swarm.
+
+5. Maclan (Local Devices)
+Ini adalah driver yang lebih advance, dimana sebuah container akan dianggap seperti sebuah device atau sebuah PC tersendiri.
+Sehingga sama seperti PC, pemberian dynamic IP akan diberikan oleh jaringan di rumah atau kantor tempat container di implementasi.
+Bisa diberikan oleh modem, router atau access point.
+
+Contoh:
+
+Router: 192.168.1.1
+│
+├── Laptop: 192.168.1.10
+│   
+├── Printer: 192.168.1.20
+│   
+├── NAS: 192.168.1.30
+│   
+└── Docker Container: 192.168.1.40
+
+Sampai-sampai dengan driver Maclan ini, container memiliki MAC address sendiri seperti layaknya sebuah device fisik.
+
+Biasanya dipakai jika:
+-) aplikasi harus terlihat sebagai perangkat asli di LAN,
+-) software memerlukan broadcast/multicast tertentu,
+-) integrasi dengan perangkat jaringan.
+
+Kekurangannya:
+-) konfigurasi lebih rumit,
+-) tidak semua lingkungan mendukung.
+
+
+=============================== Alias ===============================
+
+Network alias adalah salah satu feature network yang bisa mengaliaskan nama sebuah container dihadapan container lain
+yang terhubung ke dalam network yang sama.
+
+Contohnya:
+
+mystore_network
+    -) postgres_container, alias: db_container
+    -) mystore_cli_container
+
+maka mystore_cli_container bisa mengakses container satunya lagi dengan dua opsi, yaitu:
+postgres_container:5432 atau db_container:5432
+
+Network alias bisa diberikan dengan contoh command seperti ini:
+docker run \
+    --network mystore_network \
+    --network-alias db_container \
+    --name postgres_container \
+    postgres
+
+Untuk project kecil penggunaan nama container sudah cukup, tetapi untuk project yang lebih besar dan rumit,
+misalnya ada 4 postgres_container dengan database yang sama tapi tujuan berbeda:
+postgres_prod_01
+postgres_prod_02
+postgres_backup
+postgres_staging
+
+atau bila suatu hari nama container berubah karena suatu alasan, ini jadi mengharuskan mystore_cli_container untuk merubah terus koneksi 
+ke container databasenya.
+
+Sebuah container bisa memiliki lebih dari satu alias, dan alias yang sama bisa dipakai lebih dari satu container.
+Untuk kasus sebuah container bisa memiliki alias yang berbeda-beda:
+docker network connect \
+    --alias db_contaienr \
+    --alias my_database \
+    --alias postgres \
+    mystore_network postgres_container
+
+Tetapi untuk container yang berada di luar network my_store_network, semua alias ini tidak berlaku.
+
+Contoh penggunaan alias yang sama di container yang berbeda:
+docker container run -d --name web1_container --network mystore_network --network-alias web_container web-image:1.0
+docker container run -d --name web2_container --network mystore_network --network-alias web_container web-image:1.0
+docker container run -d --name web3_container --network mystore_network --network-alias web_container web-image:1.0
+
+Lalu mana yang akan diakses oleh container lain bila akses web_container?
+Bisa yang mana saja tergantung DNS yang dipilih, dan ini bisa menjadi cikal bakal load balancer (yang kurang baik).
+Nanti itu akan dijelaskan di notes lain yang tujuannya membahas load balancer.

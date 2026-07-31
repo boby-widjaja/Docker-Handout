@@ -75,9 +75,18 @@ docker network connect mystore_network postgres_container
 
 15. Build image java app mystore-nya:
 docker build -t java-mystore:1.0 -f Dockerfile.runner .
+atau kalau mau menggunakan multi-stage yang dibuild dari source code:
+docker build -t java-mystore:1.0 -f Dockerfile.builder .
+atau bisa juga menggunakan:
+docker build -t java-mystore:1.0 -f Dockerfile.optimized .
 
 16. Buat container java app dari image di langkah sebelumnya:
 docker container create -it --name mystore_cli java-mystore:1.0
+bila menggunakan optimized:
+docker container create -it \
+  --name mystore_cli \
+  -e DB_PASSWORD=nodecomplete \
+  java-mystore:1.0
 
 17. Hubungkan app dengan existing network yang dibuat di langkah sebelumnya:
 docker network connect mystore_network mystore_cli

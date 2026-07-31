@@ -19,6 +19,7 @@
 - Volume X
 - Build X
 - Multi Stage Build X
+- docker.ignore
 - Registry 
 - Backend
 - Frontend

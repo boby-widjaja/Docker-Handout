@@ -1,15 +1,17 @@
+#mvn dependency:go-offline akan men-download semua dependency yang dibutuhin lebih dulu, supaya jangan sampe coba ambil dari internet lagi.
 FROM maven:3.9.11-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY MyStore/pom.xml .
+RUN mvn dependency:go-offline
 COPY MyStore/src ./src
 RUN mvn clean package
 
+#Environment Variable sensitif seperti password harusnya jangan di taruh di dockerfile
 FROM eclipse-temurin:21-jre
 ENV DB_HOST=postgres_container
 ENV DB_PORT=5432
 ENV DB_NAME=mystore
 ENV DB_USERNAME=postgres
-ENV DB_PASSWORD=nodecomplete
 WORKDIR /app
 COPY --from=build /app/target/MyStore-1.0-SNAPSHOT.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]

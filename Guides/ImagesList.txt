@@ -12,4 +12,5 @@ docker pull mcr.microsoft.com/mssql/rhel/server:2022-latest
 docker pull postgres:17.10
 docker pull eclipse-temurin:21-jdk
 docker pull eclipse-temurin:21-jre
+docker pull maven:3.9.11-eclipse-temurin-21
 docker pull httpd:2.4.68
