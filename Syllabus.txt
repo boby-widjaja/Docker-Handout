@@ -24,7 +24,7 @@
 - Backend
 - Frontend
 - Docker Compose
-- Pruning
-- Network
+- Pruning X
+- Network X
 - Swarm
 

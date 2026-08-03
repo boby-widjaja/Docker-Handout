@@ -63,8 +63,44 @@ Kapan pun kita ingin membuat container tentang app static web, kita tinggal meng
 Sebelum pindah ke chapter selanjutnya tolong lihat dulu Sources/Images/Cycle of Creation.jpg
 agar lebih mengerti process dan terminology dari cycle antara image dan container.
 
+====================== Cache ==========================
+
 Note: Setiap kali Docker melakukan build pada satu Dockerfile, Docker akan menyimpan cache dari hasil build tersebut,
 jadi apabila Dockerfile yang sama melakukan build lagi, proses akan lebih cepat dan performance akan meningkat.
 Sehingga Build kedua, ketiga, dan seterusnya akan terasa lebih cepat.
 
 Cache akan diupdate apabila ada perubahan pada Dockerfilenya. Mengenai update ini akan dijelaskan nanti lebih detailnya.
+
+Kita bisa check cache hasil build dengan beberapa cara.
+Untuk melihiat penggunaan disk usage untuk build cache bisa dengan menggunakan command;
+docker builder du
+
+ID              RECLAIMABLE   SIZE      LAST ACCESSED
+abc123          true          420MB     3 days ago
+def456          false         1.1GB     5 minutes ago
+ghi789          true          90MB*      10 days ago
+....
+(Note: contoh summary ini tidak terhubung dengan contoh table di atas)
+Shared:         3.035GB
+Private:        2.03GB
+Reclaimable:    4.066GB
+Total:          5.066GB
+
+Penjelasan setiap fieldnya:
+ID: Ini adalah primary ID internal cache BuildKitnya
+RECLAIMABLE: berisi boolean yang artinya memorynya bisa di ambil lagi atau tidak.
+    true: cache ini sudah tidak memiliki referensi lagi (unused), direkomendasikan untuk dibersihkan dengan prune (baca di notes tentang prune)
+    false: cache ini masih memiliki referensi dan masih akan dipakai oleh layer cache lainnya.
+SIZE: besarnya cache di memory. Tanda (*) artinya ukuran hanya estimasi bukan real, karena ada data/layer yang dishared
+    jadi tidak mutlak ditunjuk oleh satu cache saja.
+LAST ACCESSED: Terakhir kali cache digunakan. (bukan pertama kali dibuat)
+
+Penjelasan summarynya:
+Shared: adalah memory dengan * pada sizenya. Artinya lebih dari satu cache record menunjuk ke memory yang sama.
+Private: data cache yang hanya dimiliki oleh satu cache record dan tidak dibagi dengan record lain.
+Reclaimable: Total dari Reclaimable True.
+Total: Total memory yang dipakai cache
+
+Untuk hasil yang super detail bisa menggunakan:
+docker builder du --verbose
+docker builder du -v

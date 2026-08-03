@@ -1,0 +1,120 @@
+prune adalah command yang digunakan untuk membersihkan resource yang sudah tidak digunakan dengan tujuan pembersihan memory.
+Resource yang dimaksud bisa berupa image, container, volume, network, dan cache.
+
+Mengapa harus prune padahal sudah ada delete?
+-) Prune sangat praktis, docker bisa mencari resource yang tidak terpakai dan menghapus sekaligus. (Tetapi tetap harus berhati-hati)
+-) Kebanyakana prune dipersenjatai untuk membersihkan memory cache, sedangkan pada delete tidak selalu. 
+(Tetapi jika kita memang masih mau menggunakan cache untuk percepat performance, lebih baik pakai delete)
+
+Menghapus semua container yang tidak dijalankan (dalam keadaan stopped):
+docker container prune
+docker container prune -f (force tanpa konfirmasi)
+
+Image memiliki 2 kondisi, yaitu:
+Dangling Image: atau image yang hanya memiliki nama tanpa memiliki nama dan tag (<none>:<none>).
+Unused Image: atau image yang tidak memiliki container sama sekali, baik stop maupun sedang run.
+
+Saat image bersifat dangling dan unused (2 kondisi terpenuhi) dan kita ingin membersihkannya, bisa dengan command:
+docker image prune
+docker image prune -f (tanpa konfirmasi)
+
+Kalau kita ingin menghapus seluruh unused image tanpa perduli itu dangling atau bukan, bisa menggunakan:
+docker image prune -a
+docker image prune -af (tanpa konfirmasi)
+
+Untuk menghapus volume yang tidak digunakan oleh container manapun:
+docker volume prune
+docker volume prune -f (tanpa konfirmasi)
+
+Untuk menghapus network yang tidak ter-connect oleh container manapun:
+docker network prune
+docker network prune -f (tanpa konfirmasi)
+
+Untuk menghapus cache yang tidak digunakan dari proses builder Dockerfile.
+(Builder cache dikategorikan tidak digunakan apabila kehilangan reference dari layer yang berada tepat setelahnya)
+docker builder prune
+docker builder prune -f (tanpa konfirmasi)
+
+Tetapi dengan dengan docker builder prune, masih ada memory yang tertinggal padahal reclaimable dari hasil pengamatan:
+docker builder du
+Yang tertinggal adalah yang shared, karena shared dianggap referensi juga.
+
+Menghapus semua build cache yang ada:
+docker builder prune -a
+docker builder prune --all
+docker builder prune -af (tanpa konfirmasi)
+
+Kalau mau lebih selektif dengan filter juga bisa, tapi hanya bisa berdasarkan patokan waktu, bukan id.
+
+Menghapus cache yang berumur lebih dari 24 jam.
+docker builder prune --filter "until=24h"
+
+Untuk melakukan prune ke banyak hal sekaligus kita bisa menggunakan:
+docker system prune.
+
+Apa saja yang dihapus?
+
+docker system prune
+Menghapus:
+  - Semua container yang sedang stop
+  - Network yang tidak connect ke satu container pun
+  - Semua dangling image tanpa nama dan tag
+  - Semua build cache tanpa reference
+mixed dari:
+    docker container prune
+    docker network prune
+    docker image prune
+    docker builder prune
+
+docker system prune -a
+Menghapus:
+  - Semua container yang sedang stop
+  - Network yang tidak connect ke satu container pun
+  - Image yang tidak memiliki container sama sekali.
+  - Seluruh build cache
+mixed dari:
+    docker container prune
+    docker network prune
+    docker image prune -a
+    docker builder prune -a
+
+docker system prune --volumes
+Menghapus:
+  - Semua container yang sedang stop
+  - Network yang tidak connect ke satu container pun
+  - Semua dangling image tanpa nama dan tag
+  - Semua build cache tanpa reference
+  - Volume yang tidak dipakai oleh satu container pun
+mixed dari:
+    docker container prune
+    docker network prune
+    docker image prune
+    docker builder prune
+    docker volume prune
+
+docker system prune -a --volumes
+Menghapus:
+  - Semua container yang sedang stop
+  - Network yang tidak connect ke satu container pun
+  - Image yang tidak memiliki container sama sekali.
+  - Seluruh build cache
+  - Volume yang tidak dipakai oleh satu container pun
+mixed dari:
+    docker container prune
+    docker network prune
+    docker image prune -a
+    docker builder prune -a
+    docker volume prune
+
+Note: Hati-hati dalam penghapus volumes karena ada database di sana!
+Ada kemungkinan volume akan digunakan oleh container berikutnya, kebetulan saat ini sedang tidak ada yang pakai.
+
+Untuk melihat total memory pemakaian dari sebelum dan setelah prune, mungkin bisa menggunakan command:
+docker system df
+
+
+
+
+
+
+
