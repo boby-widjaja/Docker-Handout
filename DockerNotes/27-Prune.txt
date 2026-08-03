@@ -22,9 +22,13 @@ Kalau kita ingin menghapus seluruh unused image tanpa perduli itu dangling atau 
 docker image prune -a
 docker image prune -af (tanpa konfirmasi)
 
-Untuk menghapus volume yang tidak digunakan oleh container manapun:
+Untuk menghapus volume yang tidak digunakan oleh container manapun dan tidak bernama:
 docker volume prune
 docker volume prune -f (tanpa konfirmasi)
+
+Untuk menghapus volume yang tidak digunakan oleh container manapun sekalipun yang bernama:
+docker volume prune -a
+docker volume prune -af (tanpa konfirmasi)
 
 Untuk menghapus network yang tidak ter-connect oleh container manapun:
 docker network prune
@@ -84,7 +88,7 @@ Menghapus:
   - Network yang tidak connect ke satu container pun
   - Semua dangling image tanpa nama dan tag
   - Semua build cache tanpa reference
-  - Volume yang tidak dipakai oleh satu container pun
+  - Volume yang tidak dipakai oleh satu container pun dan tidak bernama
 mixed dari:
     docker container prune
     docker network prune
@@ -98,13 +102,13 @@ Menghapus:
   - Network yang tidak connect ke satu container pun
   - Image yang tidak memiliki container sama sekali.
   - Seluruh build cache
-  - Volume yang tidak dipakai oleh satu container pun
+  - Volume yang tidak dipakai oleh satu container pun sekaligus bernama
 mixed dari:
     docker container prune
     docker network prune
     docker image prune -a
     docker builder prune -a
-    docker volume prune
+    docker volume prune -a
 
 Note: Hati-hati dalam penghapus volumes karena ada database di sana!
 Ada kemungkinan volume akan digunakan oleh container berikutnya, kebetulan saat ini sedang tidak ada yang pakai.

@@ -1,0 +1,128 @@
+1. Pastikan kita memiliki images di bawah ini:
+docker pull mcr.microsoft.com/mssql/server:2022-latest
+docker pull eclipse-temurin:21-jre
+docker pull maven:3.9.11-eclipse-temurin-21
+docker pull node:22-alpine
+
+2. Buat volume untuk app:
+docker volume create sqlserver_vol
+
+3. Buat network untuk app:
+docker network create basilisk_net
+
+=================== Database CONTAINER ========================
+
+4. Buat database container:
+docker run -d \
+    --name basilisk_db \
+    -e ACCEPT_EULA=Y \
+    -e SA_PASSWORD='SmithWessonMagnum357!' \
+    -v sqlserver_vol:/var/opt/mssql \
+    mcr.microsoft.com/mssql/server:2022-latest
+
+5. Jika belum dalam kondisi running, silahkan jalankan dengan:
+docker container start basilisk_db 
+
+6. Masuk ke dalam running basilisk_db container:
+docker exec -it -u root basilisk_db bash
+
+7. Masuk ke directory mssql:
+cd var/opt/mssql
+
+8. Buat directory backup:
+mkdir backup
+
+9. Keluar dari bash:
+exit
+
+10. Lalu pindahkan bak file ke dalam directory container:
+docker cp Database/BasiliskNext.bak basilisk_db:/var/opt/mssql/backup/BasiliskNext.bak
+
+11. Setelah berhasil kita akan kembali lagi masuk ke container dan menjalankan bash:
+docker exec -it -u root basilisk_db bash
+
+12. Jalankan sql server command line dengan ini:
+/opt/mssql-tools18/bin/sqlcmd \
+-S localhost \
+-U sa \
+-P "SmithWessonMagnum357!" \
+-C
+
+13. Kalau berhasil kalian akan masuk ke 1> dimana bisa mengetik command sqlcmd.
+(NOTE!: Jangan copy paste sql script sekaligus! 
+Apa lagi menjadi one line, karena di sini ada mix script dan command.
+Kalau mau copas baris perbaris, kecuali GO. Kita harus ketik GO lalu enter)
+Gunakan script dan command ini untuk restore.
+
+RESTORE DATABASE BasiliskNext FROM DISK='/var/opt/mssql/backup/BasiliskNext.bak' WITH
+MOVE 'BasiliskNext' TO '/var/opt/mssql/data/BasiliskNext.mdf', MOVE 'BasiliskNext_log' TO '/var/opt/mssql/data/BasiliskNext_log.ldf',
+REPLACE, RECOVERY;
+GO
+
+14. Keluar dari sqlcmd dengan:
+Ctrl + C 
+
+15. Apakah restore berhasil? Bisa uji coba dengan :
+/opt/mssql-tools18/bin/sqlcmd \
+    -S localhost \
+    -U sa \
+    -P 'SmithWessonMagnum357!' \
+    -d BasiliskNext \
+    -C \
+    -Q "SELECT * FROM dbo.Categories;"
+
+16. Keluar dari container:
+exit
+
+17. Connect database container ke network:
+docker network connect basilisk_net basilisk_db
+
+=================== Backend CONTAINER ========================
+
+
+
+
+1. Di sini ada 3 Folder dengan nama:
+NoSecurity: berisi back end tanpa security sama sekali
+LocalStorage: berisi back end yang securitynya mengembalikan JWT response untuk di handle JS
+Cookie: berisi back end yang dimana JWT nya akan disimpan di cookie dengan concept http only
+
+2. Pastikan terminal pindah ke directory folder NoSecurity
+Lalu buat image dengan cara:
+docker build --tag basilisk_nosecure:1.0 .
+
+4. Sekarang pindah ke directory folder LocalStorage lalu jalankan build image dengan cara yang mirip, tapi nama image yang berbeda:
+docker build --tag basilisk_localstore:1.0 .
+
+5. Sekarang pindah ke directory folder Cookie lalu ulangi langkah yang sama dengan nama image baru.
+docker build --tag basilisk_cookie:1.0 .
+
+6. Pastikan ketiga image baru itu tercipta dengan check:
+docker images
+
+7. Buat containers untuk ketiga images tersebut:
+docker container create --name basilisk_server_ns -p 7070:7070 basilisk_nosecure:1.0
+docker container create --name basilisk_server_ls -p 7070:7070 basilisk_localstore:1.0
+docker container create --name basilisk_server_ck -p 7070:7070 basilisk_cookie:1.0
+
+8. Karena ketiga container memiliki expose port yang sama, pastikan hanya salah satu yang jalan, jangan ketiganya.
+docker container start basilisk_server_ns
+atau
+docker container start basilisk_server_ls
+atau
+docker container start basilisk_server_ck
+
+=================== SET NETWORK ========================
+
+1. Buat network baru:
+docker network create basilisk_network
+
+2. Connect seluruh backend dengan database network:
+docker network connect basilisk_network sqlserver2022
+docker network connect basilisk_network basilisk_server_ns
+docker network connect basilisk_network basilisk_server_ls
+docker network connect basilisk_network basilisk_server_ck
+
+3. Pastikan network sudah terhubung dengan container yang bersangkutan
+docker network inspect basilisk_network
+
