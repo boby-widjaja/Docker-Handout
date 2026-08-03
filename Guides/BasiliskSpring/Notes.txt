@@ -79,3 +79,20 @@ docker network connect basilisk_net basilisk_db
 
 =================== Backend Container ========================
 
+18. Build image untuk backend appnya dengan command ini:
+docker build -t basilisk-backend:1.0 -f Builder/Dockerfile.backend .
+
+19. Buat container untuk backend appnya dengan command ini:
+docker container create \
+    --name basilisk_be \
+    -e DB_PASSWORD=SmithWessonMagnum357! \
+    -p 8005:8005 \
+    basilisk-backend:1.0
+
+20. Connect backend dengan database di dalam network basilisk_net:
+docker network connect basilisk_net basilisk_be
+
+21. Jalankan container dari backendnya, dan bisa langsung di coba di portnya di web browser:
+docker container start basilisk_be
+
+=================== Frontend Container ========================

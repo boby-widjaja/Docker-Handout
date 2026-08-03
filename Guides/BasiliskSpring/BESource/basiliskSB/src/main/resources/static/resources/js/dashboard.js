@@ -58,7 +58,7 @@ function formattingNumber(number) {
 
 async function startAnnualIncome (){
     let year = document.querySelector(".annual-income .order-year").value;
-    let dto = await requestDto('http://localhost:7070/dashboard/annualIncome/', year);
+    let dto = await requestDto('/dashboard/annualIncome/', year);
     let options = getAnnualIncomeChartOptions(dto);
     let element = document.querySelector('.annual-income .chart');
     let chart = renderChart(element, options);
@@ -117,7 +117,7 @@ function refreshAnnualIncome({annualIncomeChart}){
     let yearDropdown = document.querySelector(".annual-income .order-year");
     yearDropdown.addEventListener('change', async function(event){
         let year = yearDropdown.value;
-        let dto = await requestDto('http://localhost:7070/dashboard/annualIncome/', year);
+        let dto = await requestDto('/dashboard/annualIncome/', year);
         annualIncomeChart.updateSeries([{name: 'Incomes', data: dto.incomes}]);
         renderAnnualIncomeAnalysis(dto);
     });
@@ -127,7 +127,7 @@ function refreshAnnualIncome({annualIncomeChart}){
 
 async function startSalesmenComparison(){
     let year = document.querySelector(".salesmen-comparison .order-year").value;
-    let dto = await requestDto('http://localhost:7070/dashboard/salesmenComparison/', year);
+    let dto = await requestDto('/dashboard/salesmenComparison/', year);
     let options = getSalesmenComparisonChartOptions(dto);
     let element = document.querySelector('.salesmen-comparison .chart');
     return renderChart(element, options);
@@ -150,7 +150,7 @@ function refreshSalesmenComparison({salesmenComparisonChart}){
     let yearDropdown = document.querySelector(".salesmen-comparison .order-year");
     yearDropdown.addEventListener('change', async function(event){
         let year = yearDropdown.value;
-        let dto = await requestDto('http://localhost:7070/dashboard/salesmenComparison/', year);
+        let dto = await requestDto('/dashboard/salesmenComparison/', year);
         salesmenComparisonChart.updateSeries(dto.salesmenPerformances);
         salesmenComparisonChart.updateOptions({labels: dto.salesmenNames});
     });
@@ -162,7 +162,7 @@ async function startSalesmanPerformance(){
     let year = document.querySelector(".salesman-performance .order-year").value;
     let employeeNumber = document.querySelector(".salesman-performance .salesman-employee-number").value;
     let parameters = `?employeeNumber=${employeeNumber}&year=${year}`;
-    let dto = await requestDto('http://localhost:7070/dashboard/salesmanPerformance', parameters);
+    let dto = await requestDto('/dashboard/salesmanPerformance', parameters);
     let options = getSalesmanPerformanceChartOptions(dto);
     let element = document.querySelector('.salesman-performance .chart');
     return renderChart(element, options);
@@ -204,7 +204,7 @@ function refreshSalesmanPerformance({salesmanPerformanceChart}){
         let year = yearDropdown.value;
         let employeeNumber = employeeNumberDropdown.value;
         let parameters = `?employeeNumber=${employeeNumber}&year=${year}`;
-        let dto = await requestDto('http://localhost:7070/dashboard/salesmanPerformance', parameters);
+        let dto = await requestDto('/dashboard/salesmanPerformance', parameters);
         salesmanPerformanceChart.updateSeries([{data: dto}]);
     });
 
@@ -212,7 +212,7 @@ function refreshSalesmanPerformance({salesmanPerformanceChart}){
         let year = yearDropdown.value;
         let employeeNumber = employeeNumberDropdown.value;
         let parameters = `?employeeNumber=${employeeNumber}&year=${year}`;
-        let dto = await requestDto('http://localhost:7070/dashboard/salesmanPerformance', parameters);
+        let dto = await requestDto('/dashboard/salesmanPerformance', parameters);
         salesmanPerformanceChart.updateSeries([{data: dto}]);
     });
 }
@@ -221,7 +221,7 @@ function refreshSalesmanPerformance({salesmanPerformanceChart}){
 
 async function startIncomeByRegion(){
     let year = document.querySelector(".income-by-region .order-year").value;
-    let dto = await requestDto('http://localhost:7070/dashboard/incomeByRegion/', year);
+    let dto = await requestDto('/dashboard/incomeByRegion/', year);
     let options = getIncomeByRegionChartOptions(dto);
     let element = document.querySelector('.income-by-region .chart');
     return renderChart(element, options);
@@ -244,7 +244,7 @@ function refreshIncomeByRegion({incomeByRegionChart}){
     let yearDropdown = document.querySelector(".income-by-region .order-year");
     yearDropdown.addEventListener('change', async function(event){
         let year = yearDropdown.value;
-        let dto = await requestDto('http://localhost:7070/dashboard/incomeByRegion/', year);
+        let dto = await requestDto('/dashboard/incomeByRegion/', year);
         incomeByRegionChart.updateSeries(dto.incomes);
         incomeByRegionChart.updateOptions({labels: dto.cities});
     });
@@ -256,7 +256,7 @@ async function startCustomerActivity(){
     let year = document.querySelector(".customer-activity .order-year").value;
     let customerId = document.querySelector(".customer-activity .customer-id").value;
     let parameters = `?customerId=${customerId}&year=${year}`;
-    let dto = await requestDto('http://localhost:7070/dashboard/customerActivity', parameters);
+    let dto = await requestDto('/dashboard/customerActivity', parameters);
     let options = getCustomerActivityChartOptions(dto);
     let element = document.querySelector('.customer-activity .chart');
     return renderChart(element, options);
@@ -298,7 +298,7 @@ function refreshCustomerActivity({customerActivityChart}){
         let year = yearDropdown.value;
         let customerId = customerIdDropdown.value;
         let parameters = `?customerId=${customerId}&year=${year}`;
-        let dto = await requestDto('http://localhost:7070/dashboard/customerActivity', parameters);
+        let dto = await requestDto('/dashboard/customerActivity', parameters);
         customerActivityChart.updateSeries([{data: dto}]);
     });
 
@@ -306,7 +306,7 @@ function refreshCustomerActivity({customerActivityChart}){
         let year = yearDropdown.value;
         let customerId = customerIdDropdown.value;
         let parameters = `?customerId=${customerId}&year=${year}`;
-        let dto = await requestDto('http://localhost:7070/dashboard/customerActivity', parameters);
+        let dto = await requestDto('/dashboard/customerActivity', parameters);
         customerActivityChart.updateSeries([{data: dto}]);
     });
 }
@@ -315,7 +315,7 @@ function refreshCustomerActivity({customerActivityChart}){
 
 async function startCategoryPopularity(){
     let year = document.querySelector(".category-popularity .order-year").value;
-    let dto = await requestDto('http://localhost:7070/dashboard/categoryPopularity/', year);
+    let dto = await requestDto('/dashboard/categoryPopularity/', year);
     let options = getCategoryPopularityChartOptions(dto);
     let element = document.querySelector('.category-popularity .chart');
     return renderChart(element, options);
@@ -338,7 +338,7 @@ function refreshCategoryPopularity({categoryPopularityChart}){
     let yearDropdown = document.querySelector(".category-popularity .order-year");
     yearDropdown.addEventListener('change', async function(event){
         let year = yearDropdown.value;
-        let dto = await requestDto('http://localhost:7070/dashboard/categoryPopularity/', year);
+        let dto = await requestDto('/dashboard/categoryPopularity/', year);
         categoryPopularityChart.updateSeries(dto.totalQuantity);
         categoryPopularityChart.updateOptions({labels: dto.categoryNames});
     });
@@ -350,7 +350,7 @@ async function startCustomerInterest(){
     let year = document.querySelector(".customer-interest .order-year").value;
     let customerId = document.querySelector(".customer-interest .customer-id").value;
     let parameters = `?customerId=${customerId}&year=${year}`;
-    let dto = await requestDto('http://localhost:7070/dashboard/customerInterest', parameters);
+    let dto = await requestDto('/dashboard/customerInterest', parameters);
     let options = getCustomerInterestChartOptions(dto);
     let element = document.querySelector('.customer-interest .chart');
     return renderChart(element, options);
@@ -422,7 +422,7 @@ function refreshCustomerInterest({customerInterestChart}){
         let year = yearDropdown.value;
         let customerId = customerIdDropdown.value;
         let parameters = `?customerId=${customerId}&year=${year}`;
-        let dto = await requestDto('http://localhost:7070/dashboard/customerInterest', parameters);
+        let dto = await requestDto('/dashboard/customerInterest', parameters);
         customerInterestChart.updateSeries([{data: dto.totalQuantity}]);
         customerInterestChart.updateOptions({ xaxis: {categories: dto.categoryNames }});
     });
@@ -431,7 +431,7 @@ function refreshCustomerInterest({customerInterestChart}){
         let year = yearDropdown.value;
         let customerId = customerIdDropdown.value;
         let parameters = `?customerId=${customerId}&year=${year}`;
-        let dto = await requestDto('http://localhost:7070/dashboard/customerInterest', parameters);
+        let dto = await requestDto('/dashboard/customerInterest', parameters);
         customerInterestChart.updateSeries([{data: dto.totalQuantity}]);
         customerInterestChart.updateOptions({ xaxis: {categories: dto.categoryNames }});
     });
