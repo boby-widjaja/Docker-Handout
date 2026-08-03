@@ -1,5 +1,5 @@
 <template>
-    <base-image-tile :title="name" :imageSource="`http://localhost:7070/resources/image/product/${imagePlaceholder}`">
+    <base-image-tile :title="name" :imageSource="imagePlaceholder">
         <div class="button-container">
             <base-button :isLink="true" :link="`/product/form/${props.id}`">edit</base-button>
             <base-button :isLink="true" :link="`/product/delete/${props.id}`">delete</base-button>
@@ -20,6 +20,9 @@
 
 <script setup>
 import { computed } from 'vue';
+const domain = import.meta.env.VITE_SERVER_DOMAIN;
+const port = import.meta.env.VITE_SERVER_PORT;
+
 const props = defineProps(['id', 'name', 'supplier', 'category', 'price', 'imagePath']);
 const formattedPrice = computed(() => {
     return new Intl.NumberFormat('id-ID', {
@@ -28,6 +31,7 @@ const formattedPrice = computed(() => {
     }).format(props.price);
 })
 const imagePlaceholder = computed(() => {
-    return (props.imagePath === null) ? 'no-image.jpg' : props.imagePath
+    const productImage = (props.imagePath === null) ? 'no-image.jpg' : props.imagePath
+    return `http://${domain}:${port}/resources/image/product/${productImage}`
 })
 </script>

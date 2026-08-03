@@ -24,7 +24,6 @@ import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-@CrossOrigin
 @RestController
 @RequestMapping("/api/order")
 public class OrderRestController extends AbstractRestController {

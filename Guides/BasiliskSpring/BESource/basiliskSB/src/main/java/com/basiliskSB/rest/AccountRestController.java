@@ -24,10 +24,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 
-@CrossOrigin(
-    origins = "http://localhost:8080",
-    allowCredentials = "true"
-)
 @RestController
 @RequestMapping("/api/account")
 public class AccountRestController extends AbstractRestController{

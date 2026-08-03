@@ -1,11 +1,13 @@
 package com.basiliskSB.configuration;
 import com.basiliskSB.component.JwtRequestFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -70,7 +72,8 @@ public class RestSecurityConfiguration{
                 .hasAuthority("Administrator");
             auth.anyRequest().authenticated();
         });
-        http.cors(request -> request.configurationSource(corsConfigurationSource()));
+//        http.cors(request -> request.configurationSource(corsConfigurationSource()));
+        http.cors(Customizer.withDefaults());
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         http.httpBasic(entry -> entry.authenticationEntryPoint(authenticationEntryPoint()));
         http.exceptionHandling(exception -> exception.accessDeniedHandler(accessDeniedHandler()));
@@ -79,9 +82,10 @@ public class RestSecurityConfiguration{
     }
 
     @Bean
-    CorsConfigurationSource corsConfigurationSource() {
+    CorsConfigurationSource corsConfigurationSource(@Value("${client.domain}") String clientDomain) {
         var configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://localhost:8080");
+        //configuration.addAllowedOrigin("http://localhost:8006");
+        configuration.setAllowedOrigins(List.of(clientDomain));
         configuration.setAllowedMethods(List.of("GET","POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

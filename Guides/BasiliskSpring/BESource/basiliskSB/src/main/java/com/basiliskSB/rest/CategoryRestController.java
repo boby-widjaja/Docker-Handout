@@ -19,10 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import com.basiliskSB.dto.category.CategoryGridDTO;
 import jakarta.validation.Valid;
 
-@CrossOrigin(
-    origins = "http://localhost:8080",
-    allowCredentials = "true"
-)
 @RestController
 @RequestMapping("/api/category")
 public class CategoryRestController extends AbstractRestController{

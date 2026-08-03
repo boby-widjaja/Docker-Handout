@@ -24,7 +24,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
-@CrossOrigin
+
 @RestController
 @RequestMapping("/api/orderDetail")
 public class OrderDetailRestController extends AbstractRestController{
