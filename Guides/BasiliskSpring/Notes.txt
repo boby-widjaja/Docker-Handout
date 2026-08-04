@@ -10,6 +10,7 @@ docker volume create sqlserver_vol
 3. Buat network untuk app:
 docker network create basilisk_net
 
+
 =================== Database Container ========================
 
 4. Buat database container:
@@ -77,6 +78,7 @@ exit
 17. Connect database container ke network:
 docker network connect basilisk_net basilisk_db
 
+
 =================== Backend Container ========================
 
 18. Build image untuk backend appnya dengan command ini:
@@ -95,4 +97,14 @@ docker network connect basilisk_net basilisk_be
 21. Jalankan container dari backendnya, dan bisa langsung di coba di portnya di web browser:
 docker container start basilisk_be
 
+
 =================== Frontend Container ========================
+
+22. Build front end image dengan menggunakan command ini:
+docker build -t basilisk-frontend:1.0 -f Builder/Dockerfile.frontend .
+
+23. Buat dan run container dengan command ini:
+docker run -d \
+    --name basilisk_fe \
+    -p 8006:8006 \
+    basilisk-frontend:1.0
