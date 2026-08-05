@@ -1,0 +1,59 @@
+
+check docker compose version yang ada di system:
+docker compose version
+
+untuk check setiap perintah di docker compose:
+docker compose
+atau
+docker compose --help
+
+YAML sample:
+firstName: Ben 
+lastName: Grimm 
+hobbies:
+	- Coding
+	- Reading
+	- Gaming
+address:
+	street: Jln. ABC
+	city: Jakarta
+	country: Indonesia
+wallet:
+	- type: cash
+	  amount: 100000
+	- type: debit
+	  amount: 500000
+
+defaultf file:
+docker-compose.yaml
+
+Membuat tanpa start
+docker compose create
+
+Lebih aman stop containernya daripada down, karena tidak menghapus
+docker compose stop
+
+untuk memulai yang di stop bisa menggunakan
+docker compose start
+
+untuk me-running semua (Create dan start containers)
+docker compose up
+docker compose up -d (dettached mode)
+	detatched mode akan menjalankan compose di belakang layar jadi kita gak perlu nungguin terminalnya.
+
+Hati-hati menggunakan down, terutama dengan container database, karena akan menghapus total
+docker compose down
+
+docker compose up
+
+detatch mode:
+docker compose up -d
+
+hapus volume sekalian
+docker compose down -v
+
+ikut hapus image
+docker compose down --rmi local
+
+Dengan destination file
+docker compose -f mongo-services.yaml up

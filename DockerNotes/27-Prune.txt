@@ -115,10 +115,3 @@ Ada kemungkinan volume akan digunakan oleh container berikutnya, kebetulan saat 
 
 Untuk melihat total memory pemakaian dari sebelum dan setelah prune, mungkin bisa menggunakan command:
 docker system df
-
-
-
-
-
-
-
