@@ -1,6 +1,37 @@
+Tentunya sering kali kebutuhan kita untuk melakukan deployment sebuah system dalam satu environment, 
+kita membutuhkan multiple containers yang jalan dan berhubungan satu sama lain.
+Contoh paling sederhananya ketika kita ingin deploy aplikasi front-end yang membutuhkan API dari back-endnya
+dimana juga kita harus memiliki databasenya, sehingga setidaknya ada 3 container yang harus running:
+-database container
+-back-end container
+-front-end container
 
-check docker compose version yang ada di system:
+Contoh bisa dilihat di Guides/BasiliskSpring. File Notes.txt di dalam directory tersebut akan
+menuntun anda dalam melakukan deployment container, dimana pada akhirnya ada 3 container yang dibutuhkan agar aplikasi
+bekerja:
+-basilisk_db
+-basilisk_be
+-basilisk_fe
+
+Tertulis pada Notes.txt bahkan dengan Dockerfiles dan Source yang disiapkan, kurang lebih membutuhkan 20 - 23 langkah
+untuk setup seluruh environment Basilisk App yang terdiri dari hanya 3 containers. 
+Basilisk dibangun diatas Monolithic Architecture, bayangkan bila ini adalah Microsystem Architecture, maka jumlah
+containers banyaknya akan berkali-kali lipat.
+
+Maka melakukan build image, create dan run container satu-persatu menjadikan proses deployment bersifat manual,
+sehingga automation masih kurang optimal. (Kalau sebelum jaman containerization, bahkan Dockerfile tidak bisa membantu automationnya.)
+Karena tujuan utama kita adalah mempercepat kinerja Devops.
+
+Sebagai solusi docker menciptakan Docker Compose.
+Docker Compose adalah Multi-Container Tool yang digunakan untuk menjalankan dan menghentikan banyak container sekaligus
+dengan menggunakan konfigurasi dari file YAML.
+YAML sendiri sama seperti JSON, object dalam nested structure yang digunakan untuk menyimpan data atau konfigurasi.
+Bedanya pada JSON, syntax menggunakan javascript object dan javascript array, YAML menggunakan indentation dan -
+
+Check docker compose version yang ada di system docker kamu, gunakan:
 docker compose version
+
+(Note: dulu compose bukan bagian dari command docker, tapi program lain yang harus diinstall, tetapi versi yang baru sudah tidak lagi.)
 
 untuk check setiap perintah di docker compose:
 docker compose
@@ -57,3 +88,5 @@ docker compose down --rmi local
 
 Dengan destination file
 docker compose -f mongo-services.yaml up
+
+export parameter
