@@ -1,0 +1,8 @@
+Di sini kita akan explore lebih dalam lagi configuration dan property-property yang ada pada
+docker-compose.yaml, dan apa yang bisa kita lakukan untuk mempermudah multi container implementation.
+
+=========================================================================================================================
+
+Service adalah definisi atau blueprint dalam Docker Compose yang menjelaskan bagaimana satu jenis container 
+harus dibangun atau dijalankan, termasuk image yang digunakan, konfigurasi, jaringan, volume, port, environment variable, 
+dan pengaturan lainnya.

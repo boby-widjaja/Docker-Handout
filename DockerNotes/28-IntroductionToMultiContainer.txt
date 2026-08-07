@@ -1,0 +1,112 @@
+Tentunya sering kali kebutuhan kita untuk melakukan deployment sebuah system dalam satu environment, 
+kita membutuhkan multiple containers yang jalan dan berhubungan satu sama lain.
+Contoh paling sederhananya ketika kita ingin deploy aplikasi front-end yang membutuhkan API dari back-endnya
+dimana juga kita harus memiliki databasenya, sehingga setidaknya ada 3 container yang harus running:
+-database container
+-back-end container
+-front-end container
+
+Contoh bisa dilihat di Guides/BasiliskSpring. File Notes.txt di dalam directory tersebut akan
+menuntun anda dalam melakukan deployment container, dimana pada akhirnya ada 3 container yang dibutuhkan agar aplikasi
+bekerja:
+-basilisk_db
+-basilisk_be
+-basilisk_fe
+
+Tertulis pada Notes.txt bahkan dengan Dockerfiles dan Source yang disiapkan, kurang lebih membutuhkan 20 - 23 langkah
+untuk setup seluruh environment Basilisk App yang terdiri dari hanya 3 containers. 
+Basilisk dibangun diatas Monolithic Architecture, bayangkan bila ini adalah Microsystem Architecture, maka jumlah
+containers banyaknya akan berkali-kali lipat.
+
+Maka melakukan build image, create dan run container satu-persatu menjadikan proses deployment bersifat manual,
+sehingga automation masih kurang optimal. (Kalau sebelum jaman containerization, bahkan Dockerfile tidak bisa membantu automationnya.)
+Karena tujuan utama kita adalah mempercepat kinerja Devops.
+
+Sebagai solusi docker menciptakan Docker Compose.
+Docker Compose adalah Multi-Container Tool yang digunakan untuk menjalankan dan menghentikan banyak container sekaligus
+dengan menggunakan konfigurasi dari file YAML.
+YAML sendiri sama seperti JSON, object dalam nested structure yang digunakan untuk menyimpan data atau konfigurasi.
+Bedanya pada JSON, syntax menggunakan javascript object dan javascript array, YAML menggunakan indentation dan -
+
+Check docker compose version yang ada di system docker kamu, gunakan:
+docker compose version
+
+(Note: dulu compose bukan bagian dari command docker, tapi program lain yang harus diinstall, tetapi versi yang baru sudah tidak lagi.)
+command versi lama: docker-compose
+command versi baru: docker compose
+
+untuk check setiap perintah di docker compose:
+docker compose
+atau
+docker compose --help
+
+Seperti yang sebelumnya pernah dibahas kalau docker compose dikonfigurasi oleh file yaml.
+Untuk yang belum familiar dengan yaml, bisa lihat contohnya di Guides/ComposeLinux/Sample/contoh.yaml.
+Isi file ini hanya contoh format yaml bukan konfigurasi docker compose.
+Isi data serupa bisa dilihat dalam contoh.json.
+
+default nama file yaml yang digunakan untuk konfigurasi adalah:
+docker-compose.yaml
+
+Di dalam configurationnya terdapat services dimana di dalamnya terdapat 2 service dengan nama myfedora dan myubuntu.
+Dalam hal ini kita akan membuat 1 service untuk 1 container, tetapi pengertian service akan dijelaskan di notes berikutnya.
+
+Temukan docker-compose.yaml dalam directory Guides/ComposeLinux, lalu coba beberapa command berikut.
+Buatkan semua container tanpa menjalankannya:
+docker compose create
+
+(Notes: Mengenai tata cara konfigurasi yamlnya akan dijelaskan di catatan berikutnya.)
+
+Ketika container-container yang dibuat dari sebuah docker compose, container-container ini akan
+tercampur dengan container-container lainnya, jika mengharuskan kita untuk memilih-milih container
+mana yang merupakan bagian dari services ini dan kita akan jalankan.
+
+Kita cukup menggunakan command ini, dan docker compose akan mengenali container mana saja yang menjadi bagian darinya.
+docker compose start
+
+Untuk melihat seluruh project compose, kita bisa gunakan 
+docker compose ls
+docker compose ps
+
+Kalau kita melihat lewat docker container ls, kita akan mendapatkan mereka terindikasi 1 group project lewat
+nama prefixnya.
+NAMES
+composelinux-myubuntu-1
+composelinux-myfedora-1
+
+Kalau kita mau melihatnya inspecting setiap container, misalnya:
+docker inspect composelinux-myubuntu-1
+
+Bisa ditemukan pada property "Labels":
+"Labels": {
+	"com.docker.compose.project": "composelinux",
+	"com.docker.compose.service": "myubuntu",
+	...
+}
+
+Untuk menghentikan seluruh container yang berhubungan dengan project compose ini:
+docker compose stop
+
+Sama seperti listing container, listing compose project yang sudah dalam keadaan stop bisa menggunakan option all:
+docker compose ls -a
+
+Untuk menghapus semua container yang terkait dengan compose projectnya, bisa gunakan:
+docker compose rm
+docker compose rm -f (force tanpa meminta konfirmasi)
+
+Kalau pada container kita bisa menggunakan run sebagai action create dan start sekaligus,
+di sini kita bisa menggunakan up.
+docker compose up
+docker compose up -d (dettached mode)
+	detatched mode akan menjalankan compose di belakang layar jadi kita gak perlu nungguin terminalnya.
+
+Jika tidak mau menggunakan default file (docker-compose.yaml), kita bisa menggunakan destination file option:
+docker compose -f second-compose.yaml up
+docker compose -d -f second-compose.yaml up
+
+Lawan dari up adalah down, dimana akan menghentikan seluruh container di dalam projectnya dan menghapusnya.
+Hati-hati menggunakan down, terutama dengan container database, karena akan menghapus total
+docker compose down
+docker compose down -v (hapus volume sekalian, bila di dalam compose ada pembuatan volume)
+docker compose down --rmi local (ikut hapus imagenya juga)
+docker compose down --rmi all (ikut hapus image dan networknya juga)

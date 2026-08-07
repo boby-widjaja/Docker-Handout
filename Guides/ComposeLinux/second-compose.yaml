@@ -1,0 +1,8 @@
+services:
+  myalpine:
+    image: alpine:3.22.4 
+    command: sleep infinity
+
+  myubuntu:
+    image: 'ubuntu:26.04'
+    command: sleep infinity

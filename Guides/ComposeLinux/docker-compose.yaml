@@ -1,0 +1,8 @@
+services:
+  myfedora:
+    image: fedora:44
+    command: sleep infinity
+
+  myubuntu:
+    image: 'ubuntu:26.04'
+    command: sleep infinity
