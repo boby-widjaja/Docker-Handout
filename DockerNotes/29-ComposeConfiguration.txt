@@ -1,8 +1,151 @@
 Di sini kita akan explore lebih dalam lagi configuration dan property-property yang ada pada
 docker-compose.yaml, dan apa yang bisa kita lakukan untuk mempermudah multi container implementation.
 
-=========================================================================================================================
+Kita akan mempelajari attribute-attribute yang sering dipakai dalam project dengan contoh-contoh sederhana
+yang bisa ditemukan di Guides/ComposeLinux dan kebanyakan di Guides/ComposeProjects 
+
+1. services
+
+Pada percobaan di chapter sebelumnya, kita sudah melihat attribute services yang muncul paling di file yaml.
+Services adalah collection of service, tetapi pada yaml services lebih ditulis dalam bentuk object ketimbang array.
+Itu dikarenakan docker compose ingin membuatkan key-value pair collection pada service, tetapi tidak ada
+collection sejenis map pada yaml. Akhirnya dibuatkanlah dalam bentuk attribute-value untuk menggantikan key-value.
+Jadi setiap nama service adalah ID atau Key yang dituliskan dalam attribute. Karena sifatnya seperti Key atau ID,
+nama service bersifat unik dan tidak boleh sama satu sama yang lain.
+
+Oleh karena digunakan sebagai ID dan sifatnya harus unik, nama service disebut juga sebagai Service Identifier.
+Kesalahan yang sering terjadi adalah banyak yang men-salah artikan kalau service itu sama dengan container.
 
 Service adalah definisi atau blueprint dalam Docker Compose yang menjelaskan bagaimana satu jenis container 
 harus dibangun atau dijalankan, termasuk image yang digunakan, konfigurasi, jaringan, volume, port, environment variable, 
 dan pengaturan lainnya.
+
+Jadi service lebih dari sekedar container.
+
+
+=========================================================================================================================
+
+services:
+  mysql:
+    image: mysql:9.7
+
+services → daftar container yang ingin dijalankan.
+mysql → nama service (bukan nama image).
+image → image Docker yang digunakan.
+
+services:
+  database:
+    image: mysql:9.7
+    container_name: mysql_container
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: nodecomplete
+    volumes:
+      - mysql_volume:/var/lib/mysql
+
+volumes:
+  mysql_volume:
+
+--------------------------------------------
+
+command:
+command: tail -f /dev/null
+
+command:
+  - tail
+  - -f
+  - /dev/null
+
+-------------------------------
+
+restart: no
+restart: always
+restart: unless-stopped
+restart: on-failure
+
+-----------------------------------
+
+depends_on
+
+services:
+  app:
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql
+
+
+services:
+  app:
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+-------------------------------------
+
+services:
+  mysql:
+    networks:
+      - backend
+
+  app:
+    networks:
+      - backend
+
+networks:
+  backend:
+
+-------------------------------------
+
+Directories:
+project/
+│
+├── compose.yaml
+├── app/
+│   └── Dockerfile
+│
+└── web/
+    └── Dockerfile
+
+services:
+  app:
+    build:
+      context: ./app
+
+  web:
+    build:
+      context: ./web
+
+
+project/
+│
+├── compose.yaml
+│
+└── docker/
+    ├── Dockerfile.dev
+    ├── Dockerfile.prod
+    └── Dockerfile.test
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.production
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.production
+
+--------------------------
+
+configs ??
+
+--------------------------
+
+docker compose up --scale ??
+
+--------------------------
