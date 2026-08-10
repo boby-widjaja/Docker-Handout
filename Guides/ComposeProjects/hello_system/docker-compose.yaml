@@ -3,12 +3,12 @@ services:
     container_name: hello-world-container
     image: hello-world:latest
 
-  myfedora:
+  myFedora:
     container_name: fedora-container
     image: fedora:44
     command: sleep infinity
 
-  myubuntu:
+  myUbuntu:
     container_name: ubuntu-container
     image: 'ubuntu:26.04'
     command: sleep infinity

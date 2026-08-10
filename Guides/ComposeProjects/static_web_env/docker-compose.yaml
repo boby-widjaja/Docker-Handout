@@ -1,0 +1,11 @@
+services:
+  website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8008:80"
+    environment:
+      NAME: "Boby Widjaja"
+      JOB: "Developer"
+      DEPARTMENT: "IT"

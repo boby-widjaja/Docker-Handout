@@ -4,6 +4,7 @@ docker-compose.yaml, dan apa yang bisa kita lakukan untuk mempermudah multi cont
 Kita akan mempelajari attribute-attribute yang sering dipakai dalam project dengan contoh-contoh sederhana
 yang bisa ditemukan di Guides/ComposeLinux dan kebanyakan di Guides/ComposeProjects 
 
+-------------------------------------------------------------------------------------------------------------------------
 1. services
 
 Pada percobaan di chapter sebelumnya, kita sudah melihat attribute services yang muncul paling di file yaml.
@@ -18,20 +19,112 @@ Kesalahan yang sering terjadi adalah banyak yang men-salah artikan kalau service
 
 Service adalah definisi atau blueprint dalam Docker Compose yang menjelaskan bagaimana satu jenis container 
 harus dibangun atau dijalankan, termasuk image yang digunakan, konfigurasi, jaringan, volume, port, environment variable, 
-dan pengaturan lainnya.
+dan pengaturan lainnya. Jadi service bukanlah container, tetapi konfigurasi komplit sampai rumah itu selesai.
+Bayangkan kalau kalian membeli lemari dari IKEA, lalu di sana ada buku petunjuk cara merakitnya, bahan-bahannya apa saja yang
+sudah disediakan di dalam box? Dan apakah ada tools lain yang diperlukan di luar yang disediakan box? Apakah butuh
+tambahan palu? tambahan obeng? Adakah link dalam bentuk QR code yang menampilkan tutorial tambahan dari youtube?
 
-Jadi service lebih dari sekedar container.
+-------------------------------------------------------------------------------------------------------------------------
+2. container_name
 
+Apabila kita tidak menggunakan attribute container_name, maka nama container kita akan diberikan berdasarkan
+nama servicenya (di-concate dengan nama projectnya). Tetapi jika kita berikan nama containernya, nama containernya
+tidak akan menggunakan default nama servicenya. Perhatikan contoh Guides/ComposeProjects/hello_system
+
+services:
+  helloWorld:
+    container_name: hello-world-container
+    image: hello-world:latest
+
+  myFedora:
+    container_name: fedora-container
+    image: fedora:44
+    command: sleep infinity
+
+  myUbuntu:
+    container_name: ubuntu-container
+    image: 'ubuntu:26.04'
+    command: sleep infinity
+
+Pada kasus ini, contoh nama services adalah: helloWorld, myFedora, myUbuntu.
+Sedangkan nama containernya bisa dilihat: hello-world-container, fedora-container, dan ubuntu-container.
+
+Sebagai contoh yang bertujuan untuk menunjukan perbedaannya, saya menggunakan nama container yang berbeda.
+Walaupun tidak ada aturan baku harus seperti apa penulisan, tetapi penulisan nama pada docker, baik image, container, service, project,
+biasanya bergantian antara kebab-case dan snake_case.
+
+untuk penamaan image saya biasa menggunakan kebab-case,
+untuk penamaan project dan service/container saya menggunakan snake_case.
+Jadi ketika pembuatan project saya bisa mudah melihatnya jadi seperti ini:
+
+travel_management-core_backend
+
+Dimana travel_management adalah nama projectnya dan core_backend adalah nama containernya.
+
+services:
+  core_backend:
+
+-------------------------------------------------------------------------------------------------------------------------
+3. image
+
+Seperti yang ada pada dockerfile, fungsi image ini sangat mudah untuk dipahami, image berfungsi
+untuk menunjukan dasar image yang akan digunakan dalam pembuatan container dari service ini.
+Tapi ini bukan berarti fungsi dockerfile sendiri menjadi tidak berguna dalam penggunaan compose.
+Mengenai kombinasi penggunaan compose dan dockerfile akan dijelaskan nanti kemudian.
+
+-------------------------------------------------------------------------------------------------------------------------
+4. ports
+
+Sama seperti pada dockerfile, kita juga bisa publish ports lewat docker compose configuration.
+Kita bisa melakukannya dengan menggunakan ports attribute. Kurang lebih seperti ini contohnya:
+
+services:
+  website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8007:80"
+
+Contoh ini bisa dilihat di Guides/static_web.
+
+Service juga bisa menggunakan multiple ports, seperti contohnya:
+services:
+  myapp:
+    image: myapp:1.0
+    ports:
+      - "8007:80"
+      - "8443:443"
+      - "9000:9000"
+
+Mengapa satu container bisa punya banyak port?
+Karena satu aplikasi/service bisa menyediakan beberapa endpoint jaringan.
+
+Contoh klasik Nginx:
+80   → HTTP
+443  → HTTPS
+
+
+-------------------------------------------------------------------------------------------------------------------------
+5. build
+
+Kita juga bisa mengatur build proses dengan docker compose. Di sini juga kita bisa mengkombinasikan docker compose dengan
+docker file.
+
+context:
+dockerfile:
+args:
+target:
+cache_from:
+cache_to:
+labels:
+platforms:
+tags:
+secrets:
+ssh:
 
 =========================================================================================================================
 
-services:
-  mysql:
-    image: mysql:9.7
-
-services → daftar container yang ingin dijalankan.
-mysql → nama service (bukan nama image).
-image → image Docker yang digunakan.
 
 services:
   database:
