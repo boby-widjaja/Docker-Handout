@@ -2,6 +2,5 @@ services:
   website:
     build:
       context: .
-      dockerfile: Dockerfile
     ports:
       - "8007:80"

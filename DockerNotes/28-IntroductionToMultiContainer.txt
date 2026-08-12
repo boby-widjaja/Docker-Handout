@@ -100,6 +100,28 @@ docker compose up
 docker compose up -d (dettached mode)
 	detatched mode akan menjalankan compose di belakang layar jadi kita gak perlu nungguin terminalnya.
 
+Kita juga bisa selective terhadap service mana yang mau dijalankan oleh docker compose dengan cara menyebut nama servicenya:
+Misalnya isi docker-compose.yaml:
+services:
+  frontend:
+    image: my-frontend
+	...
+  backend:
+    image: my-backend
+	...
+  mysql:
+    image: mysql:9.7
+	...
+  redis:
+    image: redis
+	...
+
+Hanya menjalankan mysql: 
+docker compose up mysql
+
+Menjalankan backend dan mysql:
+docker compose up backend mysql
+
 Jika tidak mau menggunakan default file (docker-compose.yaml), kita bisa menggunakan destination file option:
 docker compose -f second-compose.yaml up
 docker compose -d -f second-compose.yaml up

@@ -1,0 +1,20 @@
+1. Setelah berhasil kita akan kembali lagi masuk ke container dan menjalankan bash:
+docker exec -it -u root basilisk_db bash
+
+2. Jalankan sql server command line dengan ini:
+/opt/mssql-tools18/bin/sqlcmd \
+-S localhost \
+-U sa \
+-P "SmithWessonMagnum357!" \
+-C
+
+3. Kalau berhasil kalian akan masuk ke 1> dimana bisa mengetik command sqlcmd.
+(NOTE!: Jangan copy paste sql script sekaligus! 
+Apa lagi menjadi one line, karena di sini ada mix script dan command.
+Kalau mau copas baris perbaris, kecuali GO. Kita harus ketik GO lalu enter)
+Gunakan script dan command ini untuk restore.
+
+RESTORE DATABASE BasiliskNext FROM DISK='/var/opt/mssql/backup/BasiliskNext.bak' WITH
+MOVE 'BasiliskNext' TO '/var/opt/mssql/data/BasiliskNext.mdf', MOVE 'BasiliskNext_log' TO '/var/opt/mssql/data/BasiliskNext_log.ldf',
+REPLACE, RECOVERY;
+GO

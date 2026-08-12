@@ -4,6 +4,7 @@ docker-compose.yaml, dan apa yang bisa kita lakukan untuk mempermudah multi cont
 Kita akan mempelajari attribute-attribute yang sering dipakai dalam project dengan contoh-contoh sederhana
 yang bisa ditemukan di Guides/ComposeLinux dan kebanyakan di Guides/ComposeProjects 
 
+
 -------------------------------------------------------------------------------------------------------------------------
 1. services
 
@@ -23,6 +24,7 @@ dan pengaturan lainnya. Jadi service bukanlah container, tetapi konfigurasi komp
 Bayangkan kalau kalian membeli lemari dari IKEA, lalu di sana ada buku petunjuk cara merakitnya, bahan-bahannya apa saja yang
 sudah disediakan di dalam box? Dan apakah ada tools lain yang diperlukan di luar yang disediakan box? Apakah butuh
 tambahan palu? tambahan obeng? Adakah link dalam bentuk QR code yang menampilkan tutorial tambahan dari youtube?
+
 
 -------------------------------------------------------------------------------------------------------------------------
 2. container_name
@@ -64,16 +66,105 @@ Dimana travel_management adalah nama projectnya dan core_backend adalah nama con
 services:
   core_backend:
 
+
 -------------------------------------------------------------------------------------------------------------------------
 3. image
 
-Seperti yang ada pada dockerfile, fungsi image ini sangat mudah untuk dipahami, image berfungsi
-untuk menunjukan dasar image yang akan digunakan dalam pembuatan container dari service ini.
-Tapi ini bukan berarti fungsi dockerfile sendiri menjadi tidak berguna dalam penggunaan compose.
-Mengenai kombinasi penggunaan compose dan dockerfile akan dijelaskan nanti kemudian.
+Attribute image di sini bisa memiliki 2 kegunaan. Dimana kegunaan ini berfungsi bergantian tergantung kehadiran attribute build
+(apa itu build nanti dijelaskan di bagian attribute build) di dalam docker compose. Tetapi value dari attribute ini
+sudah pasti nama image.
+
+Bila attribute build tidak ada, maka kegunaan image adalah untuk menunjukan image mana yang dipakai untuk proses pembuatan
+container ini. 
+
+Bila attribute build ada, maka kegunaan image adalah untuk memberikan nama image baru dari hasil build docker compose ini.
+Lalu menggunakan image baru ini untuk pembuatan container baru ini.
+
 
 -------------------------------------------------------------------------------------------------------------------------
-4. ports
+4. build
+
+Selain membuat container, kita juga sudah banyak belajar membuat image lewat proses build dengan menggunakan command
+docker build yang menggunakan konfigurasi dari Dockerfile. Jadi selain membantu proses pembuatan container dari image,
+docker compose juga membantu melakukan proses build untuk sebuah image.
+
+Jadi kesimpulannya, service tidak hanya mengurusi penciptaan container saja, tapi juga dalam proses building image.
+Di sini juga kita bisa mengkombinasikan docker compose dengan Dockerfile.
+
+Kita bisa mencoba lihat contoh attribute build dari contoh di dalam directory:
+-) Guides/ComposeProjects/static_web
+-) Guides/ComposeProjects/static_web_env
+
+services:
+  website:
+    build:
+      context: .
+    ports:
+      - "8007:80"
+
+services:
+  website:
+    image: static-we:1.0
+    build:
+      context: .
+      dockerfile: Dockerfile.development
+      labels:
+        maintainer: "Boby"
+        version: "1.0"
+        description: "Backend API service"
+    ports:
+      - "8008:80"
+    environment:
+      NAME: "Boby Widjaja"
+      JOB: "Developer"
+      DEPARTMENT: "IT"
+
+Pada 2 contoh di atas, kita bisa melihat docker composenya memiliki attribute build,
+dimana attribute build memiliki beberapa attribute lagi. Pada contoh di atas ditampilkan context dan dockerfile.
+Berikut ini beberapa attribute dari build yang cukup umum digunakan (tidak semua):
+
+-) context: digunakan untuk menunjukan directory tempat build context disimpan.
+-) dockerfile: digunakan untuk menunjukan path dan nama dari Dockerfile yang digunakan.
+  Note: bila Dockerfile berada di root context directory dan menggunakan nama default Dockerfile, maka attribute ini tidak diperlukan.
+-) args: Digunakan untuk men-supply value-value untuk ARG pada Dockerfile.
+-) target: sesekali digunakan untuk multi-stage dockerfile, dimana kita bisa memilih untuk menghasilkan image hanya dari step 1
+dari multi-stage tersebut.
+
+FROM node:24 AS base
+WORKDIR /app
+COPY package*.json ./
+
+FROM base AS development
+RUN npm install
+COPY . .
+CMD ["npm", "run", "dev"]
+
+FROM base AS production
+RUN npm ci --omit=dev
+COPY . .
+CMD ["npm", "start"]
+
+============================
+
+services:
+  app:
+    build:
+      context: .
+      target: development
+
+Hasil image hanya sampai build stage 2.
+
+Tetapi tidak cukup di sana, agar command docker bisa melakukan build, kita harus menambahkan option build
+pada command docker compose up.
+docker compose up --build
+
+atau secara alternatif, kita bisa proses build dulu, baru di up kemudian.
+docker compose build
+docker compose build --no-cache (Bila tidak mau ada cache pada build berikutnya)
+
+
+-------------------------------------------------------------------------------------------------------------------------
+5. ports
 
 Sama seperti pada dockerfile, kita juga bisa publish ports lewat docker compose configuration.
 Kita bisa melakukannya dengan menggunakan ports attribute. Kurang lebih seperti ini contohnya:
@@ -82,7 +173,6 @@ services:
   website:
     build:
       context: .
-      dockerfile: Dockerfile
     ports:
       - "8007:80"
 
@@ -106,22 +196,40 @@ Contoh klasik Nginx:
 
 
 -------------------------------------------------------------------------------------------------------------------------
-5. build
+6. command
 
-Kita juga bisa mengatur build proses dengan docker compose. Di sini juga kita bisa mengkombinasikan docker compose dengan
-docker file.
+Command di dalam docker compose simplenya adalah command yang dijalankan ketika container di jalankan.
+command yang biasa diketik pada saat docker run atau docker start.
+docker run ....... [command]
+docker start ...... [command]
+Dari pelajaran Dockerfile, kita tau command ini adalah command yang akan meng-override CMD instruction (bukan ENTRYPOINT)
 
-context:
-dockerfile:
-args:
-target:
-cache_from:
-cache_to:
-labels:
-platforms:
-tags:
-secrets:
-ssh:
+services:
+  app:
+    image: myapp
+    command: "echo A && echo B"
+
+Ada beberapa syntax penulisan dari command pada docker compose:
+
+Type 1: Flow Sequence (Array Style)
+command: ["python", "app.py"]
+
+Type 2: String
+command: python app.py
+
+Type 3: Block Sequence (List Style)
+command:
+  - python
+  - app.py
+  - --port
+  - "8080"
+
+
+-------------------------------------------------------------------------------------------------------------------------
+7. volumes
+
+
+
 
 =========================================================================================================================
 
@@ -141,16 +249,6 @@ volumes:
   mysql_volume:
 
 --------------------------------------------
-
-command:
-command: tail -f /dev/null
-
-command:
-  - tail
-  - -f
-  - /dev/null
-
--------------------------------
 
 restart: no
 restart: always
@@ -192,49 +290,6 @@ networks:
 
 -------------------------------------
 
-Directories:
-project/
-│
-├── compose.yaml
-├── app/
-│   └── Dockerfile
-│
-└── web/
-    └── Dockerfile
-
-services:
-  app:
-    build:
-      context: ./app
-
-  web:
-    build:
-      context: ./web
-
-
-project/
-│
-├── compose.yaml
-│
-└── docker/
-    ├── Dockerfile.dev
-    ├── Dockerfile.prod
-    └── Dockerfile.test
-
-services:
-  app:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.production
-
-services:
-  app:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.production
-
---------------------------
-
 configs ??
 
 --------------------------
@@ -242,3 +297,10 @@ configs ??
 docker compose up --scale ??
 
 --------------------------
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        APP_VERSION: "1.0"

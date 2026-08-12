@@ -1,8 +1,13 @@
 services:
   website:
+    image: static-we:1.0
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.development
+      labels:
+        maintainer: "Boby"
+        version: "1.0"
+        description: "Backend API service"
     ports:
       - "8008:80"
     environment:
