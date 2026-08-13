@@ -11,6 +11,8 @@ services:
     build:
       context: Database
       dockerfile: Dockerfile
+    networks:
+      - basilisk_net
 
   basilisk_be:
     container_name: basilisk_be
@@ -25,6 +27,8 @@ services:
     depends_on:
       - basilisk_db
     restart: on-failure
+    networks:
+      - basilisk_net
 
   basilisk_fe:
     container_name: basilisk_fe
@@ -36,6 +40,13 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - basilisk_be
+    networks:
+      - basilisk_net
 
 volumes:
   sqlserver_vol:
+
+networks:
+  basilisk_net:
+    name: basilisk_net
+    driver: bridge

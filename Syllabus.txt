@@ -1,30 +1,10 @@
 
 - Shell Script
-    Shebang X
-    Variable X
-    Input X
-    Conditional X
-    Array X
-    Iteration X
-    String X
-    Permission X
     Authentication
 
 
-- Image X
-- Container X
-- Docker File X
-- Environment Variable X
-- Database X
-- Volume X
-- Build X
-- Multi Stage Build X
+
 - docker.ignore
 - Registry 
-- Backend
-- Frontend
-- Docker Compose
-- Pruning X
-- Network X
 - Swarm
-
+- Docker Copy outside
