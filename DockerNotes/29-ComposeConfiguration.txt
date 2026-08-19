@@ -452,25 +452,34 @@ ikut pengaturan container tetangganya. Ini hanya digunakan untuk keperluan terte
 Ini sama persis dengan service:<service>, bedanya saja syntax "container:backend" menunjuk ke existing container yang
 sudah ada, bukan ke service yang dijalankan bersama.
 
+
 -------------------------------------------------------------------------------------------------------------------------
 10. depends_on
 
-depends_on
+depends_on adalah attribute dari sebuah service yang mengatur urutan mulai dijalankannya sebuah service terhadap service lain.
+Karena banyaknya service yang jalan hidupnya kebergantungan dengan existensi container yang dihasilkan service lain.
+Contoh saja sebuah service applikasi harus menunggu service database menciptakan container databasenya, baru aplikasi itu bisa
+berjalan dengan lancar.
 
+Contoh command:
 services:
   app:
     depends_on:
       - mysql
-
   mysql: 
     image: mysql
 
+Kalian bisa melihat contoh langsungnya di Guides/ComposeProjects/basilisk, di sana 
+service frontend akan berjalan 
 
 services:
   app:
     depends_on:
       mysql:
         condition: service_healthy
+
+
+
 
 -------------------------------------------------------------------------------------------------------------------------
 11. restart
