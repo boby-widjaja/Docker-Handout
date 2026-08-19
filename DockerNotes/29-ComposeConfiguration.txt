@@ -424,14 +424,33 @@ network_mode memiliki beberapa pilihan value, yaitu: bridge, host, none, service
 -) bridge: dengan mode ini, container ini meminta dirinya join network bernama bridge yang selalu ada by default setiap kalian
 kita membuat container biasa tanpa menggunakan compose sekalipun. Jadi dia tidak diberikan network default yang digenerate oleh docker compose.
 
--) host 
+-) host: ini sama dengan penjelasan host pada notes Networking.txt. Artinya container tidak menggunakan ip address sendiri,
+melainkan menggunakan address milik hostnya. Sehingga pengaturan expose dan publishing port tidak berguna bagi network ini.
 
--) none
+-) none: artinya container tidak dapat network docker sama sekali. Dengan begini bukan hanya komunikasi antar container pun yang tidak memungkinkan,
+container juga tidak dipublish ke host, tidak bisa terknoneksi dengan internent ataupun jaring lain. Service ini akan membuat
+container total terisolasi, dan hanya bisa berkomunikasi dengan dirinya sendiri. Sama seperti none pada penjelasan Networking.txt.
 
--) service:<service>
+-) other container / service:<service> : dimana sebuah container nebeng network namespace dari container lain, sehingga ip address,
+pengaturan port koneksi ke network, semuanya ikut dengan network utamanya.
 
--) container:<container>
+services:
+  backend:
+    image: my-backend:1.0
+    ports:
+        - "8007:8000"
+        - "8008:8001"
+  frontend:
+    image: my-frontend:1.0
+    network_mode: "service:backend"
 
+Dalam hal ini frontend akan total ikut network namespace milik backend.
+Sama halnya dengan tipe pengaturan host dimana container total nebeng network source milik host, kalau yang ini
+ikut pengaturan container tetangganya. Ini hanya digunakan untuk keperluan tertentu dan design network pattern tertentu.
+
+-) other container / container:<container>
+Ini sama persis dengan service:<service>, bedanya saja syntax "container:backend" menunjuk ke existing container yang
+sudah ada, bukan ke service yang dijalankan bersama.
 
 -------------------------------------------------------------------------------------------------------------------------
 10. depends_on

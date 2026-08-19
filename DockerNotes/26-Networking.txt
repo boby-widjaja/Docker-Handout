@@ -154,7 +154,7 @@ atau bisa lebih short-hand dengan:
 docker network create host mystore_network
 
 Ada 5 jenis Driver yang akan saya bahas di sini
-1. bridge
+1. bridge (default)
 2. host
 3. none
 4. overlay
@@ -177,6 +177,13 @@ Host artinya seluruh container mengikuti ip dari host secara langsung. Itu artin
 -) Tidak bisa memanfaatkan isolasi antar container. (security melemah dan conflict antar port bisa terjadi)
 -) Kenapa menggunakan host dan tidak pakai -p publish saja? Karena performance lebih cepat.
     Tidak ada mechanism NAT atau DNS antar container.
+
+Contoh pemakaian:
+docker run -d \
+  --name web \
+  --network host \
+  nginx
+
 
 3. None (Full Isolated)
 Ini full isolasi, untuk container-container yang dimaksudkan untuk dikurung dan tidak berhubungan dengan container lain
@@ -216,6 +223,77 @@ Kekurangannya:
 -) konfigurasi lebih rumit,
 -) tidak semua lingkungan mendukung.
 
+
+================ Default Bridge vs User Defined Bridge =====================
+
+Kalau kalian perhatikan, secara default docker network sudah membuatkan satu 
+default network bernama bridge dengan tipe bridge. Setiap kali kita membuat 
+satu network bridge yang baru, itu disebut juga dengan user-defined bridge.
+Walaupun sesama bridge type network, tapi karakteristik default bridge dengan user defined bridge
+cukup berbeda. Kurang lebih beginilah beberapa perbedaan dan karakteristiknya.
+
+1. Default bridge tidak bisa dibuat oleh kita developer, tidak bisa dihapus dan akan selalu ada di dalam
+network list.
+
+2. Setiap kali kita membuat container, sebuah container akan secara otomatis tergabung ke dalam default bridge,
+kecuali kita defined tujuan networknya ketika proses penciptaan containernya.
+
+3. Lain dengan user-defined bridge dimana user-defined bridge memiliki nama yang kita berikan
+ketika penciptaan network baru, default bridge sebenarnya tidak memiliki nama yang bisa di discover oleh Docker DNS, 
+sehingga tidak memungkinkan bagi container lain men-discover sebuah container yang terhubung ke dalam default bridge dengan
+nama containernya saja. Contohnya:
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Networks:                                                                                    │
+│ - bridge (default bridge)                                                                    │
+│ - hr_net (user defined network)                                                              │
+│                                                                                              │
+│ Container 1                                                                                  │
+│ --------------                                                                               │
+│ nama: core                                                                                   │
+│ listening port: 8001                                                                         │
+│ network: hr_net                                                                              │
+│                                                                                              │
+│ Container 2                                                                                  │
+│ --------------                                                                               │
+│ nama: payroll                                                                                │
+│ listening port: 8002                                                                         │
+│ network: hr_net                                                                              │
+│                                                                                              │
+│ Container 3                                                                                  │
+│ --------------                                                                               │
+│ nama: attendance                                                                             │
+│ listening port: 8003                                                                         │
+│ network: bridge                                                                              │
+│                                                                                              │
+│ Container 4                                                                                  │
+│ --------------                                                                               │
+│ nama: performance                                                                            │
+│ listening port: 8004                                                                         │
+│ network: bridge                                                                              │
+│                                                                                              │
+│ Container 1, alias core, bisa menghubungi Container 2 dengan alamat http://payroll:8002,     │
+│ karena Docker DNS akan bisa menerjemahkan payroll (nama container 2), menjadi ip address     │
+│ dari container payroll tersebut.                                                             │
+│ Container 3, alias attendance, tidak akan bisa menghubungi Container 4 dengan alamat         │
+│ http://performance:8004.                                                                     │
+└──────────────────────────────────────────────────────────────────────────────────────────────┘
+
+4. Karena semua container yang diciptakan tanpa men-defined networknya akan masuk ke dalam default bridge,
+isolasi default bridge dianggap kurang baik untuk kebutuhan test yang lebih serius apalagi untuk system production.
+
+5. Bila kita ingin mengkonfigurasi gateway dan subnet untuk network kita, lebih baik gunakan user-defined bridge,
+karena mengubahnya lebih mudah dan lebih fleksible.
+
+Ketika membuat user-defined bridge network, kita bisa mendefinisikan subnet dan gateway dengan cara:
+docker network create \
+  --subnet 10.10.0.0/24 \
+  --ip-range 10.10.0.128/25 \
+  --gateway 10.10.0.1 \
+  app_network
+
+Dan untuk mengubahnya pada default bridge, harus dilakukan pada konfigurasi pada docker daemonnya.
+
+Untuk lebih jelasnya bisa liat image Bridge Network pada Sources/Images.
 
 =============================== Alias ===============================
 
