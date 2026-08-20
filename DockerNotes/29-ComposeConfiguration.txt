@@ -470,29 +470,177 @@ services:
     image: mysql
 
 Kalian bisa melihat contoh langsungnya di Guides/ComposeProjects/basilisk, di sana 
-service frontend akan berjalan 
+service frontend akan berjalan setelah backend selesai diproses dan backend akan berjalan setelah
+service database selesai.
 
 services:
-  app:
+  basilisk_db:
+    container_name: basilisk_db
+    ...
+  basilisk_be:
+    container_name: basilisk_be
+    ...
     depends_on:
-      mysql:
-        condition: service_healthy
+      - basilisk_db
+  basilisk_fe:
+    container_name: basilisk_fe
+    ...
+    depends_on:
+      - basilisk_be
 
+Tapi di sini juga masalah dari depends_on, depends_on menjamin selesainya running sebuah container dari
+service tersebut, bukan menjamin selesainya running sebuah app atau system di dalam container tersebut.
+Dalam contoh kasus di atas, basilisk_be (backend) hanya menunggu sampai basilisk_db (database) container selesai
+di jalankan dan memasuki proses run-time. Tapi apakah backend akan menunggu sampai connection terhadap database
+sudah berhasil di established? Jawabannya tidak.
 
+Begitu juga dengan front-end, tidak akan menunggu proses booting dari spring boot yang ada di backend selesai
+dan memasuki tahap application ready. Begitu basilisk_be selesai dijalankan containernya, basilisk_fe akan langsung
+meluncur tanpa menunggu kesiapan aplikasi dan API nya.
 
 
 -------------------------------------------------------------------------------------------------------------------------
-11. restart
+11. healthcheck & condition
 
-restart: no
-restart: always
-restart: unless-stopped
-restart: on-failure
+Dikarenakan perilaku depends_on yang hanya menunggu run-time sebuah container tanpa perduli dengan jalannya app di dalam container itu,
+kita membutuhkan tambahan konfigurasi supaya depends_on bisa menunggu sampai app berjalan sehat sesuai dengan yang kita inginkan.
+Tambahan feature itu bisa di set dengan attribute healthcheck, dan attribute condition digunakan untuk membaca hasil healthcheck.
+
+Berikut ini adalah contoh code dimana sebuah service backend app menunggu database engine postgreSQL-nya benar-benar
+siap di established connectionnya.
+
+services:
+
+  database:
+    image: postgres:18
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    image: my-backend:1.0
+    depends_on:
+      database:
+        condition: service_healthy
+
+Kalau diperhatikan, attribute healthcheck memiliki beberapa attribute lagi yang menjadi propertynya.
+Kurang lebih sebagian attribute yang umum dipakai adalah:
+
+-) test: adalah perintah shell script yang digunakan untuk melakukan pemeriksaan kesehatan terhadap system di dalam container.
+  Tentu saja beda app, beda program, beda database akan berbeda juga shell script yang harus digunakan.
+  Lalu bagaimana cara docker bisa check hasil command shell tersebut healthy atau tidak? Docker hanya check apakah
+  hasil shellnya exit dengan code 0 atau tidak. Kalau exit dengan code 0 akan dinilai sebagai healthy oleh docker. 
+-) retries: Menentukan berapa kali percobaan jika kegagalan berturut-turut diperlukan sebelum status menjadi unhealthy.
+  jadi retries akan memiliki value integer, bila retries adalah 3, itu artinya healthcheck akan berhenti test jika healthy,
+  tetapi kalau gagal, maka healthcheck masih akan berusaha sebanyak total 3 kali.
+-) interval: Menentukan seberapa sering test script dari healthcheck dijalankan antara 1 retry dengan retry berikutnya.
+  Apabila tertulis interval: 5s, artinya healthcheck test berikutnya akan dijalankan 5 detik kemudian.
+-) timeout: Menentukan berapa lama Docker menunggu hasil dari satu test healthcheck sebelum dianggap gagal 
+  dan dijalankan retry berikutnya.
+-) start_period: memberikan durasi waktu delay sebelum healthcheck menjalankan test script pertamanya.
+  Karena sebagian app akan membutuhkan waktu yang cukup lama untuk start booting process, kita tidak perlu terlalu
+  terburu-buru untuk menjalankan test pertama kali saat container sudah run.
+
+Lalu pada contoh, attribute condition bisa dilihat pada service yang menunggu (dalam hal ini backend service),
+dan valuenya berisi service_healthy. Sebenarnya ada 3 macam jenis value condition, kurang lebih seperti ini:
+
+-) service_started: Akan jarang dipakai, karena dengan memakai ini sama saja tidak ada memakai healthcheck.
+  Value ini artinya container hanya menunggu sampai container sudah start.
+-) service_healthy: Akan menunggu exit code 0 dari shell script yang ada pada test attribute, dimana command tersebut
+  memberi indikasi kalau jalannya app berlangsung baik. Ini adalah value yang paling sering kita pakai untuk macam-macam kebutuhan 
+  seperti check database, app, message broker, dan lain sebagainya.
+-) service_completed_successfully: value ini tidak melihat proses shell command dalam test attribute sama sekali,
+  karena yang dia tunggu dengan exit code 0 adalah containernya itu sendiri. service completed successfully digunakan
+  untuk container-container yang dibuat dan dijalankan oleh service, lalu begitu tasknya selesai akan langsung stop,
+  jadi tidak di follow sama sekali. Contoh saja kalau kamu membuat container yang di-start untuk me-migrasi suatu data,
+  lalu selesai data itu dimigrasi dengan benar container akan langsung stop, lalu status ini akan keluar sebagai condition.
+
+Untuk melihat contoh depends_on dan condition dalam docker compose langsung, bisa dilihat pada:
+Guides/ComposeProjects/basilisk_hc
+
+services:
+  basilisk_db:
+    container_name: basilisk_db
+    ...
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'SmithWessonMagnum357!' -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  basilisk_be:
+    container_name: basilisk_be
+    ...
+    depends_on:
+      basilisk_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8005/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  basilisk_fe:
+    container_name: basilisk_fe
+    ...
+    depends_on:
+      basilisk_be:
+        condition: service_healthy
+
+Di sini bisa terlihat kalau process backend menunggu database dan frontend menunggu backendnya.
+Untuk Microsoft SQL server kita menggunakan sqlcmd comand yang mana sudah disediakan di dalam imagenya dan
+untuk backendnya kita menggunakan simple curl untuk check link health actuatornya.
+(Note: curl tidak langsung ada pada image jre, sehingga saya tambahkan RUN untuk install itu di dockerfilenya)
 
 
-configs ??
+-------------------------------------------------------------------------------------------------------------------------
+12. restart
 
---------------------------
+restart merupakan attribute dari service yang digunakan untuk membuat container yang akan menjalankan (start) dirinya sendiri lagi
+secara otomatis bila container stop dalam keadaan tertentu. 
 
-docker compose up --scale ??
+keadaan tersebut bisa di konfigurasi dalam 4 pilihan value:
 
+-) no: yang artinya container tidak akan pernah di restart otomatis
+
+-) always: apapun yang terjadi, bila container stop, akan langsung dijalankan ulang. 
+  Tidak perduli exit dengan 0 atau tidak, dan tidak perduli apa penyebab stopnya.
+
+-) unless-stopped: container akan di start lagi apabila penyebab stopnya bukan di stop secara
+  manual oleh usernya. Yang dimaksud manual adalah dengan menggunakan command docker stop, docker 
+  container stop atau docker compose stop.
+
+-) on-failure: value ini memberikan kemampuan docker container untuk me-restart dirinya secara otomatis
+  bila container tersebut stop diakibatkan karena failure atau container stop tanpa exit code 0.
+  Misalnya saja stop karena app di dalamnya mengalami error.
+
+Contoh penggunaan restart dengan attribute on-failure bisa di check di 
+Guides/ComposeProjects/basilisk
+
+basilisk_be:
+  container_name: basilisk_be
+  ...
+  restart: on-failure
+
+Mengapa saya menerapkan restart: on-failure pada backend di contoh ini?
+Karena pada saat service selesai membuat ketiga containers (database, backend dan frontend), container
+backend pasti bermasalah, dikarenakan container database belum ada isi databasenya sama sekali.
+
+Bisa dicheck pada Guides/ComposeProjects/basilisk/Notes.txt, kalau database Basilisk tidak
+daya restore secara otomatis di dalam docker compose ataupun Dockerfile, melainkan secara manual dari dalam
+container database yang sudah run itu sendiri.
+
+Disaat yang bersamaan backend process akan gagal karena tidak ditemukan koneksi ke database yang tepat.
+Kalau saja kegagalan backend process ini tidak membuat container backend stop, pada saat database sudah siap,
+proses booting untuk membuat koneksi ke database sudah tidak akan diulang lagi.
+
+Tapi di sini backend container akan terus mencoba terus-terusan restart containernya sampai koneksi database
+berhasil diraih.
+
+Khusus untuk on-failure kita bisa menentukan maximum retriesnya untuk percobaan restartnya dengan cara:
+restart: on-failure:N
+Jadi kalau mau retries sampai 8 kali:
+restart: on-failure:8

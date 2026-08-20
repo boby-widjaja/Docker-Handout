@@ -1,9 +1,7 @@
 
 - Shell Script
     Authentication
-
-
-
+    
 - docker.ignore
 - Registry 
 - Swarm

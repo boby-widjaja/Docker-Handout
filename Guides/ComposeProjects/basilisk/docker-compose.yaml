@@ -45,6 +45,7 @@ services:
 
 volumes:
   sqlserver_vol:
+    name: sqlserver_vol
 
 networks:
   basilisk_net:
