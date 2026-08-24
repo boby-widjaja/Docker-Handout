@@ -1,1 +1,221 @@
+============= Introduction =============
+
+Pada chapter ini kita akan mempelajari tentang Container Orchestration dengan menggunakan Docker Swarm.
+
+Container Orchestration adalah cara dan proses mengelola banyak container secara cepat dan otomatis,
+terutama kalau container tersebut jalan di banyak host.
+
+Orchestration tools bisa diibaratkan seperti dirigen atau maestro di dalam suatu team besar orchestra,
+dimana dia akan membantu kita untuk memanage banyak container ini dengan peranannya masing-masing.
+Orchestration tools datang dari bermacam-macam brand dan nama, seperti:
+Kubernetes, Nomad, Amazon ECS, Azure AKS, Google GKE, OpenShift, dan lain-lain.
+Tapi untuk pelajaran kita kali ini, karena kita mau keept it simple untuk pengenalan, kita menggunakan Orchestration
+bawaan dari Docker, yaitu Docker Swarm, atau lebih tepatnya Docker Swarm Mode.
+Docker Swarm Mode adalah fitur orchestration yang dibangun langsung ke Docker Engine.
+
+Untuk kasus sederhana dimana kita hanya menggunakan 3 container untuk satu database, satu backend, dan satu
+frontend, kebutuhan Orchestration menjadi kurang nyata, tetapi bagaimana kalau aplikasi kita membutuhkan:
+5 container frontend
+10 container backend
+3 container worker
+2 database
+dan semuanya tersebar di 5 server berbeda?
+Terutama mungkin kalau backendnya micro-services architecture.
+
+Dari kebutuhan itu Docker Swarm Mode memberikan beberapa feature-feature yang bisa membantu kita,
+feature-featurenya kurang lebih:
+
+1. Scheduling: scheduling bukan feature untuk penjadwalan, in fact sebenarnya istilah scheduling ini sama sekali
+tidak ada hubungannya dengan waktu. Scheduling di sini artinya task dan container ini akan dijalankan dimana.
+
+2. Replica: ini adalah satu feature paling menarik, jadi kita bisa menduplikat container menjadi beberapa kembaran
+yang bisa berguna sebagai ban cadangan, sehingga sebuah container bisa High Availability, karena bila ada 1 container yang bermasalah, 
+container lain bisa menggantikannya, sehingga down time bisa dicegah.
+
+3. Self-healing: In clase bila salah satu replica container ada yang down, docker swarm mampu membuatkan lagi container yang
+down, agar jumlah replica kembali ke jumlah awal sesuai yang diharapkan.
+
+4. Load balancing: banyak replica container yang tersebar di beberapa host bisa saling back up performance satu sama lain,
+terutama bila beberapa replica sedang terberatkan karena hal-hal tertentu.
+
+5. Scaling: meningkatkan performance sebuah container dengan menambah jumlah replica di penambahan host baru bisa dilakukan
+dengan mudah secara Horizontal Scaling. 
+Note: Vertical Scaling mengharuskan sebuah operation stop, melakukan peningkatan terhadap mesin host, lalu me-restart
+jalannya system lagi. Horizontal scaling bisa langsung lanjut tanpa adanya proses restart.
+
+6. Networking: Biasanya networking terjadi di dalam satu host yang sama, ini memungkinkan networking terjadi di multiple host.
+
+7. Service Discovery: container yang terhubung ke dalam network yang sama, akan dengan mudah dan otomatis menemukan container
+lain hanya dengan nama containernya, tanpa perlu pusing untuk terhubung ke host yang mana atau lagi berkomunikasi dengan replica yang mana.
+
+============= Guide =============
+
+Awalnya kita bisa check apakah docker swarm active atau tidak dengan menggunakan command:
+docker info
+
+Kalau docker swarm belum aktif akan ada status inactive, kalau sudah active akan sebaliknya.
+(Swarm: inactive)
+
+===========================================================
+
+
+
+Menjalankan swarm
+docker swarm init
+
+PKI (Public Key Infrastructure): sistem yang digunakan untuk mengamankan komunikasi antar node di dalam cluster Swarm melalui 
+sertifikat digital dan enkripsi.
+
+Node: sebuah mesin (1 mesin fisik atau virtual) yang menjadi bagian dari cluster dan menjalankan workload.
+
+Orchestrator (Swarm/Kubernetes):
+tidak menjalankan container langsung
+tapi mengatur node mana yang menjalankan container
+
+Dalam Docker Swarm ada 2 tipe:
+
+1. Manager Node
+“otak” cluster
+menentukan:
+container jalan di mana
+scaling
+update
+
+2. Worker Node
+“tukang eksekusi”
+hanya menjalankan container
+tidak mengambil keputusan
+
+Scheduler: komponen yang bertugas menentkan di node mana sebuah container akan dijalankan.
+Scheduler akan membagi beban (load distribution), tidak menumpuk semua container di satu node, menyebar ke beberapa node.
+
+Raft: Algoritma yang memastikan semua manager node punya data yang sama dan konsisten walaupun berjalan di mesin yang berbeda.
+Supaya terjadi kesepakatan yang synchron.
+
+Service adalah instruksi tentang bagaimana sebuah container harus dijalankan di dalam cluster.
+
+Apa yang terjadi saat docker swarm init:
+1. Membuat node / mesin kamu jadi manager pertama
+2. Membuat cluster walaupun baru 1 anggota
+3. Membuat PKI untuk sistem keamanan
+4. Membuat 2 token, worker token sama manager token
+5. Membuat networking cluster
+6. Mengaktifkan scheduler
+7. Manager menyimpan state cluster: service, node, network menggunakan Raft
+8. Membuka port internal swarm
+
+Ketika membuat service, system akan me-return service id
+docker service create alpine ping 8.8.8.8
+fffwc69vlboqtza7sjuicsuof
+
+listing service:
+docker service ls
+
+Replicas: jumlah task/instance/container yang diinginkan untuk sebuah service, agar berjalan bersamaan.
+
+melihat task atau running container di dalam service:
+docker service ps [service-name]
+
+menambah replicas dari sebuah service
+docker service update [service-name/id] --replicas 3
+
+Mengupdate container selagi jalan?
+docker update
+
+containernya kalo di stop satu si service akan jalankan lagi.
+
+menghapus servicenya
+docker service rm [nama service]
+
+katanya kalau di linux bisa:
+watch docker service ls
+
+Dalam Docker (khususnya saat memakai Docker Swarm), overlay network driver adalah:
+jenis network yang memungkinkan container di node (server) yang 
+berbeda saling berkomunikasi seolah-olah berada di jaringan yang sama.
+
+Di Docker Swarm tidak ada konsep “stop service tanpa menghapusnya” seperti docker stop pada container biasa.
+Kenapa tidak ada “stop service”?
+Karena di Swarm:
+Service itu adalah desired state
+Artinya:
+kalau kamu “stop” container
+Swarm akan langsung menyalakannya lagi
+
+docker service update --replicas 0 [service name]
+
+Men deloy stack
+docker stack deploy
+docker stack deploy -c example-voting-app-stack.yml voteapp
+-c (compose)
+
+Melihat stack
+docker stack ls
+
+Melihat container dari stack
+docker stack ps [nama stack]
+
+Melihat isi services dari stack
+docker stack services [nama stack]
+
+Docker Secret:
+Untuk menyimpan hal-hal rahasia seperti password, token dan lain-lain.
+
+docker secret create psql_user psql_user.txt
+
+echo "myDBpassWORD" | docker secret create psql_pass -
+(Note: - ada untuk terima terminal input)
+
+Lihat semua secret
+docker secret ls
+
+bisa inspect secret, tapi tentu saja isinya di encrypt
+docker secret inspect psql_pass
+
+secret di encrypt dari mata kita, tapi seharusnya bisa dibaca oleh container di dalam service.
+Misalnya harus bisa dibaca databasenya.
+Karena itu kita harus sambungkan secret dengan service atau container:
+
+docker service create \
+--name psql \
+--secret psql_user \
+--secret psql_pass \
+-e POSTGRES_PASSWORD_FILE=/run/secrets/psql_pass \
+-e POSTGRES_USER_FILE=/run/secrets/psql_user \
+postgres:15
+
+docker service create --name psql --secret psql_user --secret psql_pass -e POSTGRES_PASSWORD_FILE=/run/secrets/psql_pass -e POSTGRES_USER_FILE=/run/secrets/psql_user postgres:15
+
+Check container dengan bash
+docker exec -it psql.1.xr1kk3bq6wauryg6cqu6d8aiy bash
+
+Bisa baca encrypted content dari dalam karena sebenarnya di sini sudah tidak encrypted
+cat /run/secrets/psql_pass
+
+Cara menghapus secret dari service
+
+deploy secret dari stack:
+docker stack deploy -c docker-compose.yml mydb
+
+Kalau stack di hapus, secret akan ikut kehapus:
+docker stack rm mydb
+
+------------------------------------------------------------------------------------------------------------
+
 docker compose up --scale ??
+
+#! /bin/sh
+
+docker network create -d overlay backend
+
+docker network create -d overlay frontend
+
+docker service create --name vote -p 80:80 --network frontend --replicas 2 bretfisher/examplevotingapp_vote
+
+docker service create --name redis --network frontend redis:3.2
+
+docker service create --name db --network backend -e POSTGRES_HOST_AUTH_METHOD=trust --mount type=volume,source=db-data,target=/var/lib/postgresql/data postgres:9.4
+
+docker service create --name worker --network frontend --network backend bretfisher/examplevotingapp_worker
+
+docker service create --name result --network backend -p 5001:80 bretfisher/examplevotingapp_result
