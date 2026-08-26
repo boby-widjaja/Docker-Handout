@@ -48,7 +48,8 @@ jalannya system lagi. Horizontal scaling bisa langsung lanjut tanpa adanya prose
 7. Service Discovery: container yang terhubung ke dalam network yang sama, akan dengan mudah dan otomatis menemukan container
 lain hanya dengan nama containernya, tanpa perlu pusing untuk terhubung ke host yang mana atau lagi berkomunikasi dengan replica yang mana.
 
-============= Guide =============
+
+============= Initiation =============
 
 Awalnya kita bisa check apakah docker swarm active atau tidak dengan menggunakan command:
 docker info
@@ -56,12 +57,174 @@ docker info
 Kalau docker swarm belum aktif akan ada status inactive, kalau sudah active akan sebaliknya.
 (Swarm: inactive)
 
+Pertama-tama kita harus terlebih dulu mengaktifkan docker swarm dengan command initialization:
+docker swarm init
+
+Apa yang terjadi ketika kita mengaktifkan docker swarm?
+
+1) Docker engine berubah, yang tadinya standalone (berdiri sendiri sebagai host docker yang independen),
+    menjadi docker yang siap bergabung ke dalam swarm cluster.
+2) Docker engine yang menginisiasi swarm pertama kali akan menjadi sebuah Node dan 
+    mendapatkan status sebagai Swarm Manager atau menjadi Manager Node.
+3) Proses ini akan menghasilkan sebuah join token. Token tersebut bisa dilihat di terminal dengan syntax
+    kurang lebih seperti ini:
+    docker swarm join --token <TOKEN> <MANAGER-IP>:2377
+    docker swarm join --token SWMTKN-1-0kpmyi*** 192.168.65.3:2377
+4) Docker menyiapkan mTLS (mutual Transport Layer Security) untuk komunikasi antar node melalui jaringan.
+5) Node manager ini mulai menggunakan distributed state store atau tempat menyimpan informasi/state dari cluster.
+
+
+============= Terminology and Theory =============
+
+Mungkin akan sangat membingungkan untuk belajar Docker Swarm sebelum memahami istilah-istilah
+dalam Docker Swarm dan bagaimana cara kerjanya. Berikut ini akan kita jabarkan.
+
+Standalone/ Stand-alone: Kondisi awal docker kita dimana di dalam satu computer (host) kita, memiliki 1 Docker Engine
+dimana satu docker engine ini bersifat mandiri mengatur segala sesuatunya seperti container, image, network dan volumes.
+Konsep ini kebalikan dari Swarm Cluster.
+
+Swarm Cluster : dalam bahasa indonesia sendiri arti Swarm adalah kawanan atau gerombolan dan
+Cluster artinya Kelompok dengan kepentingan yang sama. Jadi Swarm Cluster adalah kawanan banyak Docker Engine
+yang membentuk satu kesatuan kelompok untuk menjalankan satu system workload container.
+Kawanan docker engine itu bisa berada di dalam computer host atau virtual machine host yang berbeda-beda.
+
+Node: Tetapi ketika bergabung ke dalam kawanan cluster, docker engine tidak bisa bergabung dengan identitas
+docker engine. Setiap 1 docker engine akan memiliki 1 identitas Node. Jadi saat di dalam Swarm Cluster setiap 
+membernya disebut juga sebagai Node (tentu saja 1 Node berada di dalam 1 Docker Engine dan 1 Docker Engine best practicenya
+akan di implementasi pada 1 Host). Jadi bisa dibilang Node adalah tanda anggota sebuah docker engine di dalam satu cluster.
+
+Docker Swarm Cluster
+│
+├── HOST 1
+│   └── Docker Engine #1
+│       └── Node 1
+│
+├── HOST 2
+│   └── Docker Engine #2
+│       └── Node 2
+│
+└── HOST 3
+    └── Docker Engine #3
+        └── Node 3
+
+Sebuah Node memiliki role level keanggotaannya, role-nya bisa Manager atau Worker,
+jadi bisa diibaratkan ada Node yang lebih seperti Boss atau Captainnya (Manager), dan 
+yang lainnya akan menjadi Anggota atau Pengikutnya (Worker).
+
+Manager Node / Swarm Manager: Node yang bertanggung jawab mengelola dan mengontrol Swarm Cluster
+bersama. Karena Manager memiliki kuasa ini, itu artinya manager memiliki fungsi Control Plane.
+
+Control Plane: fungsi yang digunakan untuk mengatur atau mengambil keputusan untuk manage cluster bersama.
+Yang diatur kurang lebih seperti feature-feature yang sudah pernah disebutkan sebelumnya seperti Scheduling, 
+jumlah Replica, Self-Healing, Load Balancing, Scaling, dan lain sebagainya. Itu artinya worker node tidak
+bisa secara langsung mengatur ini semua.
+
+Worker Node: adalah node yang bertugas menjalankan workload atau task-task yang telah diperintahkan
+Manager Node lewat kekuasaan Control Plane. Jadi worker node tidak memiliki kekuasaan sebagai pengambil 
+keputusan melainkan hanya menerima instruksi, seperti tolong buatkan dan jalankan container seperti ini dan seperti itu.
+
+Note: Tapi jangan salah artikan penjelasan diatas dengan mengatakan peran manager node hanya control plane,
+karena manager node juga menjalankan workload. Jadi authorization antar node bisa saya ringkas dengan:
+
+Manager Node:
+    - control plane
+    - workload
+Worker Node:
+    - workload
+
+1 Cluster bisa terdiri dari:
+    X Manager nodes >= 1 Manager Node
+    X Worker nodes >= 0 Worker Node
+Atau bisa dibilang, 1 cluster harus punya setidaknya 1 Manager Node, tetapi bisa terdiri dari banyak Manager dan Worker Nodes.
+
+Workload vs Service vs Task
+3 istilah ini terkadang membuat bingung satu sama lain.
+
+Workload: adalah list pekerjaan yang harus dijalankan oleh Swarm Cluster dan diciptakan oleh Manager Node.
+Service: kita sudah pernah memperlajari service di dalam Docker Compose, service adalah list requirement
+    dalam bentuk blue print, atau keterangan detail dari apa yang workload ingin capai.
+Task: adalah unit pekerjaan yang di jadwalkan untuk dikelola oleh para nodes sesuai dengan petunjuk pada
+    service.
+
+Perumpamaan: 
+Workload: Saya ingin menjalankan usaha restoran sunda.
+Service: Restoran ini harus memiliki 2 supervisor, 5 pelayan, luas dapur 2 x 5 meter, 
+    dan setidaknya punya 2 cabang.
+Task: Wujudkan cabang A di Jakarta dengan list karyawan yang sudah dibuat,
+    Wujudkan cabang A di Bandung dengan list karyawan yang sudah dibuat.
+
+Join Token: Sebuah token authentication yang digunakan sebagai password oleh Docker Engine lain
+untuk bergabung ke dalam satu Swarm Cluster dan menjadi node bagi Swarm Cluster tersebut.
+Token akan selalu diawali dengan SWMTKN yang merupakan singkatan dari SWarM ToKeN.
+Contoh: SWMTKN-1-0kpmyi***
+
+mutual TLS / mTLS : adalah singkatan dari mutual Transport Layer Security, adalah lapisan
+enkapsulasi security dalam komunikasi antar node, dimana kedua belah pihak saling membuktikan
+identitas dengan menggunakan special certificatenya. Itulah kenapa sebutannya mutual, karena bukan
+satu node sebagai pembawa sertifikat dan satunya lagi sebagai pemeriksa, melainkan 2-2nya saling 
+memberi sertifikat dan saling periksa.
+
+Desired State: kondisi yang diinginkan (required condition) untuk terjadi yang tertera dengan jelas
+    di dalam service dan oleh system akan dipertahankan agar tetap begitu. Atau dengan singkat
+    bisa dibilang sebagai Kondisi Ideal.
+
+Current State: adalah kondisi yang terjadi saat ini. Current State bisa sama dengan Desired State,
+    tetapi bisa juga tidak sama. Current State yang tidak sama dengan Ideal State bisa dikatakan
+    sebagai kondisi yang sedang tidak ideal. Kalau kondisi tidak ideal, maka cluster akan membawanya
+    kondisi ideal, misalnya: kondisi ideal adalah backend memiliki 3 container replica, tapi saat ini
+    cuma ada 2 container. Karena terjadi sesuatu 1 container down dan terhapus. Maka system akan
+    menambahkan 1 lagi.
+
+Dengan kemungkinan adanya multiple manager node dalam satu cluster dan kita juga mengenal konsep desired state, ini akan menjadi dilema. 
+Bayangkan dalam satu team ada 2 atau lebih pemimpin yang masing-masing memiliki idealismenya sendiri-sendiri tentang bagaimana visi dan misi 
+yang ideal dalam pekerjaan-pekerjaan yang dijalankan teamnya. Bagaimana antar manager bisa memiliki control yang selaras?
+Atau bila seluruh visi-misi yang ideal semua di atur dan pegang oleh manager 1, apa yang terjadi bila manager 1 sedang down time? 
+Apakah manager yang lain tau tentang desired state yang ideal seperti apa? (Single Point of Failure)
+Hal ini diatas dengan adanya State Cluster dan algoritma Raft.
+
+State Cluster / Distributed State Store: 
+Seluruh instruksi, rancangan, desired state harus disimpan disuatu tempat. 
+Tempat penyimpanan informasi tentang kondisi/keadaan cluster di simpan di dalam sebuah state yang
+disebut juga State Cluster atau Distributed State Store. Mengapa disebut distributed? 
+Sebab keberadaanya di-replika/di-duplikat dan dibagi ke beberapa manager node dan 
+isinya harus konsisten walaupun berada di banyak Nodes.
+(Kalau kita pikir-pikir mirip seperti Git Repository, Torrent file atau seperti Block-chain pada Bitcoin)
+
+Raft: agar distributed information bersifat konsisten, pasti dibutuhkan semacam algoritma consensus.
+Docker state cluster menggunakan Raft Consensus Algorithm untuk menjaga konsistensi ini.
+Mirip seperti distributed repository seperti git, Raft juga menyimpan log perubahan yang terjadi pada state cluster.
+
+State Cluster tidak hanya menyimpan desired state, tetapi juga menyimpan metadata yang dibutuhkan manager untuk mengelola cluster, seperti:
+-) Node information: setiap informasi dan status dari node yang tergabung ke dalam clusternya.
+-) Service information: segala informasi dari service yang dijalankan workload untuk cluster ini.
+-) Task information: Informasi seluruh task yang dijalankan service.
+-) Network Information: pada cluster tentunya lebih luas karena bisa sampai ke host lain.
+-) Secret Information: informasi-informasi rahasia yang biasa disimpan docker secret seperti password (nanti akan dijelaskan).
+-) Config Information: informasi-informasi konfigurasi yang biasa disimpan docker config (nanti akan dijelaskan).
+dan lain sebagainya termasuk informasi yang menjadi data Raft Algorithm.
+
+Stack: adalah sekumpulan Docker Service yang didefinisikan bersama dalam satu file Compose dan dideploy sebagai satu aplikasi ke Docker Swarm.
+Kalau kita lihat seperti ini, sebuah stack sebenarnya seperti 1 buah docker compose project yang ditulis di dalam satu yaml file.
+Di dalam docker swarm, stack juga ditulis di dalam yaml file dan bentuknya mirip sekali dengan docker compose project, tetapi sebenarnya dibalik
+itu docker swarm menggunakan technology yang berbeda. Jadi apa yang dulu disebut 1 project sekarang menjadi 1 stack.
+
+Routing Mesh: 
+
+
 ===========================================================
 
 
 
-Menjalankan swarm
-docker swarm init
+
+
+docker swarm join --token SWMTKN-1-0kpmyi*** 192.168.65.3:2377
+--token option memberi value token
+SWMTKN (Swarm Token Prefix)
+192.168.65.3 --> Ip Address dari Manager Node
+2377 --> Port number dari control plane, yang digunakan untuk mengkomunikasikan management control antar node.
+
+Melihat existing join token:
+docker swarm join-token worker
 
 PKI (Public Key Infrastructure): sistem yang digunakan untuk mengamankan komunikasi antar node di dalam cluster Swarm melalui 
 sertifikat digital dan enkripsi.
