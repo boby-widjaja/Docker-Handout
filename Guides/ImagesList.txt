@@ -15,3 +15,4 @@ docker pull eclipse-temurin:21-jre
 docker pull maven:3.9.11-eclipse-temurin-21
 docker pull httpd:2.4.68
 docker pull node:22.23.2
+docker pull docker:29.7.2-dind

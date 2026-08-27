@@ -208,8 +208,61 @@ Kalau kita lihat seperti ini, sebuah stack sebenarnya seperti 1 buah docker comp
 Di dalam docker swarm, stack juga ditulis di dalam yaml file dan bentuknya mirip sekali dengan docker compose project, tetapi sebenarnya dibalik
 itu docker swarm menggunakan technology yang berbeda. Jadi apa yang dulu disebut 1 project sekarang menjadi 1 stack.
 
-Routing Mesh: 
 
+============= Service =============
+
+docker service create \
+    --name web \
+    -p 8080:80 \
+    nginx:alpine
+
+Cara untuk melihat seluruh service
+docker service ls
+ID             NAME      MODE         REPLICAS   IMAGE          PORTS
+gvry5c825tq6   web       replicated   1/1        nginx:alpine   *:8080->80/tcp
+
+Menghapus exiting service:
+docker service rm [nama service]
+docker service rm web
+
+docker service create --name vote -p 80:80 --network frontend --replicas 2 bretfisher/examplevotingapp_vote
+
+docker service create --name redis --network frontend redis:3.2
+
+docker service create --name db --network backend -e POSTGRES_HOST_AUTH_METHOD=trust --mount type=volume,source=db-data,target=/var/lib/postgresql/data postgres:9.4
+
+docker service create --name worker --network frontend --network backend bretfisher/examplevotingapp_worker
+
+docker service create --name result --network backend -p 5001:80 bretfisher/examplevotingapp_result
+
+
+============= Manage Nodes =============
+
+Untuk check node yand ada:
+docker node ls
+
+Untuk melihat existing join token dari manager node, dimana to;ken tersebut digunakan untuk bergabung sebagai worker:
+docker swarm join-token worker
+
+Untuk melihat existing join token dari manager node, dimana to;ken tersebut digunakan untuk bergabung sebagai manager:
+docker swarm join-token manager
+
+Note, token yang dihasilkan akan berbeda antara join-token manager dan worker, contoh:
+docker swarm join --token SWMTKN-1-0856h11hmx0u9ordbtv4lgqsybcduat0d7czh33yvm4jpngvxg-5rtlgosbrh3v27dvgretqzqf2 192.168.65.3:2377
+docker swarm join --token SWMTKN-1-0856h11hmx0u9ordbtv4lgqsybcduat0d7czh33yvm4jpngvxg-26kd9yk20qb9lbd95jfcc3g65 192.168.65.3:2377
+
+Dimana penjelasan feedback join token seperti dibawah ini:
+docker swarm join --token SWMTKN-1-0kpmyi*** 192.168.65.3:2377
+-) --token option memberi value token
+-) SWMTKN (Swarm Token Prefix)
+-) 192.168.65.3 --> Ip Address dari Manager Node
+-) 2377 --> Port number dari control plane, yang digunakan untuk mengkomunikasikan management control antar node.
+
+Command untuk meninggalkan swarm cluster:
+docker swarm leave
+
+Jika Docker menolak leave karena node tersebut adalah Manager, Anda dapat menggunakan:
+docker swarm leave --force
 
 ===========================================================
 
@@ -217,62 +270,10 @@ Routing Mesh:
 
 
 
-docker swarm join --token SWMTKN-1-0kpmyi*** 192.168.65.3:2377
---token option memberi value token
-SWMTKN (Swarm Token Prefix)
-192.168.65.3 --> Ip Address dari Manager Node
-2377 --> Port number dari control plane, yang digunakan untuk mengkomunikasikan management control antar node.
 
-Melihat existing join token:
-docker swarm join-token worker
-
-PKI (Public Key Infrastructure): sistem yang digunakan untuk mengamankan komunikasi antar node di dalam cluster Swarm melalui 
-sertifikat digital dan enkripsi.
 
 Node: sebuah mesin (1 mesin fisik atau virtual) yang menjadi bagian dari cluster dan menjalankan workload.
 
-Orchestrator (Swarm/Kubernetes):
-tidak menjalankan container langsung
-tapi mengatur node mana yang menjalankan container
-
-Dalam Docker Swarm ada 2 tipe:
-
-1. Manager Node
-“otak” cluster
-menentukan:
-container jalan di mana
-scaling
-update
-
-2. Worker Node
-“tukang eksekusi”
-hanya menjalankan container
-tidak mengambil keputusan
-
-Scheduler: komponen yang bertugas menentkan di node mana sebuah container akan dijalankan.
-Scheduler akan membagi beban (load distribution), tidak menumpuk semua container di satu node, menyebar ke beberapa node.
-
-Raft: Algoritma yang memastikan semua manager node punya data yang sama dan konsisten walaupun berjalan di mesin yang berbeda.
-Supaya terjadi kesepakatan yang synchron.
-
-Service adalah instruksi tentang bagaimana sebuah container harus dijalankan di dalam cluster.
-
-Apa yang terjadi saat docker swarm init:
-1. Membuat node / mesin kamu jadi manager pertama
-2. Membuat cluster walaupun baru 1 anggota
-3. Membuat PKI untuk sistem keamanan
-4. Membuat 2 token, worker token sama manager token
-5. Membuat networking cluster
-6. Mengaktifkan scheduler
-7. Manager menyimpan state cluster: service, node, network menggunakan Raft
-8. Membuka port internal swarm
-
-Ketika membuat service, system akan me-return service id
-docker service create alpine ping 8.8.8.8
-fffwc69vlboqtza7sjuicsuof
-
-listing service:
-docker service ls
 
 Replicas: jumlah task/instance/container yang diinginkan untuk sebuah service, agar berjalan bersamaan.
 
@@ -287,8 +288,7 @@ docker update
 
 containernya kalo di stop satu si service akan jalankan lagi.
 
-menghapus servicenya
-docker service rm [nama service]
+
 
 katanya kalau di linux bisa:
 watch docker service ls
@@ -373,12 +373,7 @@ docker network create -d overlay backend
 
 docker network create -d overlay frontend
 
-docker service create --name vote -p 80:80 --network frontend --replicas 2 bretfisher/examplevotingapp_vote
 
-docker service create --name redis --network frontend redis:3.2
 
-docker service create --name db --network backend -e POSTGRES_HOST_AUTH_METHOD=trust --mount type=volume,source=db-data,target=/var/lib/postgresql/data postgres:9.4
-
-docker service create --name worker --network frontend --network backend bretfisher/examplevotingapp_worker
-
-docker service create --name result --network backend -p 5001:80 bretfisher/examplevotingapp_result
+Windows Firewall exception dari power shell as administrator
+Enable-NetFirewallRule -Name FPS-ICMP4-ERQ-In

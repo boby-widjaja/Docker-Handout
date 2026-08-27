@@ -1,0 +1,44 @@
+services:
+  nobunaga:
+    image: docker:29.7.2-dind
+    container_name: nobunaga
+    privileged: true
+    hostname: nobunaga
+    networks:
+      - samurai_net
+
+  tokugawa:
+    image: docker:29.7.2-dind
+    container_name: tokugawa
+    privileged: true
+    hostname: tokugawa
+    networks:
+      - samurai_net
+
+  jinsuke:
+    image: docker:29.7.2-dind
+    container_name: jinsuke
+    privileged: true
+    hostname: jinsuke
+    networks:
+      - samurai_net
+
+  kimura:
+    image: docker:29.7.2-dind
+    container_name: kimura
+    privileged: true
+    hostname: kimura
+    networks:
+      - samurai_net
+
+  sato:
+    image: docker:29.7.2-dind
+    container_name: sato
+    privileged: true
+    hostname: sato
+    networks:
+      - samurai_net
+
+networks:
+  samurai_net:
+    name: samurai_net

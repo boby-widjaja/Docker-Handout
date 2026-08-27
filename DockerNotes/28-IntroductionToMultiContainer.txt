@@ -124,7 +124,7 @@ docker compose up backend mysql
 
 Jika tidak mau menggunakan default file (docker-compose.yaml), kita bisa menggunakan destination file option:
 docker compose -f second-compose.yaml up
-docker compose -d -f second-compose.yaml up
+docker compose -f second-compose.yaml up -d 
 
 Lawan dari up adalah down, dimana akan menghentikan seluruh container di dalam projectnya dan menghapusnya.
 Hati-hati menggunakan down, terutama dengan container database, karena akan menghapus total

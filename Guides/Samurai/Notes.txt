@@ -1,0 +1,9 @@
+docker compose up -d 
+
+docker exec -it nobunaga sh
+
+docker version
+
+ip route
+
+172.19.0.5
