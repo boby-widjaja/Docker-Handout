@@ -7,6 +7,14 @@ services:
     networks:
       - samurai_net
 
+  hideyoshi:
+    image: docker:29.7.2-dind
+    container_name: hideyoshi
+    privileged: true
+    hostname: hideyoshi
+    networks:
+      - samurai_net
+
   tokugawa:
     image: docker:29.7.2-dind
     container_name: tokugawa
@@ -23,11 +31,11 @@ services:
     networks:
       - samurai_net
 
-  kimura:
+  himura:
     image: docker:29.7.2-dind
-    container_name: kimura
+    container_name: himura
     privileged: true
-    hostname: kimura
+    hostname: himura
     networks:
       - samurai_net
 
@@ -38,6 +46,30 @@ services:
     hostname: sato
     networks:
       - samurai_net
+
+  musashi:
+    image: docker:29.7.2-dind
+    container_name: musashi
+    privileged: true
+    hostname: musashi
+    networks:
+      - samurai_net
+
+  kojiro:
+    image: docker:29.7.2-dind
+    container_name: kojiro
+    privileged: true
+    hostname: kojiro
+    networks:
+      - samurai_net
+
+  masamune:
+    image: docker:29.7.2-dind
+    container_name: masamune
+    privileged: true
+    hostname: masamune
+    networks:
+      - samurai_net  
 
 networks:
   samurai_net:

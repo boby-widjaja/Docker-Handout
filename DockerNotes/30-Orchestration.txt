@@ -74,7 +74,7 @@ Apa yang terjadi ketika kita mengaktifkan docker swarm?
 5) Node manager ini mulai menggunakan distributed state store atau tempat menyimpan informasi/state dari cluster.
 
 
-============= Terminology and Theory =============
+============= Basic Terminology  =============
 
 Mungkin akan sangat membingungkan untuk belajar Docker Swarm sebelum memahami istilah-istilah
 dalam Docker Swarm dan bagaimana cara kerjanya. Berikut ini akan kita jabarkan.
@@ -209,6 +209,217 @@ Di dalam docker swarm, stack juga ditulis di dalam yaml file dan bentuknya mirip
 itu docker swarm menggunakan technology yang berbeda. Jadi apa yang dulu disebut 1 project sekarang menjadi 1 stack.
 
 
+============= Manage Nodes =============
+
+Pada praktek dasarnya untuk melakukan percobaan management node, kita memerlukan banyak host dengan 1 docker engine dan 1 node disetiap hostnya.
+Tapi itu membutuhkan banyak pc. Bila tidak memakai banyak PC, kita bisa secara alternatif menggunakan Virtual Machine.
+Tapi bahkan VM pun membutuhkan banyak resources performance dan memory.
+Untuk contoh kali ini kita akan membuat Docker di dalam Container Docker, atau istilahnya Docker in Docker (Nested docker),
+dimana setiap container akan kita jadikan satu host.
+
+(Note: Menggunakan antara WSL dengan Docker Desktop langsung juga sedikit sulit, karena keberadaan linux di dalam WSL-nya tersembunyi)
+
+Experiment itu bisa dicoba dengan menggunakan contoh di dalam Guides/Samurai
+
+Untuk check node yand ada (harus dari manager node):
+docker node ls
+
+Untuk melihat existing join token dari manager node, dimana token tersebut digunakan untuk bergabung sebagai worker:
+docker swarm join-token worker
+
+Untuk melihat existing join token dari manager node, dimana to;ken tersebut digunakan untuk bergabung sebagai manager:
+docker swarm join-token manager
+
+Note, token yang dihasilkan akan berbeda antara join-token manager dan worker, contoh:
+docker swarm join --token SWMTKN-1-0856h11hmx0u9ordbtv4lgqsybcduat0d7czh33yvm4jpngvxg-5rtlgosbrh3v27dvgretqzqf2 192.168.65.3:2377
+docker swarm join --token SWMTKN-1-0856h11hmx0u9ordbtv4lgqsybcduat0d7czh33yvm4jpngvxg-26kd9yk20qb9lbd95jfcc3g65 192.168.65.3:2377
+
+Dimana penjelasan feedback join token seperti dibawah ini:
+docker swarm join --token SWMTKN-1-0kpmyi*** 192.168.65.3:2377
+-) --token option memberi value token
+-) SWMTKN (Swarm Token Prefix)
+-) 192.168.65.3 --> Ip Address dari Manager Node
+-) 2377 --> Port number dari control plane, yang digunakan untuk mengkomunikasikan management control antar node.
+
+Command untuk meninggalkan swarm cluster:
+docker swarm leave
+
+Jika Docker menolak leave karena node tersebut adalah Manager, Anda dapat menggunakan:
+docker swarm leave --force
+
+Untuk mempromosikan sebuah worker node menjadi manager node:
+docker node promote [hostname]
+contoh:
+docker node promote masamune
+
+Untuk membuat sebuah manager turun pangkat menjadi worker node:
+docker node demote [hostname]
+contoh:
+docker node demote masamune
+
+Untuk melihat detail informasi dan metadata sebuah node:
+docker node inspect [hostname]
+contoh:
+docker node inspect tokugawa
+untuk ke diri sendiri:
+docker node inspect self
+
+Untuk menghapus node (Pastikan node Status dalam keadaan down terlebih dahulu):
+docker node rm [hostname]
+docker node rm jinsuke
+
+
+============= Nodes Theory =============
+
+Dari percobaan swarm cluster samurai yang ada di Guides/Samurai, kita bisa melihat hasil akhir nodes
+bila kita check dari docker node ls dari manager node, kita akan mendapatkan hasil seperti ini:
+
+ID                            HOSTNAME    STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
+eg8i6ol2652q235cetazhqk3g     hideyoshi   Ready     Active         Reachable        29.7.2
+kdz9cw42dyefr2mgxkrp70oxv     himura      Ready     Active                          29.7.2
+om90us836txhscuy2tjc2wqgy     jinsuke     Ready     Active                          29.7.2
+uut7sjp2jys4umxw7nrtc1rd9     kojiro      Ready     Active                          29.7.2
+3w4z9k9y6over3o7jsf4lgfwx     masamune    Ready     Active                          29.7.2
+n8ih4haflpwwqhfl9epaugtpp     musashi     Ready     Active                          29.7.2
+02pdx44hg2zwmz8zz2it7gtd1 *   nobunaga    Ready     Active         Leader           29.7.2
+zgwmitvtp1wvqp7s5n7182nlo     sato        Ready     Active                          29.7.2
+eegwiibpm59zb1f685jxn4gbc     tokugawa    Ready     Active         Reachable        29.7.2
+
+Di contoh ini total terdapat 9 nodes, diantaranya ada:
+3 manager nodes: nobunaga, tokugawa dan hideyoshi
+6 worker nodes: himura, jinsuke, kojiro, masamune, musashi, sato
+
+Semua bisa dicheck dari column MANAGER STATUS, yang kemungkinannya cuma berisi:
+<blank> : artinya worker
+Leader: jenis manager leader
+Reachable: jenis manager biasa/non-leader
+Unreachable: manager tidak bisa berkomunikasi dengan manager lain dengan Raft.
+
+Di sini kita bisa melihat kalau bahkan manager node terdiri dari 2 macam, yaitu leader dan non-leader.
+Manager leader di sini adalah nobunaga, yang menjadi swarm cluster initiator, lalu manager tokugawa dan hideyoshi yang
+bergabung kemudian menjadi manager biasa.
+
+Perbedaan manager leader dan non-leader adalah:
+Leader adalah manager yang memiliki kemampuan untuk menerima perubahan cluster dan mengkoordinasikan Raft, dan jumlahnya pasti hanya 1.
+Non-Leader adalah manager yang ikut membantu me-replica informasi State Cluster yang di share sesama manager.
+    Manager yang non-leader juga bisa berpotensi untuk berubah menjadi leader kalau cluster kehilangan leadernya atau leadernya mati.
+    Dan jumlah non-leader bisa banyak.
+
+STATUS column sendiri bisa berisikan Ready atau Down, dimana sudah cukup jelas kalau Down artinya Node tidak bisa dihubungi sama sekali.
+
+Kenapa saya membuat 3 managers di sini? Karena manager 3 adalah minimal gold standard dari jumlah manager di dalam sebuah cluster.
+Bagaimana cara mengetahui jumlah manager yang baik dalam sebuah cluster? Sebelum tau cara mengetahui jumlah manager yang
+bagus dalam satu cluster, kita harus paham dulu cara kerja consensus Raft antar managers.
+
+Beberapa keputusan manager harus diproses secara demokrasi lewat vote antar manager. Bayangkan manager leader adalah seperti president dalam sebuah negara
+atau CEO dalam sebuah perusahaan dan manager non-leader seperti wakil president dalam sebuah negara atau seperti board member di dalam sebuah
+perusahaan. Tetapi di dalam docker, demokrasi hanya terjadi antar managers saja, workers sama sekali tidak ada suara dan pengaruh di sini.
+Vote demokrasi ini adalah untuk 2 macam kategori kepentingan:
+1. Leader Election: Pemilihan Leader yang baru jika leader yang lama mati.
+2. Commiting Replication: Saat Leader mengambil keputusan untuk commit hasil rubah atau konfigurasi cluster, 
+    setidaknya harus ada kata setuju dari para manager-manager lainnya.
+
+Ketika kita membuat beberapa manager di beberapa host, tentu saja ada resiko dimana salah satu manager down, dan ini sangat beresiko.
+Jadi untuk membuat rencana contingency salah satu manager down (terutama leadernya), kita membuat lebih dari satu manager.
+Dan untuk kasus leader down, tentu saja harus ada Leader Election seperti yang sudah dijelaskan di atas.
+Kurang lebih seperti seorang president yang memiliki wakil president, jika terjadi sesuatu dengan presidentnya, maka wakilnya akan
+menggantikannya, karena bahaya sekali bila sebuah negara sama sekali tidak ada presidentnya. Tetapi bagaimana kalau wakilnya juga ikut down?
+Lalu bagaimana kalau seorang president miliki 2 atau lebih wakil? Nanti wakil yang mana yang akan menggantikan presidentnya?
+
+Untuk menyelesaikan masalah-masalah ini, docker swarm membuatkan sesuatu untuk kita. Docker swarm membuatkan kita jumlah Quorum.
+    Quorum: adalah jumlah minimal para manager yang harus menyetujui sebuah keputusan yang dilandaskan sebuah vote.
+        Note: jumlah quorum ditentukan oleh system dan tidak akan diupdate otomatis jika jumlah manager berkurang.
+    Contingency: Dari jumlah quorum kita akan mendapatkan jumlah Contingency. Contingency adalah jumlah maximum TOLERANSI manager yang boleh down. 
+        Jika manager yang down lebih daripada jumlah contingency akan mengakibatkan kekacauan.
+
+Rumus menghitung Jumlah Quorum dan Contingency adalah:
+-) Total = Jumlah total manager yang ada dalam swarm cluster
+-) Quorum = ((Total / 2) floor) + 1
+-) Contingency = Total - Quorum
+
+Dari sini bisa saya buatkan hasil perhitungannya, jika:
+Total: 1, Quorum: 1, Contingency 0
+Total: 2, Quorum: 2, Contingency 0
+Total: 3, Quorum: 2, Contingency 1
+Total: 4, Quorum: 3, Contingency 1
+Total: 5, Quorum: 3, Contingency 2
+Total: 6, Quorum: 4, Contingency 2
+Total: 7, Quorum: 4, Contingency 3
+dan seterusnya...
+
+Dari hasil perhitungan Quorum dan Contingency diatas, kurang lebih kesimpulannya seperti ini:
+-) Jika manager hanya ada 1 orang, dia sudah pasti leader. Dan kalau dia down, contingencynya 0 dan swarm tidak ada manager sama sekali.
+    Tamatlah sudah alkisah clusternya.
+-) Jika manager ada 2 orang, setiap keputusan bisa dijalankan kalau yang vote setuju ada 2 manager minimal (quorum). Kalau leadernya down,
+    maka sisa manager hanya 1 orang dan vote tidak bisa dilakukan sama sekali, karena vote valid kalau ada 2 manager yang jawab setuju.
+    Tamatlah sudah alkisah clusternya.
+-) Jika manager ada 3 orang, setiap keputusan bisa dijalankan kalau yang vote setuju ada 2 manager minimal. Kalau 1 manager down, masih
+    akan ada 2 orang manager yang bisa melakukan pengambilan vote. Sekalipun yang down adalah leadernya, sisa 2 manager masih bisa
+    melakukan pengambilan vote untuk siapa yang next jadi leadernya. Itu artinya kalau 1 manager down masih aman (contingency), kecuali kalau yang
+    down ada lebih dari 1, maka bisa bahaya. Itulah kenapa 3 manager adalah minimum gold standard jumlah manager.
+-) Jika manager ada 4 orang, jumlah pengambilan vote bisa di-sahkan kalau 3 manager bilang setuju. Itu artinya jumlah quorum meningkat, tapi
+    jumlah contingencynya tidak bertambah kalau dibanding dengan total 3 manager. Dengan memiliki 4 manager, cluster masih takut kehilangan
+    lebih dari 1 manager. Itu artinya kekuatan contingency dari 3 manager ke 4 manager tidak bertambah kuat.
+-) Jika manager ada 5 orang, jumlah quorum vote tetap 3, tetapi kali ini cluster lebih kuat ban serepnya. Karena biarpun kehilangan 2 managers,
+    cluster tetap akan baik-baik saja karena contingency bertambah kuat menjadi 2. Itu artinya 5 managers lebih toleran terhadap kegagalan daripada
+    4 manager.
+
+Kalau diperhatikan, selain total manager 1 atau 2, cluster akan berjalan dengan lebih aman bila ada manager down.
+Tetapi kalau diperhatikan lebih lagi, peningkatan kekuatan contingency terjadi di setiap jumlah ganjil pada total managernya setelah
+total 3 manager. Dimana ini menyimpulkan kalau peningkatan jumlah manager dalam angka genap itu sia-sia, 
+karena yang ingin kita perkuat adalah contingencynya.
+
+Oleh karena itu gold standard jumlah managers adalah: 3, 5, 7, 9, 11, 13, dan seterusnya.
+Jadi selalu buat jumlah manager dari pilihan angka-angka itu.
+
+Semakin tinggi angka contingencynya, semakin toleransi terhadap peristiwa yang membuat banyak node yang down,
+maka dikatakan clusternya memiliki good or ideal HA (High Availability) configuration.
+
+Bagaimana seorang manager tau kalau ada manager lain yang down atau kalau ada worker yang lain down?
+Setiap manager mampu mengawasi workernya dengan monitoring lewat swarm node communication. Jadi manager terus menerus melakukan komunikasi
+kepada workernya untuk memastikan worker masih baik-baik saja.
+Tetapi sebuah manager bisa mengetahui keadaan lain managernya dengan mendengarkan Heartbeat (detak jantung) manager node lain.
+Ya setiap manager node memiliki heartbeat yang secara terus menerus detaknya diperdengarkan di Raft consensus, sehingga sebuah manager
+bisa mendeteksi kalau manager yang lain masih hidup atau mati.
+
+Detak heartbeat sebuah manager node kurang lebih adalah setiap 1/10 detik, atau jantungnya berdetak 10 kali per setiap detiknya.
+Ketika detak jantung sebuah leader berhenti, kurang lebih ada waktu 10 detik bagi manager non-leader lain untuk mengambil keputusan
+kalau kita harus pilih ulang leader karena leader yang lama sudah mati. 10 detik itu disebut sebagai election timout. 
+
+Voting ulang terjadi secara otomatis lewat perhitungan algoritma yang dilihat dari kecepatan waktu manager non-leader meresponse vote,
+dan juga dari kelengkapan replica cluster state yang dia miliki. Sebagai pemakai docker kita tidak perlu terlalu memikirkan itu,
+yang kita harus tau hanya kalau pemilihan vote next leadernya tidak terjadi secara random (walaupun terasa seperti random).
+
+Dijelaskan diatas kalau angka quorum bersifat fixed dan tidak berubah secara otomatis ketika ada manager down dan jumlah total manager berkurang,
+karena kalau jumlah quorum bisa secara otomatis ini bahaya sekali kalau misalnya terjadi kegagalan network partition misalnya, dimana
+ada kendala sekelompok manager tidak bisa berkomunikasi dengan kelompok manager yang lain.
+Misalnya seperti di perusahaan, ada 5 board member, diantaranya ada 1 CEO yang menghilang.
+4 board member sisanya panik karena perusahaannya jalan tanpa CEO. Seharusnya CEO selanjutnya bisa disahkan kalau setidaknya
+ada 3 diantar 4 orang itu setuju. Tapi sialnya terjadi partition, dimana board 1 dan 2 berada di indonesia dasn board ke 3 dan 4 berada di
+Norwegia dan mereka tidak bisa bicara pisah negara. Board di indonesia akan dengan seenaknya merasa kita bisa memutuskan CEO berikutnya
+hanya dengan 2 suara saja (si 1 dan 2 yang ada di Indonesia), tanpa memperdulikan eksistensi member ke 3 dan ke 4 di Norwegia.
+
+(Note: kegagalan distributed information seperti ini pasti sering kalian alami dengan teman-teman. Kalian menyusun rencana jalan-jalan
+bersama dimana semua orang boleh memberikan pendapatnya, tetapi ada teman kalian yang sakit pada saat meeting dan suaranya tidak diperdulikan.
+Siapa suruh lu sakit waktu meeting! Jadi kita juga gak bisa dengar pendapat lu. Dan ini tidak baik.)
+
+
+
+
+ID                            HOSTNAME    STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
+eg8i6ol2652q235cetazhqk3g     hideyoshi   Ready     Active         Reachable        29.7.2
+kdz9cw42dyefr2mgxkrp70oxv     himura      Ready     Active                          29.7.2
+om90us836txhscuy2tjc2wqgy     jinsuke     Down      Active                          29.7.2
+uut7sjp2jys4umxw7nrtc1rd9     kojiro      Ready     Active                          29.7.2
+3w4z9k9y6over3o7jsf4lgfwx     masamune    Ready     Active                          29.7.2
+n8ih4haflpwwqhfl9epaugtpp     musashi     Ready     Active                          29.7.2
+02pdx44hg2zwmz8zz2it7gtd1     nobunaga    Down      Active         Unreachable      29.7.2
+zgwmitvtp1wvqp7s5n7182nlo     sato        Ready     Active                          29.7.2
+eegwiibpm59zb1f685jxn4gbc *   tokugawa    Ready     Active         Leader           29.7.2
+
+
+
+
 ============= Service =============
 
 docker service create \
@@ -236,38 +447,15 @@ docker service create --name worker --network frontend --network backend bretfis
 docker service create --name result --network backend -p 5001:80 bretfisher/examplevotingapp_result
 
 
-============= Manage Nodes =============
 
-Untuk check node yand ada:
-docker node ls
-
-Untuk melihat existing join token dari manager node, dimana to;ken tersebut digunakan untuk bergabung sebagai worker:
-docker swarm join-token worker
-
-Untuk melihat existing join token dari manager node, dimana to;ken tersebut digunakan untuk bergabung sebagai manager:
-docker swarm join-token manager
-
-Note, token yang dihasilkan akan berbeda antara join-token manager dan worker, contoh:
-docker swarm join --token SWMTKN-1-0856h11hmx0u9ordbtv4lgqsybcduat0d7czh33yvm4jpngvxg-5rtlgosbrh3v27dvgretqzqf2 192.168.65.3:2377
-docker swarm join --token SWMTKN-1-0856h11hmx0u9ordbtv4lgqsybcduat0d7czh33yvm4jpngvxg-26kd9yk20qb9lbd95jfcc3g65 192.168.65.3:2377
-
-Dimana penjelasan feedback join token seperti dibawah ini:
-docker swarm join --token SWMTKN-1-0kpmyi*** 192.168.65.3:2377
--) --token option memberi value token
--) SWMTKN (Swarm Token Prefix)
--) 192.168.65.3 --> Ip Address dari Manager Node
--) 2377 --> Port number dari control plane, yang digunakan untuk mengkomunikasikan management control antar node.
-
-Command untuk meninggalkan swarm cluster:
-docker swarm leave
-
-Jika Docker menolak leave karena node tersebut adalah Manager, Anda dapat menggunakan:
-docker swarm leave --force
 
 ===========================================================
 
 
 
+
+===========================================================
+docker node update --availability drain jinsuke
 
 
 

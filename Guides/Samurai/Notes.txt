@@ -1,9 +1,88 @@
+Kita akan membuat setiap container docker in docker menjadi node sendiri-sendiri dengan
+list seperti di bawah ini.
+
+┌───────────────────────────────────────────┐
+│           docker swarm cluster            │
+│                samurai_net                │
+│                                           │
+│  nobunaga       → leader                  │
+│  hideyoshi      → reachable               │
+│  tokugawa       → reachable               │
+│                                           │
+│  jinsuke        → worker                  │
+│  himura         → worker                  │
+│  sato           → worker                  │
+│  musashi        → worker                  │
+│  kojiro         → worker                  │
+│  masamune       → worker                  │
+│                                           │
+└───────────────────────────────────────────┘
+
+1. Jalankan docker compose file yang ada di directory ini dengan command:
 docker compose up -d 
 
+2. Masuk ke nobunaga container yang akan kita jadikan leader
 docker exec -it nobunaga sh
 
+3. Untuk memastikan kalau benar ada docker di dalam container ini, bisa gunakan command untuk check version:
 docker version
 
+4. Carilah ip address pada container dengan menggunakan command:
 ip route
 
-172.19.0.5
+Hasilnya akan seperti dibawah ini:
+172.17.0.0/16 dev docker0 scope link  src 172.17.0.1 
+172.18.0.0/16 dev docker_gwbridge scope link  src 172.18.0.1 
+172.19.0.0/16 dev eth0 scope link  src 172.19.0.7 
+
+Cari ip yang digunakan oleh host itu sendiri, bukan yang berasa dari docker daemon yang berjalan di container atau default networknya:
+172.19.0.7
+
+5. Inisialisasi swarm cluster dengan menggunakan ip adddress nobunaga pada virtual ethernet.
+docker swarm init --advertise-addr 172.19.0.7
+
+6. Lalu cari token yang bisa digunakan untuk join swarm cluster sebagai manager, gunakan command di bawah ini:
+docker swarm join-token manager
+catat hasilnya:
+docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2slfvtq-5d55ulfms70sfriub3aq7fk5t 172.19.0.7:2377
+
+7. Lalu cari token yang bisa digunakan untuk join swarm cluster sebagai worker, gunakan command di bawah ini:
+docker swarm join-token worker
+catat hasilnya:
+docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2slfvtq-evhmclbvflkk4i9k9dco5vogc 172.19.0.7:2377
+
+8. Silahkan exit dari container nobunaga
+
+9. Sekarang masuk ke container hideyoshi
+docker exec -it hideyoshi sh
+
+10. Kalau ingin memastikan hideyoshi memang terconnect dengan ip dari container nobunaga bisa coba ping ke ipnya:
+ping 172.19.0.7
+
+11. Joinkan hideyoshi ke swarm cluster yang sudah diinisiasi oleh nobunaga dengan join token versi manager yang kamu sudah peroleh:
+docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2slfvtq-5d55ulfms70sfriub3aq7fk5t 172.19.0.7:2377
+Sampai ada konfirmasinya
+This node joined a swarm as a manager.
+
+12. Exit dan lakukan hal yang sama dengan tokugawa
+
+13. Sisanya untuk jinsuke, himura, sato, musashi, kojiro dan masamune, silahkan lakukan hal yang sama, tapi
+join tokennya pakai yang worker version
+docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2slfvtq-evhmclbvflkk4i9k9dco5vogc 172.19.0.7:2377
+
+14. Lalu kembali lagi masuk ke nobunaga container
+docker exec -it nobunaga sh
+lalu check semua node dengan:
+docker node ls
+
+Kita mengharapkan hasil yang mirip dengan:
+ID                            HOSTNAME    STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
+eg8i6ol2652q235cetazhqk3g     hideyoshi   Ready     Active         Reachable        29.7.2
+kdz9cw42dyefr2mgxkrp70oxv     himura      Ready     Active                          29.7.2
+om90us836txhscuy2tjc2wqgy     jinsuke     Ready     Active                          29.7.2
+uut7sjp2jys4umxw7nrtc1rd9     kojiro      Ready     Active                          29.7.2
+3w4z9k9y6over3o7jsf4lgfwx     masamune    Ready     Active                          29.7.2
+n8ih4haflpwwqhfl9epaugtpp     musashi     Ready     Active                          29.7.2
+02pdx44hg2zwmz8zz2it7gtd1 *   nobunaga    Ready     Active         Leader           29.7.2
+zgwmitvtp1wvqp7s5n7182nlo     sato        Ready     Active                          29.7.2
+eegwiibpm59zb1f685jxn4gbc     tokugawa    Ready     Active         Reachable        29.7.2
