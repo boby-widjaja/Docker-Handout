@@ -1,0 +1,58 @@
+=========== Push Image to Dockerhub ===========
+
+Selama ini kita hanya pull image yang ada di dalam docker hub ke dalam docker host kita, atau tindakannya pull.
+Apakah kita bisa meng-upload atau mem-push image kita yang ada local kita ke docker hub, agar nantinya bisa di share atau di simpan di repository?
+Tentu saja bisa, kurang lebih caranya begini.
+
+1. Login ke website Dockerhub
+
+2. Pergi ke Menu:
+MyHub > Repositories > Create Repositories
+
+3. Buat beberapa repositories yang kamu inginkan.
+Dalam kasus saya, saya akan membuat basilisk-frontend, basilisk-backend, dan basilisk-database
+yang ada pada Guides/ComposeProjects/basilisk_hc
+
+Hasilnya:
+bobywidjaja/basilisk-database
+bobywidjaja/basilisk-backend
+bobywidjaja/basilisk-frontend
+
+Repository akan menciptakan nama dengan namespace berupa username, baru nama repositorynya.
+
+4. Login docker host kamu ke repository
+docker login 
+docker login -u bobywidjaja
+
+5. Kita akan membuat tag dari existing image kita dari image list, dan buat tag dengan nama
+yang persis dengan repository, ditambah tagnya, contoh:
+docker tag basilisk-backend:1.0 bobywidjaja/basilisk-backend:1.0
+docker tag basilisk-frontend:1.0 bobywidjaja/basilisk-frontend:1.0
+docker tag basilisk-database:1.0 bobywidjaja/basilisk-database:1.0
+
+6. Kita lakukan command push
+docker push bobywidjaja/basilisk-backend:1.0
+docker push bobywidjaja/basilisk-frontend:1.0
+docker push bobywidjaja/basilisk-database:1.0
+
+
+=========== Compose OCI Artifact ===========
+
+Proses sebelumnya yang kita lakukan hanya melakukan push ke satu-persatu image yang
+nantinya kita harus build lagi di dalam proses lainnya. Intinya persis seperti image-image public
+yang saat ini di share di dalam docker hub dan kita pakai.
+
+Bagaimana kalau saya mau push dan simpan seluruh proses docker compose ke docker hub?
+Caranya adalah dengan menggunakan OCI artifact.
+
+OCI (Open Container Initiative) adalah standard format Container dan Artifact container dimanage (disimpan, didistribusikan, dan dijalankan).
+OCI dibuat oleh komunitas karena banyak system containerization dan orchestration dengan berbagai merek, dan masing-masing tidak
+standard satu sama lain. Docker Hub menggunakan technology OCI untuk parsing setiap image yang di push ke mereka.
+
+Tetapi technology docker compose versi yang lebih late mampu mem-publish Compose Application sebagai OCI Artifact.
+Yaitu dengan menggunakan command:
+docker compose publish [username]/[projectname:projecttag]
+
+Contohnya bisa kita lihat di dalam Guides/basilisk_cmp.
+
+Inilah mengapa, pada saat kita melakukan compose up, kita harus menulis oci:// di depan value filenya.

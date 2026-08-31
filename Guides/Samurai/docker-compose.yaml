@@ -5,7 +5,8 @@ services:
     privileged: true
     hostname: nobunaga
     networks:
-      - samurai_net
+      samurai_net:
+        ipv4_address: 172.19.0.2 
 
   hideyoshi:
     image: docker:29.7.2-dind
@@ -13,7 +14,8 @@ services:
     privileged: true
     hostname: hideyoshi
     networks:
-      - samurai_net
+      samurai_net:
+        ipv4_address: 172.19.0.3
 
   tokugawa:
     image: docker:29.7.2-dind
@@ -21,7 +23,8 @@ services:
     privileged: true
     hostname: tokugawa
     networks:
-      - samurai_net
+      samurai_net:
+        ipv4_address: 172.19.0.4
 
   jinsuke:
     image: docker:29.7.2-dind
@@ -29,7 +32,8 @@ services:
     privileged: true
     hostname: jinsuke
     networks:
-      - samurai_net
+      samurai_net:
+        ipv4_address: 172.19.0.5
 
   himura:
     image: docker:29.7.2-dind
@@ -37,7 +41,8 @@ services:
     privileged: true
     hostname: himura
     networks:
-      - samurai_net
+      samurai_net:
+        ipv4_address: 172.19.0.6
 
   sato:
     image: docker:29.7.2-dind
@@ -45,7 +50,8 @@ services:
     privileged: true
     hostname: sato
     networks:
-      - samurai_net
+      samurai_net:
+        ipv4_address: 172.19.0.7
 
   musashi:
     image: docker:29.7.2-dind
@@ -53,7 +59,8 @@ services:
     privileged: true
     hostname: musashi
     networks:
-      - samurai_net
+      samurai_net:
+        ipv4_address: 172.19.0.8
 
   kojiro:
     image: docker:29.7.2-dind
@@ -61,7 +68,8 @@ services:
     privileged: true
     hostname: kojiro
     networks:
-      - samurai_net
+      samurai_net:
+        ipv4_address: 172.19.0.9
 
   masamune:
     image: docker:29.7.2-dind
@@ -69,8 +77,12 @@ services:
     privileged: true
     hostname: masamune
     networks:
-      - samurai_net  
+      samurai_net:
+        ipv4_address: 172.19.0.10 
 
 networks:
   samurai_net:
     name: samurai_net
+    ipam:
+      config:
+        - subnet: 172.19.0.0/24

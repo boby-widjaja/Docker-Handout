@@ -1,0 +1,27 @@
+1. Login ke dalam dockerhub (registry yang saya pakai di sini)
+docker login 
+atau
+docker login -u [username]
+docker login -u bobywidjaja
+
+2. Perhatikan kalau seluruh image pada compose file sudah menggunakan namespace username saya.
+
+3. Kita harus build dulu semua image ada di services compose filenya.
+docker compose build
+
+4. Pastikan image sudah berada pada image list kalian.
+docker image ls
+
+5. Kita bisa push ala docker compose dengan command ini:
+docker compose push
+
+6. publish agar perintah compose menjadi OCI artifact:
+docker compose publish bobywidjaja/basilisk:1.0
+
+7. Untuk compose up langsung dari OCI artifact di dalam registry:
+docker compose -f oci://docker.io/bobywidjaja/basilisk:1.0 up -d
+atau dengan env
+DB_PASSWORD="SmithWessonMagnum357!" SA_PASSWORD="SmithWessonMagnum357!" docker compose -f oci://docker.io/bobywidjaja/basilisk:1.0 up -d
+
+8. Untuk down, commandnya seperti biasa:
+docker compose -f oci://docker.io/bobywidjaja/basilisk:1.0 down

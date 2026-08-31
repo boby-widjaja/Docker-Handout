@@ -403,8 +403,15 @@ hanya dengan 2 suara saja (si 1 dan 2 yang ada di Indonesia), tanpa memperdulika
 bersama dimana semua orang boleh memberikan pendapatnya, tetapi ada teman kalian yang sakit pada saat meeting dan suaranya tidak diperdulikan.
 Siapa suruh lu sakit waktu meeting! Jadi kita juga gak bisa dengar pendapat lu. Dan ini tidak baik.)
 
+Untuk mensimulasikan sebuah host yang down, kita bisa stop container host yang mau kita matikan.
+Dalam hal ini saya akan matikan 1 host leadernya, yaitu nobunaga, dan satu worker node jinsuke.
+docker container stop nobunaga
+docker container stop jinsuke
 
-
+Di tempat saya algorithm raft dan hasil vote menunjuk tokugawa sebagai leader pengganti, bisa jadi berbeda di tempat kalian.
+Kita bisa coba masuk ke tokugawa atau hideyoshi untuk melihat seluruh node pada cluster ini dan bagaimana table statusnya.
+docker exec -it tokugawa sh
+docker node ls
 
 ID                            HOSTNAME    STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
 eg8i6ol2652q235cetazhqk3g     hideyoshi   Ready     Active         Reachable        29.7.2
@@ -417,24 +424,64 @@ n8ih4haflpwwqhfl9epaugtpp     musashi     Ready     Active                      
 zgwmitvtp1wvqp7s5n7182nlo     sato        Ready     Active                          29.7.2
 eegwiibpm59zb1f685jxn4gbc *   tokugawa    Ready     Active         Leader           29.7.2
 
-
+Di sini bisa terlihat kalau nobunaga dan jinsuke memiliki status down.
+Karena nobunaga adalah manager, dia juga mendapatkan manager status berupa Unreachable.
+Untuk semua node yang memiliki status down ini, baru bisa kita remove dengan menggunakan:
+docker node rm [hostname]
 
 
 ============= Service =============
 
+Sekarang kita akan meng-ekslporasi management service di dalam docker swarm, dari command-commandnya
+sampai option-optionnya.
+
+docker service
+├── ps
+├── inspect
+├── logs
+├── scale
+├── update
+├── rollback
+└── ... 
+
+Untuk membuat service baru:
+(Di sini juga sudah include diberi contoh untuk pemberian nama dan publishing port serperti pada pembuatan container)
 docker service create \
     --name web \
-    -p 8080:80 \
+    -p 8010:80 \
     nginx:alpine
 
 Cara untuk melihat seluruh service
 docker service ls
 ID             NAME      MODE         REPLICAS   IMAGE          PORTS
-gvry5c825tq6   web       replicated   1/1        nginx:alpine   *:8080->80/tcp
+gvry5c825tq6   web       replicated   1/1        nginx:alpine   *:8010->80/tcp
 
-Menghapus exiting service:
+Salah satu feature basic dan utama adalah pembuatan replica container:
+(Replicas: jumlah task/instance/container yang diinginkan untuk sebuah service, agar berjalan bersamaan.)
+
+docker service create \
+    --name web \
+    -p 8010:80 \
+    --replicas 3 \
+    nginx:alpine
+
+Silahkan coba menghentikan satu container, nanti segera container yang baru akan membuat replica yang baru lagi.
+Karena desired statenya 3 replicas. Dan siapa pun yang mencoba akses ke dalam salah satu container di dalam replica ini tidak
+akan mengalami kesulitan.
+
+ID             NAME      MODE         REPLICAS   IMAGE          PORTS
+qq2xvdps0a3w   web       replicated   3/3        nginx:alpine   *:8010->80/tcp
+
+Untuk menghapus exiting service:
 docker service rm [nama service]
 docker service rm web
+
+
+
+
+
+
+===========================================================
 
 docker service create --name vote -p 80:80 --network frontend --replicas 2 bretfisher/examplevotingapp_vote
 
@@ -447,23 +494,9 @@ docker service create --name worker --network frontend --network backend bretfis
 docker service create --name result --network backend -p 5001:80 bretfisher/examplevotingapp_result
 
 
-
-
-===========================================================
-
-
-
-
 ===========================================================
 docker node update --availability drain jinsuke
 
-
-
-
-Node: sebuah mesin (1 mesin fisik atau virtual) yang menjadi bagian dari cluster dan menjalankan workload.
-
-
-Replicas: jumlah task/instance/container yang diinginkan untuk sebuah service, agar berjalan bersamaan.
 
 melihat task atau running container di dalam service:
 docker service ps [service-name]
@@ -475,8 +508,6 @@ Mengupdate container selagi jalan?
 docker update
 
 containernya kalo di stop satu si service akan jalankan lagi.
-
-
 
 katanya kalau di linux bisa:
 watch docker service ls

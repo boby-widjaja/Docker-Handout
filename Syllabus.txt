@@ -3,7 +3,5 @@
     Authentication
     
 - docker.ignore
-- Registry 
-- Swarm
 - Docker Copy outside
 - secret and config

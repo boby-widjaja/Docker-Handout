@@ -32,7 +32,7 @@ services:
 
   basilisk_fe:
     container_name: basilisk_fe
-    image: basilisk-fronted:1.0
+    image: basilisk-frontend:1.0
     ports:
       - "8006:8006"
     build:
