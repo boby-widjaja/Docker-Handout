@@ -1,7 +1,10 @@
-
 - Shell Script
     Authentication
     
 - docker.ignore
 - Docker Copy outside
-- secret and config
+
+
+service --endpoint-mode???
+katanya kalau di linux bisa:
+watch docker service ls

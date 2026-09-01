@@ -1,0 +1,64 @@
+Service pada Swarm hampir mirip dengan service pada Compose dengan sedikit perbedaan.
+
+Service pada compose berfokus terhadap bagaimana container tersebut dibuat dari image sampai
+dijalankan sebagai container, tetapi fokusnya adalah untuk single host environment.
+
+Service pada swarm juga men-dikte bagaimana container tersebut harus dibuat dan dijalankan,
+tetapi lebih dari itu kalau service di sini juga men-dikte Desired State (Sudah di jelaskan di chapter OrchestrationNodes.txt sebelumnya)
+sehingga kondisi desired statenya akan otomatis di-maintain dan dipertahankan.
+Selain itu juga service pada swarm fokus kepada multi host environment.
+
+Sekarang kita akan meng-ekslporasi management service di dalam docker swarm, dari command-commandnya
+sampai option-optionnya.
+
+Untuk membuat service baru:
+(Di sini juga sudah include diberi contoh untuk pemberian nama dan publishing port serperti pada pembuatan container)
+docker service create \
+    --name web \
+    -p 8010:80 \
+    nginx:alpine
+
+Cara untuk melihat seluruh service
+docker service ls
+ID             NAME      MODE         REPLICAS   IMAGE          PORTS
+gvry5c825tq6   web       replicated   1/1        nginx:alpine   *:8010->80/tcp
+
+Salah satu feature basic dan utama adalah pembuatan replica container:
+(Replicas: jumlah task/instance/container yang diinginkan untuk sebuah service, agar berjalan bersamaan.)
+
+docker service create \
+    --name web \
+    -p 8010:80 \
+    --replicas 3 \
+    nginx:alpine
+
+Silahkan coba menghentikan satu container, nanti segera container yang baru akan membuat replica yang baru lagi.
+Karena desired statenya 3 replicas. Dan siapa pun yang mencoba akses ke dalam salah satu container di dalam replica ini tidak
+akan mengalami kesulitan.
+
+ID             NAME      MODE         REPLICAS   IMAGE          PORTS
+qq2xvdps0a3w   web       replicated   3/3        nginx:alpine   *:8010->80/tcp
+
+Untuk menghapus existing service:
+docker service rm [nama service]
+docker service rm web
+
+Selain membuat dan menghapus, kita juga bisa update service pastinya.
+Misalnya kita ingin merubah jumlah replicanya, bisa dengan
+docker service update [service-name/id] --replicas n
+docker service update web --replicas 5
+
+Untuk melihat task atau running container di dalam satu service:
+docker service ps [service-name]
+docker service ps web
+
+Untuk melihat detail informasi dan metadata dari sebuah service, kita bisa menggunakan
+inspect command, sama seperti yang lainnya:
+docker service inspect [service]
+docker service inspect web
+
+Service juga memiliki logs, sama seperti container.
+Logs pada service digunakan untuk melihat output log dari setiap task yang digenerate oleh service.
+Bisa dilihat dengan command:
+docker service logs [service]
+docker service logs web

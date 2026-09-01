@@ -80,4 +80,3 @@ Beberapa kelemahan dan kelebihan cara ini:
 Cara kelima ini adalah hybrid antara virtualization dan containerization. Biasanya di level enterprise memang pada 
 akhirnya banyak yang menggunakan ini agar feature hypervisor dan container bisa saling mengisi satu sama lain dan
 menutupi kelemahan satu sama lain.
-

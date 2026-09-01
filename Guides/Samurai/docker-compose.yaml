@@ -86,3 +86,6 @@ networks:
     ipam:
       config:
         - subnet: 172.19.0.0/24
+
+#static ipv4 dan subnet saya pasangkan agar tidak terjadi DHCP (Dynamic Host Configuration Protocol)
+#karena akan repot sekali kalau seluruh container restart dan mengalami perubahan ip yang dimana ip nya akan tidak sesuai dengan Raft

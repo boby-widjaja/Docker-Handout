@@ -1,0 +1,13 @@
+=========== Update ============
+
+update
+rollback
+
+--update-parallelism
+--update-delay
+--update-order
+--update-failure-action
+--rollback-parallelism
+
+Mengupdate container selagi jalan?
+docker update

@@ -33,23 +33,42 @@ ip route
 Hasilnya akan seperti dibawah ini:
 172.17.0.0/16 dev docker0 scope link  src 172.17.0.1 
 172.18.0.0/16 dev docker_gwbridge scope link  src 172.18.0.1 
-172.19.0.0/16 dev eth0 scope link  src 172.19.0.7 
+172.19.0.0/16 dev eth0 scope link  src 172.19.0.2 
 
 Cari ip yang digunakan oleh host itu sendiri, bukan yang berasa dari docker daemon yang berjalan di container atau default networknya:
-172.19.0.7
+172.19.0.2
+
+Note!: Pada contoh di file docker-compose.yaml, saya membuat static ip, sehingga bila seluruh container restart,
+ip tidak akan di generate secara dynamic, dimana akan mengacaukan seluruh Raft.
+Kalau ip kalian Dynamic dengan DHCP, mencari tau ip dengan ip route sangat penting, tetapi jika mengikuti cara saya,
+kita bisa langsung menggunakan ip 172.19.0.2 pada nobunaga karena sudah kita set secara static manual.
+
+services:
+  masamune:
+    ...
+    networks:
+      samurai_net:
+        ipv4_address: 172.19.0.10 
+
+networks:
+  samurai_net:
+    name: samurai_net
+    ipam:
+      config:
+        - subnet: 172.19.0.0/24
 
 5. Inisialisasi swarm cluster dengan menggunakan ip adddress nobunaga pada virtual ethernet.
-docker swarm init --advertise-addr 172.19.0.7
+docker swarm init --advertise-addr 172.19.0.2
 
 6. Lalu cari token yang bisa digunakan untuk join swarm cluster sebagai manager, gunakan command di bawah ini:
 docker swarm join-token manager
 catat hasilnya:
-docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2slfvtq-5d55ulfms70sfriub3aq7fk5t 172.19.0.7:2377
+docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2slfvtq-5d55ulfms70sfriub3aq7fk5t 172.19.0.2:2377
 
 7. Lalu cari token yang bisa digunakan untuk join swarm cluster sebagai worker, gunakan command di bawah ini:
 docker swarm join-token worker
 catat hasilnya:
-docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2slfvtq-evhmclbvflkk4i9k9dco5vogc 172.19.0.7:2377
+docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2slfvtq-evhmclbvflkk4i9k9dco5vogc 172.19.0.2:2377
 
 8. Silahkan exit dari container nobunaga
 
@@ -57,10 +76,10 @@ docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2s
 docker exec -it hideyoshi sh
 
 10. Kalau ingin memastikan hideyoshi memang terconnect dengan ip dari container nobunaga bisa coba ping ke ipnya:
-ping 172.19.0.7
+ping 172.19.0.2
 
 11. Joinkan hideyoshi ke swarm cluster yang sudah diinisiasi oleh nobunaga dengan join token versi manager yang kamu sudah peroleh:
-docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2slfvtq-5d55ulfms70sfriub3aq7fk5t 172.19.0.7:2377
+docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2slfvtq-5d55ulfms70sfriub3aq7fk5t 172.19.0.2:2377
 Sampai ada konfirmasinya
 This node joined a swarm as a manager.
 
@@ -68,7 +87,7 @@ This node joined a swarm as a manager.
 
 13. Sisanya untuk jinsuke, himura, sato, musashi, kojiro dan masamune, silahkan lakukan hal yang sama, tapi
 join tokennya pakai yang worker version
-docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2slfvtq-evhmclbvflkk4i9k9dco5vogc 172.19.0.7:2377
+docker swarm join --token SWMTKN-1-2xiccxjwddjcl4nfg6em5gtr9yw6sd9nrv48dsl3exf2slfvtq-evhmclbvflkk4i9k9dco5vogc 172.19.0.2:2377
 
 14. Lalu kembali lagi masuk ke nobunaga container
 docker exec -it nobunaga sh

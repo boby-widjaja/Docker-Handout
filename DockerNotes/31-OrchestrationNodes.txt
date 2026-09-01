@@ -241,6 +241,30 @@ docker swarm join --token SWMTKN-1-0kpmyi*** 192.168.65.3:2377
 -) 192.168.65.3 --> Ip Address dari Manager Node
 -) 2377 --> Port number dari control plane, yang digunakan untuk mengkomunikasikan management control antar node.
 
+Untuk bisa menginvite node lain dengan meng-addvertise ip address manager pertama, kita bisa menggunakan
+option --advertise-addr, dan ini jauh lebih best practice ketimbang langsung swarm init, jadi selalu biasakan advertise address:
+docker swarm init --advertise-addr 192.168.1.10
+
+Untuk tujuan security, kita juga mengenal option listener address.
+Listener address cakupannya harus lebih luas atau sama dengan advertise address.
+Dimana advertise address berguna untuk connection antar node, listener address adalah alamat yang
+di dengar dari port manapun.
+
+Kalau kita tidak membuat option listener address, maka secara default, node akan dengar dari semua source,
+jadi seperti ini:
+docker swarm init --listen-addr [address]:[swarm port]
+docker swarm init --listen-addr 0.0.0.0:2377 
+
+Kalau kita membuat command seperti ini:
+docker swarm init --advertise-addr 192.168.1.10 --listen-addr 192.168.1.10:2377 
+Itu artinya manager node tidak akan mendengar apapun selain 192.168.1.10:2377 untuk kebutuhan cluster, 
+dari sisi security seluruh pintu swarm cluster tidak exist kecuali itu.
+
+Mengapa advertise address lebih best practice? Karena ada kemungkinan manager node yang melakukan initiation
+memiliki banyak virtual ethernet, misalnya 3, sehingga menghasilkan 3 ip address.
+Kalau kita tidak advertise, algorithm docker swarm akan memilih kan kita 1 diantara 3 ip address itu secara otomatis.
+Dan belum tentu pilihannya sesuai dengan pilihan kita.
+
 Command untuk meninggalkan swarm cluster:
 docker swarm leave
 
@@ -268,6 +292,9 @@ Untuk menghapus node (Pastikan node Status dalam keadaan down terlebih dahulu):
 docker node rm [hostname]
 docker node rm jinsuke
 
+Bila kita memaksa menghapus sebuah node tanpa harus down terlebih dahulu, gunakan option force:
+docker node rm [hostname] --force
+docker node rm jinsuke --force
 
 ============= Nodes Theory =============
 
@@ -430,169 +457,96 @@ Untuk semua node yang memiliki status down ini, baru bisa kita remove dengan men
 docker node rm [hostname]
 
 
-============= Service =============
+============= Update Nodes =============
 
-Sekarang kita akan meng-ekslporasi management service di dalam docker swarm, dari command-commandnya
-sampai option-optionnya.
+Kita bisa mengupdate setiap node yang ada di dalam cluster dengan menggunakan manager node (Baik yang leader maupun yang non-leader).
+Mengupdate sebuah node bisa menggunakan command:
+docker node update [OPTIONS] [node hostname]
 
-docker service
-├── ps
-├── inspect
-├── logs
-├── scale
-├── update
-├── rollback
-└── ... 
-
-Untuk membuat service baru:
-(Di sini juga sudah include diberi contoh untuk pemberian nama dan publishing port serperti pada pembuatan container)
-docker service create \
-    --name web \
-    -p 8010:80 \
-    nginx:alpine
-
-Cara untuk melihat seluruh service
-docker service ls
-ID             NAME      MODE         REPLICAS   IMAGE          PORTS
-gvry5c825tq6   web       replicated   1/1        nginx:alpine   *:8010->80/tcp
-
-Salah satu feature basic dan utama adalah pembuatan replica container:
-(Replicas: jumlah task/instance/container yang diinginkan untuk sebuah service, agar berjalan bersamaan.)
-
-docker service create \
-    --name web \
-    -p 8010:80 \
-    --replicas 3 \
-    nginx:alpine
-
-Silahkan coba menghentikan satu container, nanti segera container yang baru akan membuat replica yang baru lagi.
-Karena desired statenya 3 replicas. Dan siapa pun yang mencoba akses ke dalam salah satu container di dalam replica ini tidak
-akan mengalami kesulitan.
-
-ID             NAME      MODE         REPLICAS   IMAGE          PORTS
-qq2xvdps0a3w   web       replicated   3/3        nginx:alpine   *:8010->80/tcp
-
-Untuk menghapus exiting service:
-docker service rm [nama service]
-docker service rm web
+Kita akan melihat beberapa option yang mungkin sering digunakan.
 
 
+1. Labeling
+
+Seperti image atau container, kita juga bisa me-label sebuah node dengan tujuan penyisipan extra informasi atau metadata.
+Untuk pemberian label kita bisa mengunakan command:
+
+docker node update --label-add [key]=[value] [node]
+docker node update --label-add storage="WD SSD blue edition 2 Tb" himura
+
+Kalau mau pemberian lebih dari satu:
+docker node update \
+  --label-add type=database \
+  --label-add storage="WD SSD blue edition 2 Tb" \
+  --label-add "description=Primary Production Database Server" \
+  tokugawa
+
+(Note: Bisa di-check beragam syntax pemberian key-value pair pada label)
+
+Kita bisa check hasil pemberian labelnya dengan:
+docker node inspect [node]
+docker node inspect tokugawa
+
+Hasilnya bisa dilihat pada properties ini:
+"Spec": {
+    "Labels": {
+        "description": "Primary Production Database Server",
+        "storage": "WD SSD blue edition 2 Tb",
+        "type": "database"
+    },
+    "Role": "manager",
+    "Availability": "active"
+}
+
+Untuk menghapus label per-keynya, kita bisa menggunakan command:
+docker node update --label-rm [key] [node]
+docker node update --label-rm storage tokugawa
+
+Untuk hapus lebih dari satu keys:
+docker node update \
+  --label-rm storage \
+  --label-rm type \
+  tokugawa
 
 
+2. availability
 
+Masih ingat ketika kita melihat list node dari cluster dengan menggunakan "docker node ls" command,
+kita melihat ada column availability di resultnya.
 
-===========================================================
+ID                            HOSTNAME    STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
+4h7dn3zrxmr0tly8yr7nuh0ta     hideyoshi   Ready     Active         Reachable        29.7.2
 
-docker service create --name vote -p 80:80 --network frontend --replicas 2 bretfisher/examplevotingapp_vote
+Availability menentukan apakah node ini bisa digunakan untuk menempatkan atau memindahkan task/service.
+Availability bukan berarti node tersebut hidup atau mati. Hidup atau mati di tentukan oleh column Status.
 
-docker service create --name redis --network frontend redis:3.2
+Ada 3 value availability, yaitu:
+-) active: berarti node tersedia secara normal untuk menjalankan task.
+-) pause: berarti node tidak menerima task baru, tetapi task yang sudah berjalan tetap berjalan.
+-) drain: mengakibatkan 3 hal
+    1) Mencegah task baru ditempatkan di node tersebut.
+    2) Menghentikan task yang sedang berjalan di node tersebut.
+    3) Scheduler kemudian akan mencoba menempatkan kembali task tersebut ke node lain yang tersedia.
 
-docker service create --name db --network backend -e POSTGRES_HOST_AUTH_METHOD=trust --mount type=volume,source=db-data,target=/var/lib/postgresql/data postgres:9.4
-
-docker service create --name worker --network frontend --network backend bretfisher/examplevotingapp_worker
-
-docker service create --name result --network backend -p 5001:80 bretfisher/examplevotingapp_result
-
-
-===========================================================
+Contoh commandnya seperti ini:
+docker node update --availability [availability] [node]
 docker node update --availability drain jinsuke
 
 
-melihat task atau running container di dalam service:
-docker service ps [service-name]
+3. hostname
 
-menambah replicas dari sebuah service
-docker service update [service-name/id] --replicas 3
-
-Mengupdate container selagi jalan?
-docker update
-
-containernya kalo di stop satu si service akan jalankan lagi.
-
-katanya kalau di linux bisa:
-watch docker service ls
-
-Dalam Docker (khususnya saat memakai Docker Swarm), overlay network driver adalah:
-jenis network yang memungkinkan container di node (server) yang 
-berbeda saling berkomunikasi seolah-olah berada di jaringan yang sama.
-
-Di Docker Swarm tidak ada konsep “stop service tanpa menghapusnya” seperti docker stop pada container biasa.
-Kenapa tidak ada “stop service”?
-Karena di Swarm:
-Service itu adalah desired state
-Artinya:
-kalau kamu “stop” container
-Swarm akan langsung menyalakannya lagi
-
-docker service update --replicas 0 [service name]
-
-Men deloy stack
-docker stack deploy
-docker stack deploy -c example-voting-app-stack.yml voteapp
--c (compose)
-
-Melihat stack
-docker stack ls
-
-Melihat container dari stack
-docker stack ps [nama stack]
-
-Melihat isi services dari stack
-docker stack services [nama stack]
-
-Docker Secret:
-Untuk menyimpan hal-hal rahasia seperti password, token dan lain-lain.
-
-docker secret create psql_user psql_user.txt
-
-echo "myDBpassWORD" | docker secret create psql_pass -
-(Note: - ada untuk terima terminal input)
-
-Lihat semua secret
-docker secret ls
-
-bisa inspect secret, tapi tentu saja isinya di encrypt
-docker secret inspect psql_pass
-
-secret di encrypt dari mata kita, tapi seharusnya bisa dibaca oleh container di dalam service.
-Misalnya harus bisa dibaca databasenya.
-Karena itu kita harus sambungkan secret dengan service atau container:
-
-docker service create \
---name psql \
---secret psql_user \
---secret psql_pass \
--e POSTGRES_PASSWORD_FILE=/run/secrets/psql_pass \
--e POSTGRES_USER_FILE=/run/secrets/psql_user \
-postgres:15
-
-docker service create --name psql --secret psql_user --secret psql_pass -e POSTGRES_PASSWORD_FILE=/run/secrets/psql_pass -e POSTGRES_USER_FILE=/run/secrets/psql_user postgres:15
-
-Check container dengan bash
-docker exec -it psql.1.xr1kk3bq6wauryg6cqu6d8aiy bash
-
-Bisa baca encrypted content dari dalam karena sebenarnya di sini sudah tidak encrypted
-cat /run/secrets/psql_pass
-
-Cara menghapus secret dari service
-
-deploy secret dari stack:
-docker stack deploy -c docker-compose.yml mydb
-
-Kalau stack di hapus, secret akan ikut kehapus:
-docker stack rm mydb
-
-------------------------------------------------------------------------------------------------------------
-
-docker compose up --scale ??
-
-#! /bin/sh
-
-docker network create -d overlay backend
-
-docker network create -d overlay frontend
+Kalau kita ada kebutuhan merubah hostname, kita bisa menggunakan docker node update
+dengan option --hostname:
+docker node update --hostname [newname] [oldname]
+docker node update --hostname tokugawa-db tokugawa
 
 
+4. role
 
-Windows Firewall exception dari power shell as administrator
-Enable-NetFirewallRule -Name FPS-ICMP4-ERQ-In
+Sebenarnya menggunakan option role fungsinya sama persis dengan docker node promote dan docker node demote.
+Gunanya untuk merubah role node antara manager atau worker.
+
+Kurang lebih commandnya seperti di bawah ini:
+docker node update --role [role] [node]
+docker node update --role manager jinsuke
+docker node update --role worker tokugawa

@@ -1,0 +1,26 @@
+Seperti yang sudah pernah dicontohkan dan dijalaskan sebelumnya, replication adalah salah satu
+feature utama dalam docker swarm.
+
+Replication artinya sebuah service memiliki multiple instance, dimana setiap instance akan menghasilkan
+sebuah container yang terlihat kembar satu dengan instance lainnya. Tapi replication tidak
+hanya berarti container kembar, karena setiap replication itu dihitung sebagai satu kesatuan service
+dimana system swarm bisa mengatur schedulernya secara efektif dan efficient untuk kebutuhan seperti backup,
+recovery dan load balancer.
+
+Kita sudah lihat contoh 
+
+scale
+--replicas
+--mode (replicated dan global)
+--replicas-max-per-node
+docker compose up --scale ??
+
+load balancer
+
+Di Docker Swarm tidak ada konsep “stop service tanpa menghapusnya” seperti docker stop pada container biasa.
+Karena bila container stop, desired replica akan mengembalikannya lagi.
+
+Note: ada baiknya jika belum yakin ingin menghapus sebuah service, 
+kita bisa hentikan servicenya dengan membuat replicanya menjadi 0.
+Sehingga tidak ada container yang berjalan.
+docker service update web --replicas 0

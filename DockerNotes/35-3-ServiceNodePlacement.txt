@@ -1,0 +1,15 @@
+=========== Node Placement ============
+
+--constraint
+--placement-pref
+
+=========== Networking ============
+
+--network
+
+Dalam Docker (khususnya saat memakai Docker Swarm), overlay network driver adalah:
+jenis network yang memungkinkan container di node (server) yang 
+berbeda saling berkomunikasi seolah-olah berada di jaringan yang sama.
+
+docker network create -d overlay backend
+docker network create -d overlay frontend

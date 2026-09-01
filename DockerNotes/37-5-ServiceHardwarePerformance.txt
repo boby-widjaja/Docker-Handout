@@ -1,0 +1,6 @@
+=========== Hardware Performance ============
+
+--limit-cpu
+--limit-memory
+--reserve-cpu
+--reserve-memory
