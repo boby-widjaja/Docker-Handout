@@ -1,4 +1,4 @@
-Seperti yang sudah pernah dicontohkan dan dijalaskan sebelumnya, replication adalah salah satu
+Seperti yang sudah pernah dicontohkan dan dijalaskan pada chapter sebelumnya, replication adalah salah satu
 feature utama dalam docker swarm.
 
 Replication artinya sebuah service memiliki multiple instance, dimana setiap instance akan menghasilkan
@@ -7,15 +7,13 @@ hanya berarti container kembar, karena setiap replication itu dihitung sebagai s
 dimana system swarm bisa mengatur schedulernya secara efektif dan efficient untuk kebutuhan seperti backup,
 recovery dan load balancer.
 
-Kita sudah lihat contoh 
+Kita sudah lihat contoh, kalau pada docker service command, replica ditulis pada option --replicas:
+docker service create --replicas n [image]
+docker service create --replicas 3 nginx:alpine
 
-scale
---replicas
---mode (replicated dan global)
---replicas-max-per-node
-docker compose up --scale ??
-
-load balancer
+atau pada update:
+docker service update --replicas n [service name]
+docker service update --replicas n web
 
 Di Docker Swarm tidak ada konsep “stop service tanpa menghapusnya” seperti docker stop pada container biasa.
 Karena bila container stop, desired replica akan mengembalikannya lagi.
@@ -24,3 +22,82 @@ Note: ada baiknya jika belum yakin ingin menghapus sebuah service,
 kita bisa hentikan servicenya dengan membuat replicanya menjadi 0.
 Sehingga tidak ada container yang berjalan.
 docker service update web --replicas 0
+
+Untuk syntax yang lebih nyaman dipakai, terutama kalau mau mengupdate lebih dari satu service sekaligus, kita bisa gunakan
+docker service scale [servicename=n]
+docker service scale [servicename1=n] [servicename2=n]
+
+Misalnya:
+ID             NAME      MODE         REPLICAS   IMAGE          PORTS
+l7bgg9qx23aa   web_one   replicated   1/1        nginx:alpine
+qyexegpo2o7z   web_two   replicated   2/2        nginx:alpine
+
+docker service scale web_one=3 web_two=4
+
+hasilnya:
+ID             NAME      MODE         REPLICAS   IMAGE          PORTS
+l7bgg9qx23aa   web_one   replicated   3/3        nginx:alpine
+qyexegpo2o7z   web_two   replicated   4/4        nginx:alpine
+
+
+Mode option pada system replication menentukan bagaimana kita mendistribusikan replica di setiap node pada cluster.
+
+System replication ada 2 mode, yang bisa diatur dengan menggunakan command:
+docker service create --mode [modetype] [options] [servicename]
+docker service create --mode replicated replicas=3 web
+
+Tipe mode ada 2 macam value:
+
+-) replicated (default) : Ini adalah mode default saat kita tidak menulis option default sama sekali.
+    Seperti yang selama ini kita sudah mencoba, mode replicated mengijinkan kita menulis manual berapa jumlah replicas yang kita inginkan.
+    Replica nanti akan ditempatkan secara otomatis oleh docker swarm di node-node yang dianalisa lebih sesuai.
+
+docker service create \
+  --name web \
+  --mode replicated \
+  --replicas 3 \
+  nginx:alpine
+
+atau tidak perlu menulis mode sama sekali
+
+docker service create \
+  --name web \
+  --replicas 3 \
+  nginx:alpine
+
+-) global: dengan menulis mode sebagai global, kita tidak bisa menggunakan option --replicas. Jumlah node akan ditentukan oleh
+    berapa jumlah nodes pada cluster ini. Jika node ada 5, maka replicas juga otomatis akan ada 5, dimana setiap replicanya 
+    akan ditempatkan 1 di setiap node. 
+
+docker service create \
+  --name web \
+  --mode global \
+  nginx:alpine
+
+
+
+
+docker service create --name web --replicas 4 nginx:alpine
+
+ID             NAME      MODE         REPLICAS   IMAGE          PORTS
+1znytan7bnps   web       replicated   4/4        nginx:alpine
+
+ID             NAME      IMAGE          NODE        DESIRED STATE   CURRENT STATE            ERROR     PORTS
+wni4nu53zj44   web.1     nginx:alpine   tokugawa    Running         Running 50 seconds ago
+ne3l4k6q31uq   web.2     nginx:alpine   hideyoshi   Running         Running 48 seconds ago
+z5iazy5eajnm   web.3     nginx:alpine   himura      Running         Running 40 seconds ago
+ryyn2zf0vi1c   web.4     nginx:alpine   musashi     Running         Running 48 seconds ago
+
+--constraint
+--placement-pref
+--replicas-max-per-node
+docker compose up --scale ??
+
+load balancer
+
+
+
+============== Stack ==================
+
+
+============== Essential Replicas ==================
