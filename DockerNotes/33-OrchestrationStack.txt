@@ -1,0 +1,80 @@
+Selain menggunakan command docker service untuk menciptakan service satu-persatu,
+service pada swarm cluster juga bisa diciptakan dengan compose yaml file.
+Secara syntax akan terlihat mirip sekali, tetapi sebetulnya setiap service adalah service dari swarm cluster.
+File compose ini disebut juga sebagai stack. (stack of services / tumpukan services)
+Untuk memanage stack, kita harus menggunakan command docker stack.
+
+Untuk mendeploy stack (sama seperti up pada docker compose), kita menggunakan command:
+docker stack deploy -c [composefile] [stackname]
+docker stack deploy --compose-file [composefile] [stackname]
+docker stack deploy -c docker-compose.yaml basic
+
+(Note: pada stack, nama docker-compose.yaml tidak bisa bekerja sebagai nama file default)
+
+Untuk proses detatch seperti biasa, bisa gunakan command:
+docker stack deploy -c [composefile] -d [stackname]
+docker stack deploy -c docker-compose.yaml -d basic
+
+(Silahkan coba menjalankan docker stack ini pada directory Guides/StackProjects/basic yang sudah disiapkan.)
+
+Untuk melihat seluruh stack, bisa gunakan:
+docker stack ls
+
+NAME       SERVICES
+basic      2
+myapp      3
+(Di sini akan ditampilkan nama stack beserta jumlah servicenya.)
+
+Daripada menggunakan command "docker service ls" yang melihat semua existing service,
+kita bisa menggunakan docker stack services untuk melihat service hanya di bawah satu stack:
+docker stack services [stack name]
+docker stack services basic
+
+Column yang ditampilkan akan persis dengan docker service ls:
+ID             NAME          MODE         REPLICAS   IMAGE          PORTS
+m58gtd3yg2yq   basic_redis   replicated   2/2        redis:alpine   
+geyq6jkhpkc8   basic_web     replicated   3/3        nginx:alpine   *:8080->80/tcp
+
+(Note: Informasi mengenai colume MODE akan dijelaskan di chapter replica nanti.)
+
+Kalau kita ingin filter output, bisa menggunakan command:
+docker stack services --filter "key=value" [stack name]
+docker stack services --filter "name=basic_web" basic
+
+Kalau untuk melihat seluruh task/container yang merupakan bagian dari satu stack, kita bisa menggunakan command:
+docker stack ps [stack name]
+docker stack ps basic
+
+ID             NAME            IMAGE          NODE             DESIRED STATE   CURRENT STATE           ERROR     PORTS
+s2y71eqs6ajv   basic_redis.1   redis:alpine   docker-desktop   Running         Running 9 minutes ago
+c5i0yw3v90vl   basic_redis.2   redis:alpine   docker-desktop   Running         Running 9 minutes ago
+pf9fzotg5ku3   basic_web.1     nginx:alpine   docker-desktop   Running         Running 9 minutes ago
+ffjyi0v0g1jc   basic_web.2     nginx:alpine   docker-desktop   Running         Running 9 minutes ago
+az2xbh0tdhdo   basic_web.3     nginx:alpine   docker-desktop   Running         Running 9 minutes ago
+
+Column DESIRED STATE memberikan informasi status bahwa task/container tersebut sudah di dalam tahap mana untuk
+memenuhi kondisi desired state. Column ini memiliki 4 kemungkinan value:
+
+1. ready: Task sudah siap dijalankan, tetapi belum dikirim ke node manapun.
+2. accepted: node pada egine/host dimana task ini harus dijalankan sudah menerima task ini.
+    Atau bisa dikatakan sudah arrived tapi belum di run.
+3. running: Task sudah dalam bentuk container yang sedang berjalan.
+4. shutdown: Task diberhentikan.
+
+Kalau kita ingin filter output, bisa menggunakan command:
+docker stack ps --filter "key=value" [stack name]
+docker stack ps -f "desired-state=running" basic
+
+Untuk menghapus stack, kita bisa gunakan:
+docker stack rm [stack name]
+docker stack rm basic
+
+(Note: ini akan menghapus: stack, services, task/container, dan network yang berada di dalamnya. Tetapi images dan volumes akan tetap tinggal)
+
+Kita bisa menggunakan docker config command untuk menampilkan detail konfigurasi dari yaml file kita.
+Keuntungannya adalah command ini akan menampilkan lebih detail dari yang ada pada yaml file, contohnya saja akan menampilka default-default
+attribute yang tidak ditulis pada yaml file, tapi diterapkan.
+Jadi kita bisa memanfaatkannya untuk men-debug yaml filenya.
+Commandnya kurang lebih seperti ini:
+docker stack config -c [yaml file name]
+docker stack config -c docker-compose.yaml

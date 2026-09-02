@@ -53,6 +53,6 @@ Tetapi technology docker compose versi yang lebih late mampu mem-publish Compose
 Yaitu dengan menggunakan command:
 docker compose publish [username]/[projectname:projecttag]
 
-Contohnya bisa kita lihat di dalam Guides/basilisk_cmp.
+Contohnya bisa kita lihat di dalam Guides/ComposeProjects/basilisk_cmp.
 
 Inilah mengapa, pada saat kita melakukan compose up, kita harus menulis oci:// di depan value filenya.

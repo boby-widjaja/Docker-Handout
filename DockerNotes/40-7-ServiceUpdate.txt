@@ -1,0 +1,20 @@
+=========== Update ============
+
+update
+rollback
+
+--update-parallelism
+--update-delay
+--update-order
+--update-failure-action
+--rollback-parallelism
+
+Mengupdate container selagi jalan?
+docker update
+
+katanya kalau di linux bisa:
+watch docker service ls
+
+docker service create --replicas 3 --name redis redis:3.0.6
+watch -n 1 docker service ps redis
+docker service update --image redis:5.0.8 redis
