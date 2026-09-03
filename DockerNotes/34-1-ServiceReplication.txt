@@ -7,6 +7,10 @@ hanya berarti container kembar, karena setiap replication itu dihitung sebagai s
 dimana system swarm bisa mengatur schedulernya secara efektif dan efficient untuk kebutuhan seperti backup,
 recovery dan load balancer.
 
+Note: Banyak experiment di bawah menggunakan contoh di Guides/Samurai
+
+============== Replicas ==================
+
 Kita sudah lihat contoh, kalau pada docker service command, replica ditulis pada option --replicas:
 docker service create --replicas n [image]
 docker service create --replicas 3 nginx:alpine
@@ -22,6 +26,9 @@ Note: ada baiknya jika belum yakin ingin menghapus sebuah service,
 kita bisa hentikan servicenya dengan membuat replicanya menjadi 0.
 Sehingga tidak ada container yang berjalan.
 docker service update web --replicas 0
+
+
+============== Scale ==================
 
 Untuk syntax yang lebih nyaman dipakai, terutama kalau mau mengupdate lebih dari satu service sekaligus, kita bisa gunakan
 docker service scale [servicename=n]
@@ -40,11 +47,13 @@ l7bgg9qx23aa   web_one   replicated   3/3        nginx:alpine
 qyexegpo2o7z   web_two   replicated   4/4        nginx:alpine
 
 
+============== Mode ==================
+
 Mode option pada system replication menentukan bagaimana kita mendistribusikan replica di setiap node pada cluster.
 
 System replication ada 2 mode, yang bisa diatur dengan menggunakan command:
-docker service create --mode [modetype] [options] [servicename]
-docker service create --mode replicated replicas=3 web
+docker service create --mode [modetype] [options] [image]
+docker service create --mode replicated replicas=3 nginx:alpine
 
 Tipe mode ada 2 macam value:
 
@@ -74,30 +83,213 @@ docker service create \
   --mode global \
   nginx:alpine
 
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CONTOH HASIL DARI REPLICATED                                                                                                                 │
+│                                                                                                                                              │
+│ docker service create --name web --replicas 4 nginx:alpine                                                                                   │
+│                                                                                                                                              │
+│ docker service ls                                                                                                                            │
+│ ID             NAME      MODE         REPLICAS   IMAGE          PORTS                                                                        │
+│ 1znytan7bnps   web       replicated   4/4        nginx:alpine                                                                                │
+│                                                                                                                                              │
+│ docker service ps web                                                                                                                        │
+│ ID             NAME      IMAGE          NODE        DESIRED STATE   CURRENT STATE            ERROR     PORTS                                 │
+│ wni4nu53zj44   web.1     nginx:alpine   tokugawa    Running         Running 50 seconds ago                                                   │
+│ ne3l4k6q31uq   web.2     nginx:alpine   hideyoshi   Running         Running 48 seconds ago                                                   │
+│ z5iazy5eajnm   web.3     nginx:alpine   himura      Running         Running 40 seconds ago                                                   │
+│ ryyn2zf0vi1c   web.4     nginx:alpine   musashi     Running         Running 48 seconds ago                                                   │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CONTOH HASIL DARI GLOBAL                                                                                                                                            │
+│                                                                                                                                                                     │
+│ docker service create --name web --mode global nginx:alpine                                                                                                         │
+│                                                                                                                                                                     │
+│ docker service ls                                                                                                                                                   │
+│ ID             NAME      MODE      REPLICAS   IMAGE          PORTS                                                                                                  │
+│ hdxnzpunl95o   web       global    9/9        nginx:alpine                                                                                                          │
+│                                                                                                                                                                     │
+│ docker service ps web                                                                                                                                               │
+│ ID             NAME                            IMAGE          NODE        DESIRED STATE   CURRENT STATE            ERROR     PORTS                                  │
+│ naqqyc7oanek   web.4h7dn3zrxmr0tly8yr7nuh0ta   nginx:alpine   hideyoshi   Running         Running 36 seconds ago                                                    │
+│ szhuiecfc278   web.11ohenoca7quq40ebugh66v7j   nginx:alpine   masamune    Running         Running 36 seconds ago                                                    │
+│ x3urh3dw6slk   web.hmdwq3uksoralvxbon9i9a8e2   nginx:alpine   tokugawa    Running         Running 37 seconds ago                                                    │
+│ lkgtn2hy3nkg   web.r0mdcvusiluqnjjbf8mjazfwe   nginx:alpine   nobunaga    Running         Running 48 seconds ago                                                    │
+│ m17wf54jb8n7   web.uoaa5gyoiwayigrxheyyp1vhq   nginx:alpine   musashi     Running         Running 38 seconds ago                                                    │
+│ 0jiourm3k048   web.v4u94wy2hukd3rarctjmbl7jo   nginx:alpine   jinsuke     Running         Running 56 seconds ago                                                    │
+│ wj8enlzp624w   web.vm3s2hf3qqwcdel4odboyjwak   nginx:alpine   sato        Running         Running 36 seconds ago                                                    │
+│ mhyjasa9hidv   web.wg2f8c6kbuw18i0aftrbeto1e   nginx:alpine   kojiro      Running         Running 38 seconds ago                                                    │
+│ epymkj5jig6o   web.z9jdrjzeclys1nwe43e2n1sow   nginx:alpine   himura      Running         Running 36 seconds ago                                                    │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
+============== Constraint ==================
 
-docker service create --name web --replicas 4 nginx:alpine
+Tetapi sejauh ini kita melihat kalau seluruh penempatan replica ke node berlangsung otomatis dan tidak selective.
+Padahal bisa jadi saya mungkin mau service ini hanya di tempatkan di node yang rolenya adalah worker.
+Atau bisa saja penempatannya harus specific di node dengan specific id atau name. Kita bisa melakukan itu dengan constraint.
 
+Constraint adalah feature yang memungkinkan kita untuk select node mana yang harus menerima replicas (Kebalikan dari filter)
+Constaint bisa diperintahkan dalam command dengan option --constraint:
+docker service create --replicas n --constraint 'properties[comparison operation]value' [image]
+atau
+docker service create --mode global --constraint 'properties[comparison operation]value' [image]
+
+Note: comparison operation pada constraint hanya == (sama dengan) dan != (tidak sama dengan)
+
+Contoh kita akan memberikan 1 replica ke setiap worker node:
+docker service create \
+  --name web \
+  --mode global \
+  --constraint 'node.role==worker' \
+  nginx:alpine
+
+docker service ls
+ID             NAME      MODE      REPLICAS   IMAGE          PORTS
+fr149ofmjimw   web       global    6/6        nginx:alpine
+
+docker service ps web
+ID             NAME                            IMAGE          NODE       DESIRED STATE   CURRENT STATE            ERROR     PORTS
+gvp4ywow9r0g   web.11ohenoca7quq40ebugh66v7j   nginx:alpine   masamune   Running         Running 44 seconds ago
+0devnkw14stc   web.uoaa5gyoiwayigrxheyyp1vhq   nginx:alpine   musashi    Running         Running 44 seconds ago
+eb5r1mq130h5   web.v4u94wy2hukd3rarctjmbl7jo   nginx:alpine   jinsuke    Running         Running 44 seconds ago
+wnebz95wg03m   web.vm3s2hf3qqwcdel4odboyjwak   nginx:alpine   sato       Running         Running 44 seconds ago
+xm8ctrj9rwj4   web.wg2f8c6kbuw18i0aftrbeto1e   nginx:alpine   kojiro     Running         Running 44 seconds ago
+qzdomafmp9na   web.z9jdrjzeclys1nwe43e2n1sow   nginx:alpine   himura     Running         Running 44 seconds ago
+
+Contoh kita akan memberikan ke 3 replica semuanya untuk 1 node tokugawa.
+docker service create \
+  --name web \
+  --replicas 3 \
+  --constraint 'node.hostname==tokugawa' \
+  nginx:alpine
+
+docker service ls
 ID             NAME      MODE         REPLICAS   IMAGE          PORTS
-1znytan7bnps   web       replicated   4/4        nginx:alpine
+jwuklk6xyo7g   web       replicated   3/3        nginx:alpine
 
-ID             NAME      IMAGE          NODE        DESIRED STATE   CURRENT STATE            ERROR     PORTS
-wni4nu53zj44   web.1     nginx:alpine   tokugawa    Running         Running 50 seconds ago
-ne3l4k6q31uq   web.2     nginx:alpine   hideyoshi   Running         Running 48 seconds ago
-z5iazy5eajnm   web.3     nginx:alpine   himura      Running         Running 40 seconds ago
-ryyn2zf0vi1c   web.4     nginx:alpine   musashi     Running         Running 48 seconds ago
+docker service ps web
+ID             NAME      IMAGE          NODE       DESIRED STATE   CURRENT STATE                ERROR     PORTS
+l3tbiwxhz609   web.1     nginx:alpine   tokugawa   Running         Running about a minute ago
+wpi45wtquenv   web.2     nginx:alpine   tokugawa   Running         Running about a minute ago
+bgpibxtwd764   web.3     nginx:alpine   tokugawa   Running         Running about a minute ago
 
---constraint
---placement-pref
---replicas-max-per-node
-docker compose up --scale ??
 
-load balancer
+Untuk creative constraint selection, kita bisa menggunakan node label.
+Cara memakai label ada pada chapter sebelumnya di OrchestrationNode
 
+Misalnya sebagian node di beri lable dengan type storage, seperti ini:
+docker node update --label-add type=storage tokugawa
+
+Lalu bila replicasnya ini untuk node dengan tipe storage, maka contoh commandnya:
+docker service create \
+  --name database \
+  --constraint 'node.labels.type==storage' \
+  mysql:9.7
+
+Kita juga bisa menggunakan lebih dari satu constraint, yang nantinya akan membentuk AND logic.
+docker service create \
+  --name api \
+  --constraint 'node.role==worker' \
+  --constraint 'node.labels.type==compute' \
+  --replicas 2 \
+  nginx
+
+Ini artinya 2-2 kebutuhan harus terpenuhi. Hanya node yang bertipe worker dan memiliki lable type compute yang akan menerima replicanya.
+
+
+============== Max Replicas ==================
+
+Kita bisa membatasi maximum jumlah replica per node dengan menggunakan option --replicas-max-per-node.
+Bila --replicas-max-per-node 2, artinya setiap node yang menerima replica tidak bisa memiliki lebih dari 2 replica untuk service ini.
+
+Command kurang lebih bentuknya seperti ini:
+docker service create [options] --replicas-max-per-node n [images]
+
+docker service create \
+  --name web \
+  --replicas 6 \
+  --replicas-max-per-node 2 \
+  nginx:alpine
+
+Yang menjadi pertanyaan mungkin adalah, apa yang terjadi jika jumlah replica melebihi jumlah node x jumlah max replica per node?
+Misalnya kita memiliki 4 node di dalam cluster, dan masing-masing diberi max replica per node adalah 2.
+
+Maka max replicas dalam cluster ini adalah = 4 x 2, itu 8.
+Apa yang terjadi pada situasi seperti ini kalau saya menulis code:
+docker service create \
+  --name web \
+  --replicas 10 \
+  --replicas-max-per-node 2 \
+  nginx:alpine
+
+Swarm tidak akan bisa menjalakan semuanya, hasilnya dari 10 replicas = 10 task, ada 2 task yang pending.
+Pada akhirnya menghasilkan 8 replicas dan 2 pending task.
+
+Running : 8 replicas
+Pending : 2 tasks
+
+Kalau kita lihat kondisinya, akan seperti ini:
+docker service ps web
+
+ID       NAME       NODE     DESIRED STATE   CURRENT STATE
+abc      web.1      node-1   Running         Running
+def      web.2      node-1   Running         Running
+ghi      web.3      node-2   Running         Running
+jkl      web.4      node-2   Running         Running
+mno      web.5      node-3   Running         Running
+pqr      web.6      node-3   Running         Running
+stu      web.7      node-4   Running         Running
+vwx      web.8      node-4   Running         Running
+yyy      web.9      -        Running         Pending
+zzz      web.10     -        Running         Pending
+
+Kita akan mencobanya dengan contoh di dalam Samurai services, dan akan kita kombinasikan juga dengan constraint.
+Pada samurai, ada 3 node managers, dan 6 node workers.
+Kita hanya membagikan node ke managers saja, jadi constraint rolenya manager.
+Tetapi kita batasi hanya 2 node per-replica.
+Berarti max replicas yang bisa ditampung adalah 3 nodes x 2 max replica per node = 6 replicas.
+Untuk membuat contoh pending, saya akan buat replicas sebanyak 8, biar ada pendings.
+
+docker service create -d \
+  --name web \
+  --constraint 'node.role==manager' \
+  --replicas 8 \
+  --replicas-max-per-node 2 \
+  nginx:alpine
+
+Hasilnya:
+docker service ls
+ID             NAME      MODE         REPLICAS               IMAGE          PORTS
+plrhbu7ww5tj   web       replicated   6/8 (max 2 per node)   nginx:alpine   
+
+docker service ps web
+ID             NAME      IMAGE          NODE        DESIRED STATE   CURRENT STATE           ERROR                              PORTS
+da9v8v3u87xp   web.1     nginx:alpine   tokugawa    Running         Running 9 seconds ago
+kcl3ldjypqt8   web.2     nginx:alpine   hideyoshi   Running         Running 9 seconds ago
+rnsmn1i3lq60   web.3     nginx:alpine   nobunaga    Running         Running 9 seconds ago
+ktpszgwhlhay   web.4     nginx:alpine   tokugawa    Running         Running 8 seconds ago
+kw0vvcv5jmap   web.5     nginx:alpine   hideyoshi   Running         Running 8 seconds ago
+azvpv1m8f1pk   web.6     nginx:alpine   nobunaga    Running         Running 9 seconds ago
+jz8y0oyy9nrq   web.7     nginx:alpine               Running         Pending 9 seconds ago   "no suitable node (scheduling …"   
+jk3f45liiynw   web.8     nginx:alpine               Running         Pending 9 seconds ago   "no suitable node (scheduling …"   
 
 
 ============== Stack ==================
 
+Semua yang kita lakukan baik untuk pengaturan mode, jumlah replica, maximum replica dan constraint kita lalukan dengan docker service command.
+Sekarang mari kita lihat bagaimana melakukannya dengan stack di dalam yaml attribute.
 
-============== Essential Replicas ==================
+Semuanya akan diletakan dibawah attribute deploy seperti pada contoh di bawah ini:
+
+services:
+  web:
+    image: nginx
+    deploy:
+      mode: replicated
+      replicas: 6
+      replicas-max-per-node: 2
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.zone == zone-a
