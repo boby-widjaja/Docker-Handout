@@ -1,7 +1,90 @@
-=========== Instance ============
+Banyak option yang pasti kalian sudah familiar kalau sudah belajar docker sejauh ini.
+Khususnya option-option yang digunakan untuk pembuatan instance service dan tasknya, seperti nama, environment variable, 
+publish dan lain sebagainya. Kita akan melihat-lihat beberapa di sini, tapi sebelum kita mulai tolong ingat
+seluruh proses di sini berlangsung saat run-time, tidak ada yang build time.
 
---name
---env
---mount
---publish
---health-cmd
+--name : ini untuk menentukan nama servicenya, dan contohnya juga sudah banyak dibahas di chapter sebelumnya.
+
+contoh:
+docker service create --name web nginx:alpine
+
+--------------------------------------------------------------------------------------------------------------
+
+--env : ini juga sudah sangat jelas untuk environment variable yang sudah sering dibahas.
+
+contoh:
+docker service create \
+  --name myapp \
+  --env APP_ENV=production \
+  --env PORT=8080 \
+  nginx:alpine
+
+atau cukup -e lebih singkatnya:
+docker service create \
+  --name myapp \
+  -e APP_ENV=production \
+  -e PORT=8080 \
+  nginx:alpine
+
+--------------------------------------------------------------------------------------------------------------
+
+--publish : adalah untuk publish port ke host computer, dan ini juga sering dibahas di chapter sebelumnya
+
+contoh syntax panjang:
+docker service create \
+  --name web \
+  --publish published=8080,target=80 \
+  nginx:alpine
+
+atau ditulis dengan lebih short-hand tapi less semantic:
+docker service create \
+    --name web \
+    -p 8010:80 \
+    nginx:alpine
+
+--------------------------------------------------------------------------------------------------------------
+
+--mount: digunakan untuk memasang (mount) storage dari Docker host ke dalam container yang menjalankan task/service.
+Commandnya kurang lebih seperti:
+docker service create --mount type=[],source=[],target=[] [image]
+
+docker service create \
+  --name web \
+  --mount type=bind,source=/data,target=/app/data \
+  nginx
+
+Ada 3 attribute utama pada mount, yaitu type, source dan target.
+
+-) type: menentukan jenis yang digunakan. Ada 2 macam, yaitu bind dan volume.
+    Seperti pada pelajaran di PersistentDatabase, bind digunakan untuk mengkaitkan sebuah directory di dalam file system container
+    ke directory di dalam host, sedangkan volume sendiri untuk penggunaannya dengan docker volume.
+-) source: adalah path asal host atau nama volume.
+-) target: target directory di dalam container.
+
+Contoh:
+--mount type=bind,source=/data,target=/app/data
+--mount type=volume,source=dbdata,target=/var/lib/mysql
+
+
+--------------------------------------------------------------------------------------------------------------
+
+--health-cmd: ini adalah health check command yang biasa kita temukan di dalam compose yaml file.
+    Silahkan check pada chapter ComposeConfiguration pada section healthcheck & condition.
+
+contoh commandnya seperti:
+docker service create \
+  --name web \
+  --health-cmd "curl -f http://localhost/ || exit 1" \
+  nginx
+
+versi lebih lengkapnya:
+docker service create \
+  --name web \
+  --health-cmd "curl -f http://localhost/ || exit 1" \
+  --health-interval 10s \
+  --health-timeout 5s \
+  --health-retries 3 \
+  nginx
+
+  Bentuk yaml file seluruh option di sini bisa ditemukan persis seperti yang ada pada docker compose file biasa.
+  Semua dijelaskan di dalam chapter ComposeConfiguration.

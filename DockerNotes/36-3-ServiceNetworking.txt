@@ -1,10 +1,37 @@
 =========== Networking ============
 
+Kalau kita ingat di pelajaran chapter Networking, ada satu jenis network driver type yang digunakan untuk komunikasi antar container tetapi 
+satu container dengan container lainnya berada di server yang berbeda, namanya Overlay. Dan pada chapter itu juga network overlay merujuk 
+ke chapter ini.
+
+Overlay sendiri adalah jenis network driver yang mampu menghubungkan container ke container yang berada pada node atau host yang berbeda,
+dimana itu tidak mampu di lakukan Bridge. Ketika kita menggunakan network overlay, setiap node akan membuat virtual network dimana virtual
+network itu mampu terhubung dengan physical network interface yang berada di server yang berbeda dengan menggunakan technology yang disebut
+VXLAN (Virtual Extensible Local Area Network).
+
+Overlay sendiri mampu menghubungkan container ke container lain dalam satu host sama seperti bridge, jadi ketika kita membuat cluster
+dimana ada container yang lokasinya sama node/host dan dicampur dengan yang berbeda node/host tidak akan masalah.
+
+Pertanyaannya mungkin, "Kenapa kita tidak selalu menggunakan Overlay saja? Karena overlay juga bisa mengerjakan apa yang bridge kerjakan"
+Proses overlay network memiliki proses yang lebih complex, mechanism yang lebih complex ini tidak dibutuhkan untuk komunikasi satu host,
+malah informasi overhead tambahannya akan memberatkan dan kalau ada masalah lebih sulit untuk dicari tahu dan diselidiki.
+
+Ingat kalau waktu penggunaan overlay adalah pada saat ada lebih dari 1 node atau ada lebih dari satu host. Kalau kita
+ingin menggunakan docker swarm tapi sebenarnya seluruh container akan kita taruh di 1 node saja, maka kita tetap bisa menggunakan
+network bridge walaupun berada di dalam cluster.
+
+Untuk menghubungkan network antar node, pertama-tama buat dulu networknya:
+docker network create --driver overlay [network name]
+docker network create -d overlay [network name]
+docker network create --driver overlay app_net
+docker network create -d overlay app_net
+
+Ketika kita membuat network itu pada sebuah manager node, manager node yang lain langsung bisa melihat network baru
+app_net berada di dalam network list nya (docker network ls), tetapi worker node tidak bisa melihat.
+Itu karena network ini bagian dari state cluster yang di distribuse Raft.
+
+
+
 --network
 
-Dalam Docker (khususnya saat memakai Docker Swarm), overlay network driver adalah:
-jenis network yang memungkinkan container di node (server) yang 
-berbeda saling berkomunikasi seolah-olah berada di jaringan yang sama.
-
-docker network create -d overlay backend
-docker network create -d overlay frontend
+Cari tau soal ingress
