@@ -16,9 +16,8 @@ Pertanyaannya mungkin, "Kenapa kita tidak selalu menggunakan Overlay saja? Karen
 Proses overlay network memiliki proses yang lebih complex, mechanism yang lebih complex ini tidak dibutuhkan untuk komunikasi satu host,
 malah informasi overhead tambahannya akan memberatkan dan kalau ada masalah lebih sulit untuk dicari tahu dan diselidiki.
 
-Ingat kalau waktu penggunaan overlay adalah pada saat ada lebih dari 1 node atau ada lebih dari satu host. Kalau kita
-ingin menggunakan docker swarm tapi sebenarnya seluruh container akan kita taruh di 1 node saja, maka kita tetap bisa menggunakan
-network bridge walaupun berada di dalam cluster.
+Untuk percobaan dibawah saya menggunakan Guides/Samurai untuk mensimulasikan multi-host,
+tapi sebetulnya kalian tidak perlu juga melakukan itu, karena percobaan network ini bisa juga dilakukan di single host (pc anda langsung).
 
 Untuk menghubungkan network antar node, pertama-tama buat dulu networknya:
 docker network create --driver overlay [network name]
@@ -28,10 +27,75 @@ docker network create -d overlay app_net
 
 Ketika kita membuat network itu pada sebuah manager node, manager node yang lain langsung bisa melihat network baru
 app_net berada di dalam network list nya (docker network ls), tetapi worker node tidak bisa melihat.
-Itu karena network ini bagian dari state cluster yang di distribuse Raft.
+Itu karena network ini bagian dari state cluster yang di distribusi Raft.
+Untuk percobaan pembuatan network di atas saya buat di nobunaga node, tetapi app_net juga bisa dilihat
+dari tokugawa atau hideyoshi.
 
+Selanjutnya saya akan membuat service yang berperan meng-imitasi service sebuah back end app dan sebuah front end app.
+Karena fokus kita di sini network, yang terpenting bisa kah front end melakukan request ping ke back end dengan menggunakan DNS
+namenya. Kalau bisa berarti mereka bisa ter-connect dalam satu network overlay yang sama.
 
+Untuk itu saya menggunakan image dari nicolaka/netshoot, dimana ini adalah container yang biasa digunakan untuk uji coba network.
+Pada container ini, linux sudah dilengkapi dengan banyak tools basic untuk kebutuhan networking.
 
---network
+Pertama-tama buat service backendnya dengan command ini:
 
-Cari tau soal ingress
+docker service create \
+    --name backend \
+    --network app_net \
+    --replicas 2 \
+    nicolaka/netshoot \
+    nc -l -p 8020
+
+Kita akan membuat 2 replica saja cukup (Kalau memakai docker in docker, lebih baik jangan terlalu banyak, akan berat performancenya).
+Seperti layaknya sebuah backend app, dia akan terus mendengar setiap request ke sebuah port. Dalam hal ini portnya adalah 8020.
+
+Lalu saya buat sebuah front end service yang hidup selama kurang lebih 1 jam. Agar proses container tidak langsung stop:
+docker service create \
+    --name frontend \
+    --network app_net \
+    --replicas 2 \
+    nicolaka/netshoot \
+    sleep 3600
+
+Kalau kita check setiap task dan replicas yang dihasilkan dari command create service untuk front end dan back end diatas,
+kurang lebih hasilnya akan seperti ini.
+
+docker service ls
+ID             NAME       MODE         REPLICAS   IMAGE                      PORTS
+pupzcz39uy2p   backend    replicated   2/2        nicolaka/netshoot:latest
+j3r67fi2dd0p   frontend   replicated   2/2        nicolaka/netshoot:latest
+
+Perhatikan kalau backend dan front end semuanya berada di node yang berbeda.
+
+docker service ps backend
+ID             NAME        IMAGE                      NODE        DESIRED STATE   CURRENT STATE            ERROR     PORTS
+s0r5u93i4421   backend.1   nicolaka/netshoot:latest   masamune    Running         Running 50 seconds ago
+g3n0ynd54k28   backend.2   nicolaka/netshoot:latest   hideyoshi   Running         Running 50 seconds ago
+docker service ps frontend
+ID             NAME         IMAGE                      NODE       DESIRED STATE   CURRENT STATE            ERROR     PORTS
+st7yjh2da5dl   frontend.1   nicolaka/netshoot:latest   nobunaga   Running         Running 51 seconds ago
+j830b9hig2ix   frontend.2   nicolaka/netshoot:latest   tokugawa   Running         Running 51 seconds ago
+
+Gunakan command docker container ls atau docker ps untuk mendapat 1 nama container dari front end.
+Lalu execute itu dengan bash, contohnya seperti ini:
+docker exec -it frontend.1.st7yjh2da5dladjs0mp6y7ow9 bash
+
+Setelah itu coba ping backend dengan namenya:
+ping backend
+
+Kalau ping berhasil, artinya network overlay berhasil menghubungkan container antar node.
+
+Kalau kita lihat, di dalam network list terdapat satu default network dengan nama ingress:
+NETWORK ID     NAME              DRIVER    SCOPE
+k0s5n6sznlvo   ingress           overlay   swarm
+
+ingress ini tercipta pada saat kita pertamakali mengaktifkan docker swarm cluster dengan
+command: docker swarm init
+
+ingress adalah overlay network khusus yang digunakan Docker Swarm untuk menjalankan routing mesh 
+ketika Anda melakukan publish port pada service. Kita tidak perlu set ini dengan option --network.
+Ingress akan secara otomatis terpasang pada saat ada publish to host -p option.
+
+Routing mesh adalah technology dimana host yang bukan pemiliki task/container, tetapi berada di dalam
+cluster yang sama juga bisa mengaksesnya dengan port hasil publish.
