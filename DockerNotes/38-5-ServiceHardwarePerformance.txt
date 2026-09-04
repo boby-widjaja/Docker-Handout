@@ -1,6 +1,54 @@
-=========== Hardware Performance ============
+Tentu sebuah task/container akan memakan biaya performance hardware dari host kita.
+Untuk sebuah container, concern pemakaiannya berada pada CPU/Processor dan pada RAM/In-Memory/Temporary Memory.
+Dan konfigurasi yang akan diatur saat pembuatan service adalah seberapa 
+di-LIMIT penggunaannya dan berapa yang di-RESERVE penggunaan CPU dan RAM nya.
 
+Limit: batas maksimum resource yang boleh digunakan container.
+Reservation → resource minimum yang diminta/dipesan oleh container agar Swarm dapat 
+    menjadwalkannya ke node yang cukup kapasitas.
+
+Semua itu ditulis dalam options:
 --limit-cpu
---limit-memory
 --reserve-cpu
+--limit-memory
 --reserve-memory
+
+Limit CPU: Menentukan maksimum logical processor yang boleh digunakan oleh task/container.
+    Ingat, 1 logical processor core, bukan 1 core physical hardware core.
+    Jika kita me-limit 2 CPU, bukan 2 logical processor kita locked untuk hanya kebutuhan ini, 
+    melainkan container ini tidak boleh memakai lebih dari 2. Bila tidak di-limit, app pada container
+    bisa menggunakan sebanyak tersedianya.
+
+Untuk jumlah logical processor yang kalian punya, bisa di check lewat OSnya. Biasanya berjumlah sama 
+atau lebih banyak dari physical corenya.
+
+Logical Processor adalah 1 unit yang dipakai oleh 1 thread di dalam multi-thread programming untuk berjalan dalam 
+waktu yang simultan. Jadi kalau aplikasi kalian menjalankan 8 thread pool, maka kalau ada 8 logical processor akan
+dipakai 1 untuk setiap thread bila semua thread berjalan. Kalau jumlah thread pool dan running thread jalan
+bersamaan dalam satu waktu melebihi jumlah logical processornya, maka akan dikerjakan silih bergantian.
+
+Oleh karena itu, option --limit-cpu, diisi dengan value integer berupa jumlah logical processor:
+docker service create \
+  --name web \
+  --limit-cpu 2 \
+  nginx
+
+Note: Kalau sebuah program melakukan full computation menggunakan multi-threading, tetapi limit-cpu hanya
+    dibatasi 1, maka performance program tersebut akan sama dengan single-thread system, dimana asynchronous
+    process terjadi silih berganti di dalam satu logical core.
+
+Limit Memory: menggunakan konsep yang sama dengan limit CPU, di ini kita akan melimit pemakaian RAM, tentunya
+    dalam satuan megabyte. Secara default kalau kita tidak menulis limit memory, app bisa menggunakannya sebanyak yang tersedia.
+
+Contohnya:
+docker service create \
+  --name database \
+  --limit-memory 512M \
+  redis
+
+Jika aplikasi mencoba menggunakan memory melebihi limit tersebut, Docker dapat melakukan OOM kill terhadap container.
+OOM kill (Out of Memory Kill) adalah tindakan penghentian process container dengan paksa karena mencoba menggunakan
+memory diluar limitnya.
+
+Kalau sebuah container tertutup karena lonjakan memory mendadak yang tinggi, self-heal / recovery replica akan 
+secara otomatis membuatkan penggantinya.
