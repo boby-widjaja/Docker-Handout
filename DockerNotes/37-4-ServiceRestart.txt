@@ -1,5 +1,77 @@
-=========== Restart ============
+Pada chapter ini kita akan melihat bagaimana cara mengatur restart policy pada task/container
+di dalam docker swarm. Fungsinya menentukan kapan task/container yang gagal harus dijalankan kembali, 
+berapa lama menunggu sebelum restart, dan berapa kali maksimal mencoba restart.
 
---restart-condition
---restart-delay
---restart-max-attempts
+Di sini kita akan menggunakan 3 option, yaitu:
+--restart-condition: kondisi seperti apa yang memerlukan task/container untuk restart?
+--restart-delay: Tunggu delay berapa lama baru restart?
+--restart-max-attempts: Berapaka kali percobaan restart baru menyerah?
+
+Flownya kurang lebih:
+Container mati
+     │
+     ▼
+Apakah perlu restart?
+ (--restart-condition)
+     │
+     ▼
+Tunggu berapa lama?
+ (--restart-delay)
+     │
+     ▼
+Restart
+     │
+     ▼
+Sudah berapa kali mencoba?
+ (--restart-max-attempts)
+     │
+     ├── belum mencapai batas → coba lagi
+     │
+     └── mencapai batas → berhenti mencoba
+
+
+--restart-condition mirip dengan restart pada attribute docker compose, dengan sedikit perbedaan.
+Di sini restart condition memiliki 3 macam value:
+
+--restart-condition none
+--restart-condition on-failure
+--restart-condition any
+
+-) none: tidak melakukan restart otomatis sama sekali.
+-) on-failure: hanya restart ketika proses failure atau app di dalam container me-return exit code diluar dari 0.
+    (Note: penjelasan exit code sudah dijelaskan di Shell Notes dan di ComposeConfiguration)
+-) any: kalau container stop, restart apa pun exit codenya. Ini merupakan default value dan
+    yang sering digunakan. Itu sebabnya setiap replica yang kita stop akan selalu hidup lagi 
+    walaupun tidak ada exit code error.
+
+
+Restart delay bisa diisi dengan satuan waktu, contoh:
+docker service create \
+  --name app \
+  --restart-condition on-failure \
+  --restart-delay 10s \
+  nginx
+
+Dan sudah pasti restart max attemps akan di beri value integer, contoh:
+docker service create \
+  --name app \
+  --restart-condition on-failure \
+  --restart-delay 5s \
+  --restart-max-attempts 3 \
+  nginx
+
+
+============= Stack ===============
+
+Untuk penerapannya pada stack yaml, semua ditulis di bawh attribute deploy, yaitu restart_policy.
+Contohnya:
+
+services:
+  api:
+    image: nginx:latest
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
