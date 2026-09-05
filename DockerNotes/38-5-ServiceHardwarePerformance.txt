@@ -13,6 +13,9 @@ Semua itu ditulis dalam options:
 --limit-memory
 --reserve-memory
 
+
+=========== Limit CPU ==============
+
 Limit CPU: Menentukan maksimum logical processor yang boleh digunakan oleh task/container.
     Ingat, 1 logical processor core, bukan 1 core physical hardware core.
     Jika kita me-limit 2 CPU, bukan 2 logical processor kita locked untuk hanya kebutuhan ini, 
@@ -37,6 +40,22 @@ Note: Kalau sebuah program melakukan full computation menggunakan multi-threadin
     dibatasi 1, maka performance program tersebut akan sama dengan single-thread system, dimana asynchronous
     process terjadi silih berganti di dalam satu logical core.
 
+Terlalu banyak menggunakan logical core pun akan mengakibatkan jumlah runnable workload/thread yang membutuhkan CPU secara bersamaan 
+melebihi kapasitas CPU yang tersedia. Ini bisa mengakibatkan CPU contention yang mengakibatkan turunnya performance karena mechanism time slice pada cpu.
+
+CPU contention terjadi ketika beberapa workload ingin menggunakan CPU pada saat yang sama, tetapi kapasitas CPU fisik yang 
+tersedia tidak cukup untuk memenuhi semuanya secara bersamaan. Akibatnya ada alternate task yang dikerjakan 1 CPU logical core dan bila lamanya melewati time slice,
+bisa mengakibatkan:
+
+-) CPU throttling
+-) workload menjadi lebih lambat
+-) latency meningkat
+-) throughput turun
+-) response time meningkat
+
+
+=========== Limit Memory ==============
+
 Limit Memory: menggunakan konsep yang sama dengan limit CPU, di ini kita akan melimit pemakaian RAM, tentunya
     dalam satuan megabyte. Secara default kalau kita tidak menulis limit memory, app bisa menggunakannya sebanyak yang tersedia.
 
@@ -48,7 +67,49 @@ docker service create \
 
 Jika aplikasi mencoba menggunakan memory melebihi limit tersebut, Docker dapat melakukan OOM kill terhadap container.
 OOM kill (Out of Memory Kill) adalah tindakan penghentian process container dengan paksa karena mencoba menggunakan
-memory diluar limitnya.
+memory diluar limitnya. OOM kill akan mengakibatkan sebuah container stop dengan status error, jadi bukan exit 0.
+Jadi ini harus dipertimbangkan pada restart conditionnya. (Baca di chapter ServiceRestart)
 
-Kalau sebuah container tertutup karena lonjakan memory mendadak yang tinggi, self-heal / recovery replica akan 
-secara otomatis membuatkan penggantinya.
+Kalau tiba-tiba terjadi lonjakan kebutuhan memory diluar batas dan OOM kill terjadi, maka mechanisme restart atau desired state
+reconciliation akan bertindak. OOM kill dianggap termasuk kedalam scenario stop karena problem internal, jadi seharusnya restart policy
+akan bekerja terlebih dahulu, kalau max attempts sudah tercapai baru ke desired state reconciliation.
+
+Nah ini salah satu failure mode yang cukup berbahaya dalam production, karena ini bisa mengakibatkan hal yang disebut
+Crash Loop atau Restart Loop. Dimana artinya OOM kill dilakukan terus dan kelahiran task/container baru terjadi terus.
+Terjadinya infinite cycle dari kematian dan lahir baru. Untuk mencegah ini, memberikan ukuran memory yang pas dan memberikan maximum
+attempts pada restart policy sangat penting.
+
+Note!: Memberikan memory yang terlalu sedikit itu lebih bahaya daripada memberikan logical core yang terlalu banyak atau 
+terlalu sedikit kepada CPU. Salah menggunakan limit pada CPU tidak akan mengakibatkan OOM kill dan app di dalam container pun tidak
+bisa memaksa menggunakan CPU logical core lebih dari yang disediakan. Hanya ada kemungkinan mengakibat CPU Contention yang dibahas sebelumnya.
+
+
+=========== Reserve CPU ==============
+
+Reserve CPU adalah konfigurasi untuk menyewa minimum CPU yang harus tersedia pada host agar service mau menempatkan tasknya.
+Jadi jika pc host kita hanya memiliki 8 logical processor, dan kita me-reservenya 12 core, task tidak akan di run.
+
+Tetapi jangan salah artikan dengan, bila kita reserve-cpu 2, itu artinya cpu tersebut akan di-locked hanya khusus untuk
+kebutuhan service ini dan tidak boleh dipakai untuk yang lain. Karena tidak begitu cara kerjanya, logical core yang di-reserve tentunya
+masih bisa dipakai untuk kebutuhan lain, bahkan untuk kebutuhan service lain.
+
+Bila logical core yang ada lebih sedikit dari kebutuhan minimum dan task tidak jalan, ini bukan berarti task exit code dan
+memasuki restart mechanism atau desired state reconciliation. Task yang tidak bisa memenuhi kebutuhan reserve akan berstatus pending terus-menerus.
+
+Beginilah contoh commandnya:
+
+docker service create \
+  --name api \
+  --reserve-cpu 1 \
+  nginx
+
+
+=========== Reserve Memory ==============
+
+Reserve Memory prinsipnya sama persis dengan Reserve CPU, tapi untuk memory RAM.
+
+Kurang lebih beginilah commandnya:
+docker service create \
+  --name database \
+  --reserve-memory 1G \
+  redis
