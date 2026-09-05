@@ -1,0 +1,352 @@
+============ Rolling Mechanism =============
+
+Di chapter sebelumnya di dalam OrchestrationService, kita belajar untuk meng-update service dengan command:
+docker service update [options].
+
+Tentu cukup mudah dimengerti, command itu artinya kita akan meng-update suatu option atau konfigurasi dari
+dari sebuah service. Tapi dengan banyaknya replicas apalagi yang bisa tersebar dibanyak nodes, bagaimana
+cara docker swarm melakukan update ke seluruh replicas tasksnya?
+
+Yang dilakukan docker swarm adalah melakukan Rolling Update, yang artinya adalah update setiap replica
+secara bergilir satu-persatu (tidak langsung keseluruhan). Contohnya:
+
+1. Misalnya kita membuat service dengan command seperti ini:
+docker service create --name web --replicas 3 nginx:1.25
+
+2. Task/Container akan menghasilkan:
+web
+├── task 1 → nginx:1.25
+├── task 2 → nginx:1.25
+└── task 3 → nginx:1.25
+
+3. Kita mengupdate image kita dari nginx:1.25 menjadi nginx:1.31
+docker service update --image nginx:1.31 web
+
+4. Degan konfigurasi yang tepat, hasil proses updatenya akan seperti:
+
+1) Kondisi awal:
+web
+├── task 1 → nginx:1.25
+├── task 2 → nginx:1.25
+└── task 3 → nginx:1.25
+
+2) Update langkah pertama:
+web
+├── task 1 → nginx:1.31 (Updated)
+├── task 2 → nginx:1.25
+└── task 3 → nginx:1.25
+
+3) Update langkah berikutnya:
+web
+├── task 1 → nginx:1.31 (Updated)
+├── task 2 → nginx:1.31 (Updated)
+└── task 3 → nginx:1.25
+
+3) Update langkah terakhir:
+web
+├── task 1 → nginx:1.31 (Updated)
+├── task 2 → nginx:1.31 (Updated)
+└── task 3 → nginx:1.31 (Updated)
+
+Dengan begini down time dari system tidak akan terjadi, karena kalau melakukan update sekaligus ketiga replica dari web service
+akan mati total secara bersamaan dalam waktu beberapa detik.
+
+
+============ Update and Rollback Policy =============
+
+Bisa saja update service yang baru terjadi kesalahan dan kita ingin kembali ke versi sebelumnya, maka proses itu disebut juga Rollback.
+Baik update dan rollback sama-sama dijalankan dengan command "docker service update", dan keduanya bisa disetting prilaku update dan rollbacknya.
+
+Berikut ini adalah option yang digunakan untuk memanipulasi perilaku update.
+(Seluruh configuration terhadap perilaku update bisa diset pada saat create servicenya)
+
+UPDATE PARALLELISM
+
+--update-parallelism: Menentukan berapa banyak task yang boleh di-update secara bersamaan (parallel/asynchronous).
+valuenya tentu saja akan berupa integer. Contoh command:
+
+docker service create \
+    --name web \
+    --replicas 5 \
+    --update-parallelism 2 \
+    nginx:1.25
+
+
+UPDATE DELAY
+
+--update-delay: Menentukan berapa lama jedah Swarm menunggu sebelum melanjutkan update ke replica berikutnya.
+valuenya tentu saja akan berupa satuan waktu. Contoh command:
+
+docker service create \
+    --name web \
+    --replicas 5 \
+    --update-parallelism 2 \
+    --update-delay 30s \
+    nginx:1.25
+
+
+UPDATE ORDER
+
+--update-order: Option ini menentukan mechanisme pertukaran container lama dan baru pada saat update.
+Kita semua tau, kalau service menupdate task/containernya, tidak ada mechanism edit. 
+Update adalah hasil dari remove yang lama lalu create yang baru. 
+Pertanyaannya remove dulu baru create baru atau create baru dulu baru remove?
+value dari update order ada 2 macam, yaitu:
+stop-first (default) : remove dulu baru create
+start-first : create dulu baru remove.
+
+stop-first: (memperkecil kebutuhan resources, memperbesar resiko down-time)
+1. web
+├── task 1 → nginx:1.25
+├── task 2 → nginx:1.25
+└── task 3 → nginx:1.25
+2. web
+├── task 2 → nginx:1.25
+└── task 3 → nginx:1.25
+3. web
+├── task 1 → nginx:1.31 (Updated)
+├── task 2 → nginx:1.25
+└── task 3 → nginx:1.25
+
+start-first: (memperbesar kebutuhan resources, memperkecil resiko down-time)
+1. web
+├── task 1 → nginx:1.25
+├── task 2 → nginx:1.25
+└── task 3 → nginx:1.25
+2. web
+├── task 1 → nginx:1.25
+├── task 2 → nginx:1.25
+├── task 3 → nginx:1.25
+└── task 4 → nginx:1.31 (Created)
+3. web
+├── task 2 → nginx:1.25
+├── task 3 → nginx:1.25
+└── task 4 → nginx:1.31 (Created)
+
+Contoh command:
+
+docker service create \
+  --name web \
+  --replicas 3 \
+  --update-order stop-first \
+  nginx:1.25
+
+
+UPDATE FAILURE ACTION
+
+--update-failure-action: menentukan apa yang harus dilakukan Swarm jika update 1 task saja mengalami kegagalan?
+Ada 3 pilihan value untuk option ini:
+    pause (default) : berhenti ditengah jalan.
+    continue: lanjut saja
+    rollback: mundur dan kembalikan semuanya sedia kala.
+
+Scenario pause:
+Task 1 → updated
+Task 2 → updated
+Task 3 → FAILED
+Task 4 → tidak di-update
+Task 5 → tidak di-update
+
+Scenario continue:
+Task 1 → success
+Task 2 → FAILED
+Task 3 → tetap lanjut
+Task 4 → tetap lanjut
+Task 5 → tetap lanjut
+
+Scenario rollback:
+Task 1 → success (kembalikan sedia kala)
+Task 2 → success (kembalikan sedia kala)
+Task 3 → FAILED (kembalikan sedia kala)
+Task 4 → tidak di-update
+Task 5 → tidak di-update
+
+Contoh command:
+docker service create \
+  --name web \
+  --replicas 5 \
+  --update-failure-action continue \
+  nginx:1.25
+
+
+UPDATE MAX FAILURE RATIO
+
+--update-max-failure-ratio: options ini akan bermanfaat apabila option --update-failure-action memiliki nilai paused atau rollback (kalau continue tidak ada effect).
+update max failure ratio adalah TOLERANSI dari jumlah replica yang gagal diupdate, untuk menentukan pengambilan keputusan paused atau rollback.
+Jadi kalau toleransinya tinggi, failed untuk update 2 task saja bisa dianggap belum butuh butuh untuk paused atau rollback, dan masih lanjut continue update.
+Tapi ketimbang jumlah replica dalam integer, --update-max-failure-ratio meminta value berupa percentage, yang kita isi dengan value dari 0 - 1.
+Kalau toleransinya 20% maka kita harus beri value 0.2
+
+Berarti kalau ada 10 replicas dan --update-max-failure-ratio 0.2, itu artinya kalau failednya 2 task, update masih akan berlanjut.
+Default value dari option ini adalah 0, artinya defaultnya tidak ada toleransi sama sekali.
+Kurang lebih contoh commandnya:
+
+docker service create \
+  --name web \
+  --replicas 10 \
+  --update-failure-action rollback \
+  --update-max-failure-ratio 0.2 \
+  nginx:1.25
+
+
+UPDATE MONITOR
+
+--update-monitor: adalah Probation period sebuah task dianggap fail atau sukses.
+Karena ada saja kemungkinan sebuah task diupdate dan berhasil, lalu 5 detik kemudian task tersebut langsung fail.
+Kalau tidak ada probation periodnya, maka kegagalan task tersebut sudah merupakan tanggung jawab dari mechanism restart atau reconciliation.
+Tapi dengan kita memberi value --update-monitor 10s, itu artinya selama 10 detik, update mechanism masih pesimistic dan mengawasi task tersebut.
+Baru setelah 10s tidak mengalami kegagalanlah update dianggap berhasil dan tidak perlu melihat failure action.
+
+Contoh command:
+docker service create \
+  --name web \
+  --replicas 10 \
+  --update-failure-action rollback \
+  --update-monitor 30s \
+  nginx:1.25
+
+
+ROLLBACK
+
+--rollback: rollback adalah action yang kita lakukan untuk melakukan rollback secara manual dengan update action.
+Contoh command:
+docker service update --rollback web
+atau bisa juga:
+docker service rollback web
+
+(Note: Tentu saja kalau sebuah service belum pernah mengalami update yang menghasilkan versi sebelumnya, maka tidak ada rollback yang bermakna untuk dilakukan.)
+
+Sisanya adalah option-option dari perilaku rollback yang bisa diset pada saat create servicenya.
+Dan semuanya sama dengan option pada update, seperti parallelism, delay, order, dan lain sebagainya:
+
+--rollback-parallelism
+--rollback-delay
+--rollback-order
+--rollback-failure-action
+--rollback-monitor
+
+Contoh command:
+docker service create \
+  --name web \
+  --replicas 5 \
+  --rollback-parallelism 1 \
+  --rollback-delay 5s \
+  --rollback-order start-first \
+  --rollback-failure-action pause \
+  --rollback-monitor 10s \
+  nginx:1.25
+
+
+============ Stack =============
+
+Pengaturan pada yaml filenya kurang lebih seperti di bawah ini:
+
+services:
+  web:
+    image: nginx:1.25
+    deploy:
+      replicas: 5
+      update_config:
+        parallelism: 2
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+        max_failure_ratio: 0.2
+        monitor: 30s
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+        order: start-first
+        failure_action: pause
+        monitor: 10s
+
+Coba perhatikan, seluruh pengaturan update berada di bawah update_config attribute dan seluruh pengaturan 
+rollback berada di bawah rollback_config attribute.
+
+
+============ Update-able Options =============
+
+Berikutnya saya tampilkan beberapa option dan configuration yang bisa dijalankan bersama docker service update.
+Hampir kebanyakan sama persis dengan option pada docker service create.
+Hanya sebagian saja yang sifatnya jadi menambah atau menghapus.
+Yang sifatnya jadi menambah atau menghapus syntax optionnya akan ditambahkan -add atau -rm.
+
+1. Image & proses aplikasi
+| Option         | Kegunaan                                    | Contoh                   |
+| -------------- | ------------------------------------------- | ------------------------ |
+| `--image`      | Mengganti image service                     | `--image nginx:1.28`     |
+| `--args`       | Mengubah argument/command argument          | `--args "sleep 1000"`    |
+| `--entrypoint` | Mengganti `ENTRYPOINT` image                | `--entrypoint /bin/bash` |
+| `--workdir`    | Mengubah working directory                  | `--workdir /app`         |
+| `--user`       | Menentukan user yang menjalankan container  | `--user 1000`            |
+| `--hostname`   | Mengubah hostname container                 | `--hostname web01`       |
+
+2. Replica
+| Option                    | Kegunaan                                | Contoh                      |
+| ------------------------- | --------------------------------------- | --------------------------- |
+| `--replicas`              | Mengubah jumlah task/replica            | `--replicas 5`              |
+| `--replicas-max-per-node` | Membatasi jumlah replica pada satu node | `--replicas-max-per-node 1` |
+
+3. Environment Variable
+| Option      | Kegunaan                               | Contoh                         |
+| ----------- | -------------------------------------- | ------------------------------ |
+| `--env-add` | Menambah/mengubah environment variable | `--env-add APP_ENV=production` |
+| `--env-rm`  | Menghapus environment variable         | `--env-rm APP_ENV`             |
+
+4. Secret & Config
+| Option         | Kegunaan                            |
+| -------------- | ----------------------------------- |
+| `--secret-add` | Menambahkan atau memperbarui secret |
+| `--secret-rm`  | Menghapus secret                    |
+| `--config-add` | Menambahkan atau memperbarui config |
+| `--config-rm`  | Menghapus config                    |
+
+5. Network & Port
+| Option            | Kegunaan                                   |
+| ----------------- | ------------------------------------------ |
+| `--network-add`   | Menambahkan network                        |
+| `--network-rm`    | Menghapus network                          |
+| `--publish-add`   | Menambahkan/mengubah published port        |
+| `--publish-rm`    | Menghapus published port                   |
+
+6. Storage / Mount
+| Option        | Kegunaan                        |
+| ------------- | ------------------------------- |
+| `--mount-add` | Menambahkan atau mengubah mount |
+| `--mount-rm`  | Menghapus mount                 |
+
+7. Resource CPU & Memory
+| Option                | Kegunaan                               |
+| --------------------- | -------------------------------------- |
+| `--limit-cpu`         | Batas maksimum CPU                     |
+| `--limit-memory`      | Batas maksimum RAM                     |
+| `--limit-pids`        | Jumlah maksimum process                |
+| `--reserve-cpu`       | CPU yang di-reserve                    |
+| `--reserve-memory`    | RAM yang di-reserve                    |
+
+8. Placement / Penempatan Task
+| Option                 | Kegunaan                         |
+| ---------------------- | -------------------------------- |
+| `--constraint-add`     | Menambahkan constraint           |
+| `--constraint-rm`      | Menghapus constraint             |
+| `--placement-pref-add` | Menambahkan placement preference |
+| `--placement-pref-rm`  | Menghapus placement preference   |
+
+9. Restart Policy
+| Option                   | Kegunaan                        |
+| ------------------------ | ------------------------------- |
+| `--restart-condition`    | Kapan task harus direstart      |
+| `--restart-delay`        | Jeda sebelum restart            |
+| `--restart-max-attempts` | Maksimum percobaan restart      |
+| `--restart-window`       | Window untuk menghitung restart |
+
+10. Health Check
+| Option                    | Kegunaan                            |
+| ------------------------- | ----------------------------------- |
+| `--health-cmd`            | Command untuk health check          |
+| `--health-interval`       | Interval health check               |
+| `--health-timeout`        | Batas waktu health check            |
+| `--health-retries`        | Berapa kali gagal sebelum unhealthy |
+| `--health-start-period`   | Grace period saat startup           |
+| `--health-start-interval` | Interval check selama startup       |
+| `--no-healthcheck`        | Menonaktifkan health check          |

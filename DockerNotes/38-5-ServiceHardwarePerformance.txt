@@ -113,3 +113,22 @@ docker service create \
   --name database \
   --reserve-memory 1G \
   redis
+
+
+=========== Stack ==============
+
+Contoh penulisan yaml stack configurationnya seperti ini:
+
+services:
+  app:
+    image: nginx:alpine
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+
+semuanya berada di bawah attributes resources, lalu limit dan reservations dibagi menjadi 2 attributes terpisah.

@@ -45,8 +45,13 @@ docker service rm web
 
 Selain membuat dan menghapus, kita juga bisa update service pastinya.
 Misalnya kita ingin merubah jumlah replicanya, bisa dengan
-docker service update [service-name/id] --replicas n
-docker service update web --replicas 5
+docker service update [options] [service-name/id]
+docker service update --replicas 5 web
+docker service update --image nginx:1.28 web
+docker service update --image nginx:1.28 --replicas 5 web
+docker service update --env-add DB_HOST=mysql web
+docker service update --network-add backend web
+dan lain sebagainya. Akan dibahas lebih detail di chapter ServiceUpdate.
 
 Untuk melihat task atau running container di dalam satu service:
 docker service ps [service-name]
