@@ -7,72 +7,38 @@ docker volume create sqlserver_volume
 3. Check volume:
 docker volume ls
 
-======================== RUN ==============================
+======================== SECRET ==============================
 
-4a.1. Cara buat container dengan run command:
-docker run -d \
-    --name sqlserver_container \
-    -p 1433:1433 \
-    -e ACCEPT_EULA=Y \
-    -e SA_PASSWORD='SmithWessonMagnum357!' \
-    -v sqlserver_volume:/var/opt/mssql \
-    mcr.microsoft.com/mssql/server:2022-latest
+4. Buat password secret:
+docker secret create mssql_sa_password mssql_sa_password.txt
 
-======================== DOCKERFILE ==============================
+5. Check eksistensi kedua secret:
+docker secret ls
 
-4b.1. Cara buat container dengan Dockerfile, change directory ke MSSQLServer
-cd Guides/MSSQLServer
+======================== UPGRADE IMAGE ==============================
 
-4b.2. Build SQL Server image
-docker build -t sqlserver-private:1.0 .
+6. Upgrade image dengan docker file, supaya ditambahkan entrypoint.sh sejak awal:
+docker build -t sqlserver-secret:1.0 .
 
-4b.3. Run image yang sudah dibuat
-docker run -d \
-    --name sqlserver_container \
-    -p 1433:1433 \
-    -v sqlserver_volume:/var/opt/mssql \
-    sqlserver-private:1.0
+7. Pastikan image yang baru sudah ada:
+docker images
+
+======================== DEPLOY ==============================
+
+8. Lalu deploy stack dengan:
+docker stack deploy -c docker-stack.yaml sqlstack
 
 ============================== SSMS ====================================
 
-5a.1. Untuk penggunaan lewat SSMS kita akan masuk dulu ke dalam containernya dengan bash.
-docker exec -it -u root sqlserver_container bash
-
-5a.2. Dari dalam sqlserver container, buat satu folder / directory backup:
-mkdir backup
-
-5a.3. Lalu keluar dari bash dengan exit.
-
-5a.4. Di working directory MSSQLServer, pindahkan bak file ke dalam directory container:
-docker cp Sources/MyStore.bak sqlserver_container:/backup/MyStore.bak
-
-5a.4. Akses SSMS dengan menggunakan detail di bawah ini:
+7.a. Test dengan akses SSMS dengan menggunakan detail di bawah ini:
 server name: localhost,1433
 username: sa
 password: SmithWessonMagnum357!
 encryption: Trust Certificate
 
-5a.5. Restore bak backup file lewat SSMS dengan cara:
-di directory Databases, click kanan.
-Restore Database > Device > ... > Add > Pilih folder backup yang sudah dibuat sebelumnya > Pilih MyStore.bak > Ok.
-Tapi jangan OK sampai selesai.
-
-5a.6. Pergi ke Tab Options.
-Ketika restore, pastikan path Restore As directory pathnya di ubah, karena windows dan linux berbeda:
-dari:
-C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\
-jadi
-/var/opt/mssql/data/
-
-Replace Restore AS:
-Rows Data: /var/opt/mssql/data/MyStore.mdf
-Log : /var/opt/mssql/data/MyStore_log.ldf
-
-Lalu OK
-
 ============================== DBeaver ====================================
 
-5b.1. Gunakan DBeaver untuk merestore database.
+7.b. Test dengan menggunakan DBeaver:
 New Database Connection > SQL Server
 Input data: 
 server name: localhost
@@ -81,46 +47,3 @@ username: sa
 password: SmithWessonMagnum357!
 Show All Schemas: checked
 Trust Certificate: checked
-
-5b.3. Restore database:
-Open File > MyStore.sql
-
-5b.4. Apabila connection belum terhubung ke database:
-Ctrl + 9
-Lalu pilih koneksi
-
-5b.5.
-Execute SQL Script (Alt + X)
-
-=====================================================================
-
-6. Masuk ke container dengan bash:
-docker exec -it -u root sqlserver_container bash
-
-7. Setelah instalasi berarti bisa check path dari sqlcmd
-find /opt -name sqlcmd -type f 2>/dev/null
-
-8. Apabila tidak ditemukan mssql-tools18 (seharusnya ada), dan
-Dockerfile belum menginstall mssql-tools18, silahkan install.
-apt install mssql-tools18
-(Note: ini untuk bisa melakukan cli ke sql)
-
-9. Misalnya path yang di dapat di:
-/opt/mssql-tools18/bin/sqlcmd
-maka check version caranya
-/opt/mssql-tools18/bin/sqlcmd -?
-
-10. Agar lebih pendek, kita bisa taruh itu di Environment Variablenya:
-export PATH="$PATH:/opt/mssql-tools18/bin"
-(Sesuaikan dengan path yang ada diproses sebelumnya)
-sehingga untuk command tinggal sqlcmd:
-sqlcmd -?
-
-11. Kita bisa coba select data dengan ini:
-sqlcmd \
-    -S localhost \
-    -U sa \
-    -P 'SmithWessonMagnum357!' \
-    -d MyStore \
-    -C \
-    -Q "SELECT * FROM dbo.Products;"
