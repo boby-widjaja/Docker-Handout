@@ -1,0 +1,85 @@
+1. Pull PostgreSQL image dari dockerhub, kita akan menggunakan versi 17.10
+docker pull postgres:17.10
+
+2. Buat volume untuk persistent database:
+docker volume create postgres_volume
+
+3. Check volume:
+docker volume ls
+
+======================== SECRET ==============================
+
+4. Buat password secret:
+docker secret create postgres_password postgres_password.txt
+
+5. Buat user secret: (Bisa juga dengan file, ini hanya mencoba variant langsung dengan echo saja)
+echo "postgres" | docker secret create postgres_user -
+
+6. Check eksistensi kedua secret:
+docker secret ls
+
+======================== SERVICE ==============================
+
+7. Sekarang bisa buat servicenya. Hati-hati dengan path conversion.
+Tergantung kalian jalankan command servicenya dimana.
+
+Kalau langsung dari linux bash bisa begini:
+docker service create \
+  --name my_postgres \
+  --replicas 1 \
+  -p 5432:5432 \
+  -e POSTGRES_USER_FILE=/run/secrets/postgres_user \
+  -e POSTGRES_DB=mystore \
+  -e POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password \
+  --mount type=volume,source=postgres_volume,target=/var/lib/postgresql/data \
+  --secret postgres_user \
+  --secret postgres_password \
+  postgres:17.10
+
+Kalau dari windows power shell bisa seperti ini:
+docker service create `
+  --name my_postgres `
+  --replicas 1 `
+  -p 5432:5432 `
+  -e POSTGRES_USER_FILE=/run/secrets/postgres_user `
+  -e POSTGRES_DB=mystore `
+  -e POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password `
+  --mount type=volume,source=postgres_volume,target=/var/lib/postgresql/data `
+  --secret postgres_user `
+  --secret postgres_password `
+  postgres:17.10
+
+Kalau pakai git bash, karena adanya masalah path conversion, bisa escape dengan //
+docker service create \
+  --name my_postgres \
+  --replicas 1 \
+  -p 5432:5432 \
+  -e POSTGRES_USER_FILE=//run/secrets/postgres_user \
+  -e POSTGRES_DB=mystore \
+  -e POSTGRES_PASSWORD_FILE=//run/secrets/postgres_password \
+  --mount type=volume,source=postgres_volume,target=//var/lib/postgresql/data \
+  --secret postgres_user \
+  --secret postgres_password \
+  postgres:17.10
+
+
+============================== PgAdmin ====================================
+
+8.a. Check koneksi dengan menggunakan PgAdmin:
+Servers > Click Kanan > Register > Server
+General Tab
+    Name: Container
+Connection Tab
+    Host name/address: localhost
+    Port: 5432
+    Username: postgres
+    Password: nodecomplete
+
+============================== DBeaver ====================================
+
+8.b. Check koneksi dengan menggunakan DBeaver
+New Database Connection > PostgreSQL
+Host: localhost
+Port: 5432
+Username: postgres
+Password: nodecomplete

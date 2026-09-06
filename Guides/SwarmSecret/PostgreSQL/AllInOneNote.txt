@@ -1,0 +1,36 @@
+1. Pull PostgreSQL image dari dockerhub, kita akan menggunakan versi 17.10
+docker pull postgres:17.10
+
+2. Buat volume untuk persistent database:
+docker volume create postgres_volume
+
+3. Check volume:
+docker volume ls
+
+4. Pastikan tidak ada secret yang berhubungan dengan project ini.
+
+======================== DEPLOY ==============================
+
+5. Deploye external_secret.yaml dengan:
+docker stack deploy -c all_in_one.yaml -d my_project
+
+============================== PgAdmin ====================================
+
+8.a. Check koneksi dengan menggunakan PgAdmin:
+Servers > Click Kanan > Register > Server
+General Tab
+    Name: Container
+Connection Tab
+    Host name/address: localhost
+    Port: 5432
+    Username: postgres
+    Password: nodecomplete
+
+============================== DBeaver ====================================
+
+8.b. Check koneksi dengan menggunakan DBeaver
+New Database Connection > PostgreSQL
+Host: localhost
+Port: 5432
+Username: postgres
+Password: nodecomplete
