@@ -34,6 +34,27 @@ option --tag digunakan untuk menamai image dan tagnya.
 Build Context menandai lokasi directory yang boleh diakses docker daemon selama
 process build, dalam hal ini . berarti current directory, yaitu seluruh isi dari directory Static Web
 
+------------------------------ Docker Ignore ------------------------------------
+
+Kita juga bisa membuat ignore file seperti pada git (.gitignore), yaitu dengan menulis .dockerignore
+Yang artinya semua hal yang ditulis di dalam file .dockerignore akan dikeluarkan dari Build Context.
+
+Syntax penulisannya sama seperti git ignore.
+
+others/ : ignore seluruh directory others dan isinya
+Note.txt : ignore file Note.txt
+*.log : ignore seluruh file dengan format log
+!important.log : kecualikan file dengan nama important.log
+
+dan sebagainya. Mungkin ada beberapa variasi wild card lainnya.
+
+Beberapa manfaat menggunakan ignore adalah:
+1. Mempercepat build
+2. Mengurangi ukuran build context
+3. Mencegah file sensitif masuk ke build context
+
+----------------------------------------------------------------------------------
+
 Di sini Dockerfile akan secara otomatis digunakan oleh process build.
 Dockerfile pada contoh ini memiliki 2 Instructions, yaitu FROM dan COPY.
 Mengenai Dockerfile nanti akan dibahas lebih lanjut di chapter setelahnya.
