@@ -230,3 +230,18 @@ Yang menjadi pembeda adalah kita membuat databasenya terlebih dahulu baru me-res
 dan datanya.
 
 Command line pada postgre juga sedikit berbeda.
+
+
+=========================================== Tambahan Docker Copy ===========================================
+
+Kalian sudah sempat melihat di proses Guides/MSSQLServer, kita sempat melakukan docker copy.
+Docker copy adalah command untuk memindahkan directory atau file keluar masuk host dan container.
+
+Commandnya kurang lebih seperti:
+docker cp [SOURCE] [DESTINATION]
+
+Kalau pada contoh, copy dilakukan dari host ke container:
+docker cp Sources/MyStore.bak sqlserver_container:/backup/MyStore.bak
+
+Tapi sebaliknya juga bisa:
+docker cp sqlserver_container:/backup/MyStore.bak Sources/MyStore.bak
