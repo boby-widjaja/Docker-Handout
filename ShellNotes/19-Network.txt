@@ -34,3 +34,8 @@ min = latency minimum
 avg = rata-rata
 max = maksimum
 mdev = variasi latency
+
+Cara melihat network information pada linux:
+    ifconfig → (interface) adalah command lama (legacy) untuk melihat dan mengatur network interface.
+    ip a → interface + address ,digunakan untuk melihat network interface beserta IP address-nya.
+    ip route → routing/jalur paket, kalau saya mau mengirim paket ke suatu network, paketnya harus lewat mana?

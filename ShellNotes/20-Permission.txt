@@ -141,3 +141,70 @@ bisa menambahkan command sudo (super user do).
 
 Misalnya:
 sudo chmod ug-rw new-name.txt
+
+Sebagai user biasa lainnya:
+sudo -u johndoe [command]
+
+
+=============================== ACL ===================================================
+
+Secara alternatif, kita juga bisa menggunakan ACL (Access Control List).
+ACL (Access Control List) adalah mekanisme permission yang lebih fleksibel daripada permission standar rwx pada file/directory.
+Dimana ketimbang kita hanya melihat permission dari sisi: user, group dan others, kita juga bisa melihatnya dari dimensi individu setiap user dan group.
+
+getfacl: digunakan untuk melihat ACL.
+
+command: 
+getfacl [filename]
+getfacl file.txt
+
+hasilnya:
+# file: file.txt
+# owner: johndoe
+# group: sandy
+user::rw-
+group::r--
+other::r--
+
+setfacl: digunakan untuk membuat atau mengubah ACL. (-m option modify)
+
+command:
+setfacl -m [options] [filename]
+setfacl -m u:bobywidjaja:rwx file-name.txt
+
+hasilnya:
+# file: file.txt
+# owner: johndoe
+# group: sandy
+user::rw-
+user:bobywidjaja:rwx
+group::r--
+mask::r--
+other::r--
+
+untuk menghapus gunakan option -x
+
+command:
+setfacl -x [options] [filename]
+setfacl -x u:bobywidjaja file.txt
+
+
+mask: membatasi permission maksimum untuk named user, named group, dan group class.
+
+Misalnya:
+user::rw-
+user:bobywidjaja:rw-
+group::r--
+mask::r--
+other::---
+
+Biar bobywidjaja terlihat bisa rw, sebenarnya dia terfilter mask yang hanya r, sehingga dia hanya r.
+
+Kalau:
+user::rw-
+user:bobywidjaja:rw-
+group::r--
+mask::rwx
+other::---
+
+bobywidjaja dapat rw-, technically ini jadi gak masking.

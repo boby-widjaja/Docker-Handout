@@ -24,13 +24,4 @@ Outputnya:
 1-Variable.sh: Bourne-Again shell script, ASCII text executable
 Menandakan ini bash script.
 
------------------------------------------------------------------------------------------------------
-
-Cron job
-Shell script untuk DevOps dan automation (Docker, deployment, backup, monitoring, dsb.)
-Export (-x)
-Membuat variable menjadi environment variable.
-declare -x APP_ENV=production
-Sama seperti:
-export APP_ENV=production
-Anak proses dapat melihat variable tersebut.
+Silahkan pelajari contoh-contoh shell script pada: Guides/ShellScript

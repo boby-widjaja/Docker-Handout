@@ -1,0 +1,203 @@
+Record authentication pada Linux disimpan dalam path ini:
+/etc/passwd: menyimpan informasi dasar user
+/etc/group: menyimpan informasi group
+/etc/shadow: ini yang paling sensitif menyimpan informasi authentication/password user
+/etc/login.defs: Melihat auth configuration
+/etc/sudoers: konfigurasi sudo
+
+Check list of user dengan menggunakan trick command:
+cut -d: -f1 /etc/passwd
+
+Tambah user baru dengan command:
+sudo useradd [username]
+sudo useradd johndoe
+
+Tambah user sekaligus membuatkan home directory:
+sudo useradd -m [username]
+sudo useradd -m sandy
+
+Berikan atau ubah password:
+sudo passwd [username]
+sudo passwd johndoe
+
+Bagaimana cara check apakah user punya password atau tidak?
+Gunakan command password status:
+passwd -S bobywidjaja
+bobywidjaja P 2026-09-06 0 99999 7 -1
+
+Huruf setelah username menunjukkan status password:
+| Status | Arti                                 |
+| ------ | ------------------------------------ |
+| `P`    | **Password sudah ada** dan aktif     |
+| `L`    | Password **locked**                  |
+| `NP`   | **No Password** — tidak ada password |
+
+Command change age : digunakan untuk mengatur dan melihat password aging, yaitu aturan mengenai masa berlaku password 
+dan status kedaluwarsa akun/password user di Linux.
+Command ditulis dengan:
+chage [options] [username]
+
+perintah chage untuk merubah setting password
+-l : list, detail list informasi password age.
+-d : last day password diganti
+-m : tidak bisa ubah password sampai minimum hari
+-M : maximum umur password
+-W : jumlah hari sebelum expire diberikan warning
+-I : jumlah hari inactive sejak password expire dan account disabled
+-E : menentukan expire lewat tanggal
+
+sudo chage -l bobywidjaja
+
+hasilnya:
+Last password change                                    : Sep 06, 2026
+Password expires                                        : Jun 21, 2300
+Password inactive                                       : never
+Account expires                                         : never
+Minimum number of days between password change          : 0
+Maximum number of days between password change          : 99999
+Number of days of warning before password expires       : 7
+
+Untuk modifikasi contohnya:
+chage -m 5 -M 90 -W 10 -I 3 bobywidjaja
+
+Check ownership dari file, bisa menggunakan long format seperti biasa:
+ls -l [nama file]
+ls -l file.txt
+
+Untuk menghapus user:
+userdel [username]
+userdel sandy
+
+Untuk menghapus user beserta home directorynya:
+userdel -r [username]
+userdel -r sandy
+
+Hasilnya:
+-rw-r--r-- 1 boby docker 5242880 Sep  6 19:30 MyStore.bak
+            ^^^^ ^^^^^^
+            user  group
+Jadi:
+Owner/user → boby
+Group owner → docker
+
+Change owner of a file: (biasanya hanya root yang diberikan permission, bisa pakai sudo)
+sudo chown [user] [file]
+sudo chown johndoe file.txt
+sudo chown root file.txt
+
+Untuk melihat list group yang ada:
+cut -d: -f1 /etc/group
+
+Untuk membuat group:
+sudo groupadd [groupname]
+sudo groupadd developer
+
+Change group sebuah file:
+sudo chgrp [groupname] [filename]
+sudo chgrp developer file.txt
+
+Melihat identitas user:
+id [username]
+id bobywidjaja
+hasilnya:
+uid=1000(bobywidjaja) gid=1000(bobywidjaja) groups=1000(bobywidjaja),10(wheel),994(docker)
+UID → User ID
+GID → Group ID dari primary group
+Groups → semua group yang diikuti user tersebut
+
+Mengapa ada group dengan nama usernya? Itu disebut juga UPG (User Private Group): group yang dibuat khusus untuk satu user, 
+biasanya dengan nama yang sama dengan user tersebut.
+
+Mengapa ada UPG? Karena kalau semua new user default group-nya "general-user", maka file yang dibuat oleh user ini
+akan accidentally secara default permissionnya juga dikasih ke user lain.
+
+ID user (UID) dan ID group (GID) tidak wajib sama. Pada User Private Group (UPG), biasanya keduanya dibuat dengan angka yang sama, 
+tetapi itu adalah konvensi/default, bukan aturan Linux.
+
+Cara lain melihat semua groups dari seorang user dengan lebih simple adalah:
+groups [username]
+groups bobywidjaja
+
+Set (add or edit) secondary group:
+usermod [username] -G [groupname]
+usermod spiderman -G superheroes
+atau
+usermod -G [groupname] [username]
+usermod -G superheroes spiderman
+
+awalnya --> spiderman: spiderman developers
+usermod -G superheroes spiderman
+hasilnya --> spiderman: spiderman superheroes
+
+nambahkan user ke group denga option append:
+sudo usermod -aG [groupname] [username]
+sudo usermod -aG developer bobywidjaja
+
+awalnya --> bobywidjaja: bobywidjaja docker
+sudo usermod -aG developer bobywidjaja
+akhirnya --> bobywidjaja: bobywidjaja docker developer
+
+Melihat all users yang di dalam sebuah group:
+getent group [groupname]
+getent group developer
+
+Menghapus sebuah group:
+groupdel [groupname]
+groupdel developers
+
+Contoh command complete:
+useradd -g superheroes -s /bin/bash -c "This is iron man." -m -d /home/ironman ironman
+
+Hasil dari command di atas adalah:
+-) useradd ... ironman: menambah user baru dengan nama ironman
+-) -g superheroes : primary group dari ironman adalah superheroes
+-) -s /bin/bash : digunakan untuk menentukan login shell user. Kalau Iron Man login, shell yang digunakan adalah Bash.
+-) -c "This is iron man." : menambahkan comment
+-) -m : memastikan ironman membuat home directory
+-) -d /home/ironman : meng-custom lokasi dari home directory si ironman
+
+
+-----------------------------------------------------------------------
+
+
+visudo: mengedit file konfigurasi sudo
+File ini mengatur:
+siapa yang boleh menggunakan sudo
+command apa saja yang boleh dijalankan
+permission administratif user/group
+
+## Allow root to run any commands anywhere 
+root    ALL=(ALL)       ALL
+bobywidjaja     ALL=(ALL)       ALL
+
+append spiderman ke dalam group wheel
+usermod -aG wheel spiderman
+
+wheel adalah group khusus di Linux/Unix yang biasanya digunakan untuk menentukan siapa yang boleh mendapatkan akses 
+    administratif menggunakan sudo atau su.
+Secara sederhana: Member group wheel dianggap sebagai “administrator sistem”.
+
+(Note: Big Wheel, orang yang punya kekuasaan tinggi)
+
+Check siapa saja yang menjadi bagian dari wheel kecuali super user:
+grep wheel /etc/group
+
+ngetest hak pake command dmidecode.
+user yang gak ada di wheel, mau pakai sudo command juga gak akan bisa ngapa2in
+
+command untuk melihat ukuran disk 
+sudo fdisk -l
+
+setuid
+
+setgid
+
+sticky: melindungi file dari ke-delete secara tidak sengaja.
+sticky bit : huruf t dibelakang permission
+-rwx rwx rwt
+
+find / -perm /6000 -type f
+
+cara pasang sticky bit ke sebuah directory
+chmod +t directoryparentname
+(sticky bit akan menghentikan accidental delete pada anak-anaknya)
