@@ -107,3 +107,6 @@ Apabila defaultnya bukan Distro yang anda inginkan, misalnya
 
 Bisa dipindahkan dengan cara:
 wsl --set-default FedoraLinux-44
+
+Cara uninstall linux distro dari wsl:
+wsl --unregister FedoraLinux-44
