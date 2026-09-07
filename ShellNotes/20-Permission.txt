@@ -145,6 +145,14 @@ sudo chmod ug-rw new-name.txt
 Sebagai user biasa lainnya:
 sudo -u johndoe [command]
 
+sticky: melindungi file dari ke-delete secara tidak sengaja.
+sticky bit : huruf t dibelakang permission
+-rwx rwx rwt
+
+cara pasang sticky bit ke sebuah directory
+chmod +t directoryparentname
+(sticky bit akan menghentikan accidental delete pada anak-anaknya)
+
 
 =============================== ACL ===================================================
 
