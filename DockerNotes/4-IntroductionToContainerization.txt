@@ -94,9 +94,7 @@ docker container ps --all
 
 Untuk melihat seluruh container yang aktif, kita tidak perlu menggunakan option all:
 docker container ls
-docker container ls
-docker container ps
-docker container ps
+docker ps
 
 Untuk melihat container beserta ukuran memorynya:
 docker container ls -a --size

@@ -18,3 +18,4 @@ Beberapa signal yang sering dipakai:
 - SIGQUIT : Keluar dan membuat core dump
 
 Mengenai Signal bisa di baca Shell Notes nya untuk lebih lengkapnya.
+Keterangannya bisa ditemukan di ShellNotes dengan topic Process

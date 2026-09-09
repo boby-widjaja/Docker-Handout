@@ -35,7 +35,7 @@ Note: silahkan check ShellNotes/1-LinuxDistribution note untuk lebih jelasnya.
 wsl --install FedoraLinux-44
 
 6. Gunakan command dibawah untuk melihat, versi atau distribusi apa saja yang ada pada wsl kalian.
-wsl -l -
+wsl -l -v
 
 7. Saat ini anda bisa membuka langsung aplikasi WSL pada windows anda, nanti anda akan dibawa otomatis ke 
 distribusi linux yang anda sudah install, silahkan check versi dengan command ini:

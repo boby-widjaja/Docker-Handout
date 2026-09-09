@@ -1,0 +1,145 @@
+Process adalah sebuah program yang sedang dieksekusi oleh OS saat ini.
+Sama seperti running task pada Task Manager di dalam windows.
+Saat ini seluruh processes yang sedang berjalan akan memakan performance pada temporary memory atau RAM.
+
+Command-command yang digunakan untuk memperlihatkan process:
+
+List process yang berjalan hanya di terminal shell saat ini, tidak yang di shell lain atau di background:
+ps
+
+Menunjukan seluruh process yang sedang jalan di OS:
+ps -e
+
+Menunjukan seluruh process hanya untuk selected user:
+ps -u [username]
+ps -u bobywidjaja
+
+Menunjukan process dalam full format:
+ps -f 
+ps -ef
+ps -f -u bobywidjaja
+
+Menunjukan seluruh process pada OS dengan BSD (Berkeley Software Distribution) format:
+ps aux
+
+Command ps dimana kita bisa custom dan organized sendiri ingin melihat column apa saja:
+ps -o [FORMAT]
+ps -o pid,psr,cmd
+
+Penjelasan column-column yang muncul dari command ps di atas adalah:
+
+-) PID [format: pid]: process id
+
+-) PPID [format: ppid]: Parent Process ID — yaitu PID dari proses yang menjadi induknya.
+
+-) UID / USER : owner dari proses ini
+
+-) TTY: TeleTYpe, dan secara praktis menunjukkan id terminal yang terhubung pada process tersebut.
+untuk mengetahui identitas terminal yang saat ini kamu sedang operasikan, pakai command:
+tty 
+untuk melihat seluruhnya bisa gunakan command:
+who
+
+-) TIME: total durasi waktu yang di-spend oleh CPU untuk process ini. bukan berapa lama process sudah berjalan.
+
+-) STIME: (Start Time) jam berapa process ini mulai
+
+-) CMD: Command program yang digunakan untuk menjalankan process ini.
+
+
+
+PR : scheduling priority? semakin tinggi prioritas process, semakin besar kesempatan process mendapatkan CPU time.
+    prioritas aktual yang dipakai scheduler Linux
+NI : Nice Value (makin negatif makin prioritas)
+    nilai yang diberikan user/admin untuk mempengaruhi prioritas process
+VIRT : virtual memory yang dipakai task
+RES : RAM yang dikonsumsi oleh process
+SHR : Shared memory yang dipakai task
+S : state dari process dengan singkatan
+%CPU : total pemakaian CPU
+%MEM : Total penggunaan Memory
+
+
+
+====================================================================================
+
+
+Bisa control linux systemnya juga
+systemctl poweroff
+systemctl halt
+systemctl reboot
+
+
+ps aux : shows all running process in BSD Format
+
+
+
+
+di tampilan top, bisa process:
+C: untuk view absolute command
+k: kill process yang ditunjuk
+M dan P: sorting process
+
+
+Dapatkan list dari semua nama signal atau nomor signal
+kill -l
+
+Signal yang sering dipakai:
+kill PID : Kill a process with default signal
+kill -1 : restart
+kill -2 : interrupt from the keyboard just like Ctrl c
+kill -9 : forcefully kill the process
+kill -15 : kill a process gracefully
+
+sleep:  menghentikan sementara eksekusi process selama waktu tertentu.
+
+echo "Mulai"
+sleep 3
+echo "Selesai"
+
+Mulai
+(tunggu 3 detik)
+Selesai
+
+killall
+pkill
+
+Signals: shrt message yang dikirim ke Process.
+
+Setiap kali kita gunakan Ctrl + C, itu sebenarnya mengirim signal ke proses untuk menghentikan processnya.
+
+Signal bisa:
+Interupt, Control atau Communicate dengan Process.
+
+2 macam process signal:
+Standard Signal
+Real-Time Signal
+
+Standard Signal: menggunakan predefined signal dengan fix meaning untuk stop, pause dan terminate process.
+
+SIGINT (Signal Interrupt)
+Kill -SIGNINT PID
+
+SIGTERM (Signal Terminate) : Terminate Gracefully, Save Data, Clean Before Closing
+Kill -SIGTERM PID
+
+SIGKILL (Signal Kill) : Force kill process
+Kill -SIGKILL PID
+
+SIGSTOP (Signal Stop): Pause running process
+Kill -SIGSTOP PID
+
+SIGCONT (Signal Continue) : Resume stopped process
+Kill -SIGCONT PID
+
+SIGSEGV (Signal Segmentation Fault) : Access Invalid Memory Location (Kadang suka bikin crash)
+Kill -SIGSEGV PID
+
+
+
+Real-Time Signals : Kirim extra informasi seiring dengan signalnya, membuatnya high performance.
+
+types:
+SIGRTMIN : Menandakan awal dari signal
+SIGRTMAX : Menandakan akhir dari signal
+Intermediate Signals : digunakan untuk custom process
