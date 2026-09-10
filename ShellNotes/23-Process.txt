@@ -26,120 +26,275 @@ Command ps dimana kita bisa custom dan organized sendiri ingin melihat column ap
 ps -o [FORMAT]
 ps -o pid,psr,cmd
 
-Penjelasan column-column yang muncul dari command ps di atas adalah:
+Process identity & hierarchy
+| Format   | Column   | Deskripsi                                 |
+| -------- | -------- | ----------------------------------------- |
+| `pid`    | `PID`    | Process ID                                |
+| `ppid`   | `PPID`   | Parent Process ID                         |
+| `sid`    | `SID`    | Session ID                                |
+| `pgid`   | `PGID`   | Process Group ID                          |
+| `tpgid`  | `TPGID`  | Foreground process group ID dari terminal |
+| `user`   | `USER`   | Username pemilik process                  |
+| `uid`    | `UID`    | User ID                                   |
+| `group`  | `GROUP`  | Group pemilik process                     |
+| `gid`    | `GID`    | Group ID                                  |
+| `euser`  | `EUSER`  | Effective username                        |
+| `euid`   | `EUID`   | Effective user ID                         |
+| `egroup` | `EGROUP` | Effective group name                      |
+| `egid`   | `EGID`   | Effective group ID                        |
 
--) PID [format: pid]: process id
+Process state / status
+| Format  | Column  | Deskripsi                                       |
+| ------- | ------- | ----------------------------------------------- |
+| `stat`  | `STAT`  | Process state + additional flags                |
+| `state` | `S`     | State utama process                             |
+| `s`     | `S`     | Session leader indicator/state-related field    |
+| `wchan` | `WCHAN` | Kernel function tempat process sedang menunggu  |
+| `nlwp`  | `NLWP`  | Number of Lightweight Processes / jumlah thread |
+| `lwp`   | `LWP`   | Lightweight Process ID / thread ID              |
+| `spid`  | `SPID`  | Thread ID / kernel thread ID                    |
 
--) PPID [format: ppid]: Parent Process ID — yaitu PID dari proses yang menjadi induknya.
+CPU
+| Format    | Column    | Deskripsi                                       |
+| --------- | --------- | ----------------------------------------------- |
+| `pcpu`    | `%CPU`    | Persentase CPU usage                            |
+| `c`       | `C`       | Legacy CPU utilization-related value            |
+| `psr`     | `PSR`     | Processor/core tempat process terakhir berjalan |
+| `time`    | `TIME`    | Total accumulated CPU time                      |
+| `cputime` | `TIME`    | CPU time                                        |
+| `etimes`  | `ELAPSED` | Elapsed time dalam detik                        |
+| `time`    | `TIME`    | CPU time dalam format waktu                     |
+| `bsdtime` | `TIME`    | CPU time, BSD-style format                      |
 
--) UID / USER : owner dari proses ini
+Memory
+| Format | Column | Deskripsi                        |
+| ------ | ------ | -------------------------------- |
+| `vsz`  | `VSZ`  | Virtual Memory Size, KiB         |
+| `rss`  | `RSS`  | Resident Set Size, KiB           |
+| `pmem` | `%MEM` | Persentase physical RAM          |
+| `sz`   | `SZ`   | Ukuran virtual memory dalam page |
+| `trs`  | `TRS`  | Text resident set size           |
+| `drs`  | `DRS`  | Data + stack resident set        |
+| `data` | `DATA` | Data + stack                     |
+| `text` | `CODE` | Executable code/text             |
+| `shr`  | `SHR`  | Shared memory                    |
+| `pss`  | `PSS`  | Proportional Set Size            |
+| `rss`  | `RSS`  | Resident Set Size                |
 
+Time / waktu
+| Format       | Column    | Deskripsi                               |
+| ------------ | --------- | --------------------------------------- |
+| `start`      | `STARTED` | Waktu process mulai                     |
+| `stime`      | `STIME`   | Start time                              |
+| `start_time` | `START`   | Start time dalam format tertentu        |
+| `lstart`     | `STARTED` | Tanggal + waktu lengkap process dimulai |
+| `etime`      | `ELAPSED` | Lama process hidup                      |
+| `etimes`     | `ELAPSED` | Lama process hidup dalam detik          |
+| `time`       | `TIME`    | Total CPU time                          |
+| `cputime`    | `TIME`    | Total CPU time                          |
+
+Terminal
+| Format  | Column  | Deskripsi                         |
+| ------- | ------- | --------------------------------- |
+| `tty`   | `TT`    | Controlling terminal              |
+| `tname` | `TTY`   | Terminal name                     |
+| `tpgid` | `TPGID` | Foreground process group ID       |
+| `tpgid` | `TPGID` | Process group foreground terminal |
+
+Scheduling / priority
+| Format   | Column   | Deskripsi           |
+| -------- | -------- | ------------------- |
+| `pri`    | `PRI`    | Scheduling priority |
+| `ni`     | `NI`     | Nice value          |
+| `cls`    | `CLS`    | Scheduling class    |
+| `rtprio` | `RTPRIO` | Real-time priority  |
+| `policy` | `POL`    | Scheduling policy   |
+
+Command / executable
+| Format    | Column    | Deskripsi                 |
+| --------- | --------- | ------------------------- |
+| `cmd`     | `CMD`     | Command                   |
+| `comm`    | `COMMAND` | Nama executable           |
+| `args`    | `COMMAND` | Command beserta arguments |
+| `command` | `COMMAND` | Command                   |
+| `fname`   | `COMMAND` | Executable filename       |
+| `ucmd`    | `COMMAND` | Command name              |
+| `ucomm`   | `COMMAND` | Command name              |
+| `exe`     | `COMMAND` | Executable path           |
+
+File / I/O
+| Format      | Column    | Deskripsi               |
+| ----------- | --------- | ----------------------- |
+| `fd`        | `FD`      | File descriptor         |
+| `fds`       | `FDS`     | Jumlah file descriptors |
+| `cgroup`    | `CGROUP`  | Control groups process  |
+| `context`   | `CONTEXT` | Security context        |
+| `label`     | `LABEL`   | Security label          |
+| `seccomp`   | `SECCOMP` | Seccomp mode            |
+| `oom`       | `OOM`     | OOM-related value       |
+| `oom_score` | `OOM`     | OOM score               |
+| `oom_adj`   | `OOM_ADJ` | OOM adjustment          |
+
+Environment / security
+| Format    | Column    | Deskripsi                 |
+| --------- | --------- | ------------------------- |
+| `euser`   | `EUSER`   | Effective user            |
+| `euid`    | `EUID`    | Effective UID             |
+| `egroup`  | `EGROUP`  | Effective group           |
+| `egid`    | `EGID`    | Effective GID             |
+| `label`   | `LABEL`   | SELinux/security label    |
+| `context` | `CONTEXT` | Security context          |
+| `supgid`  | `SUPGID`  | Supplementary group IDs   |
+| `supgrp`  | `SUPGRP`  | Supplementary group names |
+
+Thread-related
+| Format | Column | Deskripsi                            |
+| ------ | ------ | ------------------------------------ |
+| `nlwp` | `NLWP` | Jumlah thread                        |
+| `lwp`  | `LWP`  | Thread ID                            |
+| `spid` | `SPID` | Thread ID                            |
+| `tid`  | `TID`  | Thread ID                            |
+| `psr`  | `PSR`  | CPU terakhir thread/process berjalan |
+
+Karena variasi column yang bisa dilihat dari satu process, saya akan bahas hal-hal yang sering dipakai, 
+atau yang keluar di ps, ps -f dan ps aux terlebih dahulu:
+-) PID: process id
+-) PPID: Parent Process ID — yaitu PID dari proses yang menjadi induknya.
+-) UID / USER: owner dari proses ini, id dan usernamenya.
+-) GID / GROUP: group dari proses ini, id dan nama groupnya.
 -) TTY: TeleTYpe, dan secara praktis menunjukkan id terminal yang terhubung pada process tersebut.
-untuk mengetahui identitas terminal yang saat ini kamu sedang operasikan, pakai command:
-tty 
-untuk melihat seluruhnya bisa gunakan command:
-who
-
+    untuk mengetahui identitas terminal yang saat ini kamu sedang operasikan, pakai command:
+    tty 
+    untuk melihat seluruhnya bisa gunakan command:
+    who
 -) TIME: total durasi waktu yang di-spend oleh CPU untuk process ini. bukan berapa lama process sudah berjalan.
+-) STIME / START: (Start Time) jam berapa process ini mulai
+-) CMD / COMMAND: Command program yang digunakan untuk menjalankan process ini.
+-) C: Nilai penggunaan CPU berdasarkan system unix jaman dahulu, sudah sangat jarang digunakan karena
+    dinilai lebih sulit dimengerti dan masih ada cara alternative pengukurannya. 
+    Nilai CPU Utilization di dapat dari = TIME / ELAPSED TIME.
+-) %CPU : Persentase penggunaan CPU oleh process.
+-) PSR: Nomor logical CPU (processor/core) tempat thread/process tersebut terakhir kali dieksekusi.
+-) VSZ: Virtual Memory Size, dalam satuan KiB. Jumlah memory yang di book untuk proses ini dari RAM.
+    Note: KiB adalah Kibi byte bukan KB Kilo Byte.
+    1 KiB = 1024 bytes
+    1 KB = 1000 bytes
+-) RSS: Resident Set Size, juga biasanya dalam KiB. Jumlah memory yang terpakai di dalam Virtual Memory Size oleh proses ini.
+-) %MEM : Berapa % RAM yang digunakan
+-) STAT: Status Process
+    Status process memiliki 2 bagian pada valunye:
+        Karakter pertama = state utama process
+        Karakter setelahnya = atribut/flag tambahan
 
--) STIME: (Start Time) jam berapa process ini mulai
+    Huruf pertama menunjukkan state utama:
+    | STAT | Nama                  | Arti sederhana                                            |
+    | ---- | --------------------- | --------------------------------------------------------- |
+    | `R`  | Running / Runnable    | Sedang berjalan atau siap dijalankan CPU                  |
+    | `S`  | Interruptible sleep   | Sedang menunggu sesuatu, dan bisa dibangunkan oleh signal |
+    | `D`  | Uninterruptible sleep | Sedang menunggu operasi kernel tertentu, biasanya I/O     |
+    | `T`  | Stopped               | Process dihentikan                                        |
+    | `t`  | Tracing stop          | Berhenti karena sedang di-trace/debug                     |
+    | `Z`  | Zombie                | Process sudah selesai, tetapi entry-nya masih ada         |
+    | `I`  | Idle                  | Kernel thread idle                                        |
 
--) CMD: Command program yang digunakan untuk menjalankan process ini.
+    Atribut/flag tambahan
+    | Karakter | Arti                                         |
+    | -------- | -------------------------------------------- |
+    | `s`      | Session leader                               |
+    | `+`      | Foreground process group                     |
+    | `l`      | Multi-threaded                               |
+    | `<`      | High-priority / elevated scheduling priority |
+    | `N`      | Low-priority / low scheduling priority       |
+    | `L`      | Pages locked into memory                     |
+    | `        | `                                            |
 
+Kita juga bisa menggunakan perintah top selain ps untuk memonitor semuanya itu secara terus-menerus:
+top
 
+Menentukan refresh rate dalam detik:
+top -d [seconds]
+top -d 2
+Refresh setiap 2 detik.
+Default biasanya sekitar 3 detik.
 
-PR : scheduling priority? semakin tinggi prioritas process, semakin besar kesempatan process mendapatkan CPU time.
-    prioritas aktual yang dipakai scheduler Linux
-NI : Nice Value (makin negatif makin prioritas)
-    nilai yang diberikan user/admin untuk mempengaruhi prioritas process
-VIRT : virtual memory yang dipakai task
-RES : RAM yang dikonsumsi oleh process
-SHR : Shared memory yang dipakai task
-S : state dari process dengan singkatan
-%CPU : total pemakaian CPU
-%MEM : Total penggunaan Memory
+Memonitor selected PID:
+top -p [PID]
+top -p 1234
+Beberapa PID:
+top -p 1234,5678,9012
 
+Memonitor selected user:
+top -u [username/UID]
+top -u bobywidj
 
-
-====================================================================================
-
-
-Bisa control linux systemnya juga
-systemctl poweroff
-systemctl halt
-systemctl reboot
-
-
-ps aux : shows all running process in BSD Format
-
-
-
-
-di tampilan top, bisa process:
-C: untuk view absolute command
+Mengubah tampilan top monitoring dengan beberapa hot key:
+c: untuk view command dalam absolute path
 k: kill process yang ditunjuk
-M dan P: sorting process
+M: sort berdasarkan memory
+P: sort berdasarkan cpu
+N: sort berdasarkan PID
+1: Tampilkan setiap logical core daslam CPU
+f: untuk custom column field sesuai dengan yang kita mau lihat
 
 
-Dapatkan list dari semua nama signal atau nomor signal
+=============================== SIGNAL ====================================
+
+Kita bisa memberi perintah ke OS kernel, agar OS kernel mengirim signal ke salah satu process, lalu
+signal handler akan melakukan suatu action ke process tersebut. Action pada process itu bisa
+berupa penghentian process, melanjutkan process, reload process, dan masih banyak lainnya.
+
+Signal bisa dikirim oleh macam-macam hal, misalnya:
+-) dikirim oleh kill command
+-) dikirim oleh sleep command
+-) dikirim oleh systemctl command
+-) dikirim oleh keyboard terminal, misalnya Ctrl + C atau Ctrl + Z
+-) k key pada top monitoring (sudah dibahas sebelumnya)
+-) Docker instruction STOPSIGNAL
+-) otomatis dari kernel karena kondisi dan operasi tertentu
+
+Ada bermacam-macam signal, dan setiap signal punya nomor unik masing-masing.
+Di bawah ini saya tampilkan signal yang relatif lebih sering dipakai, 
+tentu saja tidak semua saya tampilkan dan jelaskan.
+
+| Signal      | Nomor     | Kegunaan                                                  
+| ----------- | --------: | ---------------------------------------------------------
+| SIGTERM     |        15 | Meminta process berhenti secara graceful, save data, clean sebelum closing.
+| SIGKILL     |         9 | Memaksa process berhenti (force kill).
+| SIGINT      |         2 | Interrupt dari keyboard, biasanya `Ctrl+C`.
+| SIGTSTP     |        20 | Stop dari terminal, biasanya dari `Ctrl+Z` atau sleep command.
+| SIGSTOP     |        19 | Memaksa process berhenti sementara (Paused), bentuk force dari SIGTSTP
+| SIGCONT     |        18 | Melanjutkan process yang stopped (Resume)
+| SIGHUP      |         1 | Hangup; sering digunakan untuk reload/restart konfigurasi
+| SIGCHLD     |        17 | Signal yang dikirim dari child ke parentnya karena perubaha statusnya. (keseringan otomatis, bukan manual)
+| SIGSEGV     |        11 | Sering kita temui karena bug dan crash suatu program karena Access Invalid Memory.
+| SIGQUIT     |         3 | Mirip seperti SIGSEGV tapi dilakukan dengan sengaja dengan Ctrl+\
+
+
+Untuk melihat list signal yang ada, kita bisa menggunakan command:
 kill -l
 
-Signal yang sering dipakai:
-kill PID : Kill a process with default signal
-kill -1 : restart
-kill -2 : interrupt from the keyboard just like Ctrl c
-kill -9 : forcefully kill the process
-kill -15 : kill a process gracefully
+Kita bisa mengirim signal dengan command kill dengan structure seperti berikut:
+kill -[signal name/ signal number] [PID]
+kill -15 5678
+kill -SIGTERM 5678
 
-sleep:  menghentikan sementara eksekusi process selama waktu tertentu.
+Kalau kita tidak menulis signal name atau signal number, misalnya:
+kill 5678, SIGTERM adalah defaultnya.
 
-echo "Mulai"
-sleep 3
-echo "Selesai"
+Untuk menghentikan process, saya sarankan menggunakan SIGTERM selalu, tetapi
+kalau terjadi sesuatu pada process dan tidak bisa berhenti, saya sarankan gunakan alternatif SIGKILL.
 
-Mulai
-(tunggu 3 detik)
-Selesai
+Baik SIGSEGV dan SIGQUIT meninggalkan Core Dump.
+Core dump adalah snapshot isi/memori dan state process ketika process mengalami crash/termination tertentu.
+Jadi sifatnya seperti error log. Tujuannya supaya developer bisa melakukan debugging.
 
-killall
-pkill
+Kita juga bisa kill dengan menggunakan nama process atau nama command, dimana biasanya
+command yang sama memiliki lebih dari satu process, misalnya:
+PID    COMMAND
+1234   firefox
+2345   firefox
+3456   firefox
 
-Signals: shrt message yang dikirim ke Process.
-
-Setiap kali kita gunakan Ctrl + C, itu sebenarnya mengirim signal ke proses untuk menghentikan processnya.
-
-Signal bisa:
-Interupt, Control atau Communicate dengan Process.
-
-2 macam process signal:
-Standard Signal
-Real-Time Signal
-
-Standard Signal: menggunakan predefined signal dengan fix meaning untuk stop, pause dan terminate process.
-
-SIGINT (Signal Interrupt)
-Kill -SIGNINT PID
-
-SIGTERM (Signal Terminate) : Terminate Gracefully, Save Data, Clean Before Closing
-Kill -SIGTERM PID
-
-SIGKILL (Signal Kill) : Force kill process
-Kill -SIGKILL PID
-
-SIGSTOP (Signal Stop): Pause running process
-Kill -SIGSTOP PID
-
-SIGCONT (Signal Continue) : Resume stopped process
-Kill -SIGCONT PID
-
-SIGSEGV (Signal Segmentation Fault) : Access Invalid Memory Location (Kadang suka bikin crash)
-Kill -SIGSEGV PID
-
-
-
-Real-Time Signals : Kirim extra informasi seiring dengan signalnya, membuatnya high performance.
-
-types:
-SIGRTMIN : Menandakan awal dari signal
-SIGRTMAX : Menandakan akhir dari signal
-Intermediate Signals : digunakan untuk custom process
+Untuk melakukan kill lebih dari satu sekaligus berdasarkan nama 'firefox" nya:
+killall -[signal name/ signal number] [Command]
+killall -SIGTERM firefox

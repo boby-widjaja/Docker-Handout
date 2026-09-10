@@ -24,4 +24,8 @@ Outputnya:
 1-Variable.sh: Bourne-Again shell script, ASCII text executable
 Menandakan ini bash script.
 
+Jalankan dengan:
+bash [nama file]
+bash 1-Variable.sh
+
 Silahkan pelajari contoh-contoh shell script pada: Guides/ShellScript

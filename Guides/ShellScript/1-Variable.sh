@@ -67,3 +67,8 @@ echo "$SUPPLIER"
 #ANSI-C Quoting feature khusus bash, ditulis dengan $'', sehingga kita bisa melakukan escaping character
 SENTENCE=$'\tIni adalah contoh sebuah paragraph.\nDimana baris baru bisa terjadi.\nDan terjadi lagi.'
 echo "$SENTENCE"
+
+#sleep: adalah command sederhana untuk mem-pause atau menghentikan process sementara dalam kurun waktu tertentu.
+echo "Mulai"
+sleep 3
+echo "Selesai"
