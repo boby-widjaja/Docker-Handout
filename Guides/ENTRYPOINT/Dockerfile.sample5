@@ -1,0 +1,5 @@
+FROM fedora:44
+USER root
+COPY sayHello.sh sayHello.sh
+RUN chmod +x /sayHello.sh
+ENTRYPOINT [ "./sayHello.sh" ]

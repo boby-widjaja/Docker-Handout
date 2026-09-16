@@ -30,7 +30,7 @@ docker run -d \
     --name mysql_container \
     -p 3306:3306 \
     -v mysql_volume:/var/lib/mysql \
-    mysql:9.7
+    mysql-private:1.0
 
 ==================================================================
 
