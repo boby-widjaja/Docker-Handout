@@ -23,9 +23,14 @@ HEALTHCHECK NONE
 Kita akan mencoba beberapa contoh di dalam directory HEALTHCHECK, mulai dari check existing file,
 Available domain dan available port.
 
-Untuk mencoba existing file, bisa dengan menjalankan command berikut
+Untuk mencoba existing file, bisa dengan menjalankan command berikut di Guides/HEALTHCHECK
 docker build --tag file-checker:1.0 -f Dockerfile.existing .
 docker run -it --name file_tester file-checker:1.0 bash
+
+Note: kita bisa menggunakan option -e juga untuk test command:
+test -f /alive.txt (check apakah ada file ini?)
+atau
+test -e /alive.txt (bisa digunakan untuk check existin directory juga)
 
 Selagi container berjalan, cobalah membuka terminal lain dan check status dari containernya:
 docker container ls
@@ -37,6 +42,18 @@ CONTAINER ID   IMAGE              COMMAND   CREATED          STATUS             
 Ketika terbukti healthy akan mendapat status seperti ini:
 CONTAINER ID   IMAGE              COMMAND   CREATED         STATUS                   PORTS     NAMES
 265eb2bbd6f9   file-checker:1.0   "bash"    4 minutes ago   Up 4 minutes (healthy)             file_tester
+
+Kalau kita menghapus file alive.txt lewat bash sebeluml healthy status keluar, atau
+kalau kita membuat file yang berbeda:
+FROM fedora:44
+RUN touch /ghost.txt
+HEALTHCHECK CMD test -f /alive.txt
+CMD ["tail", "-f", "/dev/null"]
+
+Hasilnya akan terlihat unhealthy jika menunggu kurang lebih 3 menit.
+
+CONTAINER ID   IMAGE              COMMAND   CREATED         STATUS                     PORTS     NAMES
+19e22616e038   file-checker:2.0   "bash"    3 minutes ago   Up 3 minutes (unhealthy)             file_tester
 
 Healthy atau Unhealthy dicheck docker lewat exit code dari Linux.
 | Exit Code | Arti                        |
